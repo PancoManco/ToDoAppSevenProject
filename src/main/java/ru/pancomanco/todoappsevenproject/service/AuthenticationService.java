@@ -1,13 +1,16 @@
 package ru.pancomanco.todoappsevenproject.service;
 
-import ru.pancomanco.todoappsevenproject.dto.request.SignInRequestDto;
-import ru.pancomanco.todoappsevenproject.dto.request.SignUpRequestDto;
+import ru.pancomanco.todoappsevenproject.dto.TokenPair;
+import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
+import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
 import ru.pancomanco.todoappsevenproject.dto.response.SignInResponseDto;
 import ru.pancomanco.todoappsevenproject.dto.response.SignUpResponseDto;
 
 public interface AuthenticationService {
 
-    public SignUpResponseDto signUp(SignUpRequestDto signUpRequestDto);
+    TokenPair register(RegisterRequestDto registerRequestDto);
+    TokenPair login(LoginRequestDto loginRequestDto);
+    TokenPair refresh(String refreshToken);
+    void logout(String refreshToken);
 
-    public SignInResponseDto signIn(SignInRequestDto signInRequestDto);
 }

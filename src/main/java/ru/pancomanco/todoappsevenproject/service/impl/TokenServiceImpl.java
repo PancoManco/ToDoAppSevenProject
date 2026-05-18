@@ -2,16 +2,28 @@ package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.pancomanco.todoappsevenproject.dto.TokenPair;
+import ru.pancomanco.todoappsevenproject.entity.RefreshToken;
+import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
+import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
+import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,22 +31,109 @@ import java.util.stream.Collectors;
 public class TokenServiceImpl implements TokenService {
 
     private final JwtEncoder jwtEncoder;
+    private final JwtDecoder refreshJwtDecoder;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthProperties properties;
 
+    @Transactional
+    @Override
+    public TokenPair issueTokenPair(User user) {
+        String accessToken = createAccessToken(user);
+        String refreshToken = createRefreshToken(user);
+
+        String refreshTokenHash = sha256(refreshToken);
+        Instant refreshExpiresAt = Instant.now()
+                .plus(Duration.ofDays(properties.jwt().refreshTokenDays()));
+
+        refreshTokenRepository.save(
+                new RefreshToken(user, refreshTokenHash, refreshExpiresAt)
+        );
+
+        return new TokenPair(accessToken, refreshToken);
+    }
+
+    @Transactional
+    @Override
+    public TokenPair rotateRefreshTokenPair(String rawRefreshToken) {
+        Jwt jwt = refreshJwtDecoder.decode(rawRefreshToken);
+
+        String tokenHash = sha256(rawRefreshToken);
+
+        RefreshToken currentToken = refreshTokenRepository
+                .findByTokenHash(tokenHash)
+                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
+
+        if (currentToken.isRevoked()) {
+            refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
+            throw new UnauthorizedException("Refresh token reuse detected");
+        }
+
+        if (currentToken.isExpired()) {
+            currentToken.revoke();
+            throw new UnauthorizedException("Refresh token expired");
+        }
+
+        currentToken.revoke();
+
+        return issueTokenPair(currentToken.getUser());
+
+    }
+
+    @Transactional
+    @Override
+    public void revokeRefreshTokenPair(String rawRefreshToken) {
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            return;
+        }
+        String tokenHash = sha256(rawRefreshToken);
+        refreshTokenRepository
+                .findByTokenHashAndRevokedFalse(tokenHash)
+                .ifPresent(RefreshToken::revoke);
+    }
 
     @Override
-    public String generateToken(Authentication authentication) {
+    public String createAccessToken(User user) {
         Instant now = Instant.now();
-        String scope = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" "));
+        Instant expiresAt = now.plus(Duration.ofMinutes(properties.jwt().accessTokenMinutes()));
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("self")
+                .issuer(properties.jwt().issuer())
                 .issuedAt(now)
-                .expiresAt(now.plus(1, ChronoUnit.HOURS))
-                .subject(authentication.getName())
-                .claim("roles", scope)
+                .expiresAt(expiresAt)
+                .subject(String.valueOf(user.getId()))
+                .claim("token_type", "access")
+                .claim("email", user.getEmail())
+                .claim("roles", List.of(user.getRole().name()))
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    @Override
+    public String createRefreshToken(User user) {
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(Duration.ofDays(properties.jwt().refreshTokenDays()));
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(properties.jwt().issuer())
+                .issuedAt(now)
+                .expiresAt(expiresAt)
+                .id(UUID.randomUUID().toString())
+                .subject(String.valueOf(user.getId()))
+                .claim("token_type", "refresh")
+                .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    @Override
+    public String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not hash token", e);
+        }
     }
 }

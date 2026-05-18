@@ -1,106 +1,199 @@
 package ru.pancomanco.todoappsevenproject.config;
 
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
+import ru.pancomanco.todoappsevenproject.security.CookieEndpointOriginFilter;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.UUID;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.util.List;
 
 
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
+@EnableConfigurationProperties(AuthProperties.class)
 public class SecurityConfig {
 
-    private static KeyPair generateRsaKey() {
-        KeyPair keyPair;
-        try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048);
-            keyPair = keyPairGenerator.generateKeyPair();
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        }
-        return keyPair;
+    @Bean
+    @Order(1)
+    SecurityFilterChain oauth2SecurityFilterChain(
+            HttpSecurity http,
+            OAuth2SuccessHandler successHandler
+    ) throws Exception {
+        return http
+                .securityMatcher("/oauth2/**", "/login/oauth2/**")
+
+                .csrf(csrf -> csrf.disable())
+
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(successHandler)
+                        .failureHandler((request, response, exception) -> {
+                            response.sendRedirect("http://localhost:5173/login?error=oauth");
+                        })
+                )
+
+                .build();
     }
 
+
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+    @Order(2)
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           CookieEndpointOriginFilter originFilter,
+                                           JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+        return http
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("api/v1/auth/**").permitAll()
-                        .anyRequest().authenticated());
-
-        http.oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(new JwtAuthenticationConverter())));
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-       return  http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-
-    @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        KeyPair keyPair = generateRsaKey();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(originFilter, BearerTokenAuthenticationFilter.class)
                 .build();
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return new ImmutableJWKSet<>(jwkSet);
+
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource());
+    SecretKey jwtSecretKey(AuthProperties properties) {
+        byte[] keyBytes = Base64.getDecoder().decode(properties.jwt().secret());
+
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 256 bits");
+        }
+
+        return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
     @Bean
-    public JwtEncoder jwtEncoder() {
-        return new NimbusJwtEncoder(jwkSource());
+    JwtEncoder jwtEncoder(SecretKey jwtSecretKey) {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSecretKey));
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-        return jwtConverter;
+    JwtDecoder jwtDecoder(SecretKey jwtSecretKey, AuthProperties properties) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder
+                .withSecretKey(jwtSecretKey)
+                .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)
+                .build();
+
+        OAuth2TokenValidator<Jwt> issuerValidator =
+                JwtValidators.createDefaultWithIssuer(properties.jwt().issuer());
+
+        OAuth2TokenValidator<Jwt> tokenTypeValidator =
+                tokenTypeValidator("access");
+
+        decoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(issuerValidator, tokenTypeValidator)
+        );
+
+        return decoder;
+    }
+
+    @Bean
+    @Qualifier("refreshJwtDecoder")
+    JwtDecoder refreshJwtDecoder(SecretKey jwtSecretKey, AuthProperties properties) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder
+                .withSecretKey(jwtSecretKey)
+                .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)
+                .build();
+
+        OAuth2TokenValidator<Jwt> issuerValidator =
+                JwtValidators.createDefaultWithIssuer(properties.jwt().issuer());
+
+        OAuth2TokenValidator<Jwt> tokenTypeValidator =
+                tokenTypeValidator("refresh");
+
+        decoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(issuerValidator, tokenTypeValidator)
+        );
+
+        return decoder;
+    }
+
+    private OAuth2TokenValidator<Jwt> tokenTypeValidator(String expectedType) {
+        return jwt -> {
+            String actualType = jwt.getClaimAsString("token_type");
+
+            if (expectedType.equals(actualType)) {
+                return OAuth2TokenValidatorResult.success();
+            }
+
+            OAuth2Error error = new OAuth2Error(
+                    "invalid_token",
+                    "Invalid token_type. Expected: " + expectedType,
+                    null
+            );
+
+            return OAuth2TokenValidatorResult.failure(error);
+        };
+    }
+
+    @Bean
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter rolesConverter = new JwtGrantedAuthoritiesConverter();
+        rolesConverter.setAuthoritiesClaimName("roles");
+        rolesConverter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(rolesConverter);
+
+        return converter;
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(AuthProperties properties) {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(properties.frontendOrigin()));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 
 }
