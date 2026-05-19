@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.SocialAuthService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
@@ -25,7 +26,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final SocialAuthService socialAuthService;
     private final TokenService tokenService;
-
+    private final RefreshCookieHelper refreshCookieHelper;
+    private final AuthProperties properties;
 
     @Override
     public void onAuthenticationSuccess(
@@ -47,18 +49,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         TokenPair tokens = tokenService.issueTokenPair(user);
 
-        ResponseCookie refreshCookie = RefreshCookieHelper.create(
+        ResponseCookie refreshCookie = refreshCookieHelper.create(
                 tokens.refreshToken(),
                 Duration.ofDays(7)
         );
 
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        response.sendRedirect(properties.oauth2SuccessRedirect());
 
 
-        // access token НЕ кладём в query parameter.
-        // Frontend после redirect вызывает POST /api/auth/refresh
-        // и получает access token.
-        response.sendRedirect("http://localhost:5173/oauth/success");
     }
 }
 

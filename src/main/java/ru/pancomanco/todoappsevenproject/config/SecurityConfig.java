@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,33 +41,33 @@ import java.util.List;
 @EnableConfigurationProperties(AuthProperties.class)
 public class SecurityConfig {
 
+//    @Bean
+//    @Order(1)
+//    SecurityFilterChain oauth2SecurityFilterChain(
+//            HttpSecurity http,
+//            OAuth2SuccessHandler successHandler
+//    ) {
+//        return http
+//                .securityMatcher("/oauth2/**", "/login/oauth2/**")
+//
+//                .csrf(csrf -> csrf.disable())
+//
+//                .authorizeHttpRequests(auth -> auth
+//                        .anyRequest().permitAll()
+//                )
+//
+//                .oauth2Login(oauth2 -> oauth2
+//                        .successHandler(successHandler)
+//                        .failureHandler((request, response, exception) -> {
+//                            response.sendRedirect("http://localhost:5173/login?error=oauth");
+//                        })
+//                )
+//                .build();
+//    }
+
+
     @Bean
-    @Order(1)
-    SecurityFilterChain oauth2SecurityFilterChain(
-            HttpSecurity http,
-            OAuth2SuccessHandler successHandler
-    ) {
-        return http
-                .securityMatcher("/oauth2/**", "/login/oauth2/**")
-
-                .csrf(csrf -> csrf.disable())
-
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                )
-
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(successHandler)
-                        .failureHandler((request, response, exception) -> {
-                            response.sendRedirect("http://localhost:5173/login?error=oauth");
-                        })
-                )
-                .build();
-    }
-
-
-    @Bean
-    @Order(2)
+   // @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CookieEndpointOriginFilter originFilter,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) {
@@ -74,7 +75,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
@@ -102,6 +103,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Primary
     JwtDecoder jwtDecoder(SecretKey jwtSecretKey, AuthProperties properties) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder
                 .withSecretKey(jwtSecretKey)

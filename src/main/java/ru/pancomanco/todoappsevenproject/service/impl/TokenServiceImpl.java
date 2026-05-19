@@ -1,6 +1,8 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +11,7 @@ import ru.pancomanco.todoappsevenproject.entity.RefreshToken;
 import ru.pancomanco.todoappsevenproject.entity.User;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
+import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 
@@ -21,13 +24,28 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder refreshJwtDecoder;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthRepository authRepository;
     private final AuthProperties properties;
+
+    public TokenServiceImpl(
+            JwtEncoder jwtEncoder,
+            @Qualifier("refreshJwtDecoder") JwtDecoder refreshJwtDecoder,
+            RefreshTokenRepository refreshTokenRepository,
+            AuthRepository userRepository,
+            AuthProperties properties
+    ) {
+        this.jwtEncoder = jwtEncoder;
+        this.refreshJwtDecoder = refreshJwtDecoder;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.authRepository = userRepository;
+        this.properties = properties;
+    }
+
 
     @Transactional
     @Override
@@ -100,7 +118,10 @@ public class TokenServiceImpl implements TokenService {
                 .claim("roles", List.of(user.getRole().name()))
                 .build();
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        JwsHeader headers = JwsHeader.with(MacAlgorithm.HS256).build();
+        return jwtEncoder
+                .encode(JwtEncoderParameters.from(headers, claims))
+                .getTokenValue();
     }
 
     @Override
@@ -117,7 +138,12 @@ public class TokenServiceImpl implements TokenService {
                 .claim("token_type", "refresh")
                 .build();
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        JwsHeader headers = JwsHeader.with(MacAlgorithm.HS256).build();
+
+        return jwtEncoder
+                .encode(JwtEncoderParameters.from(headers, claims))
+                .getTokenValue();
+
     }
 
     @Override

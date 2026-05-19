@@ -44,9 +44,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = authRepository.findByEmailIgnoreCase(loginRequestDto.email())
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
-        if (!user.isEnabled()) {
-            throw new UnauthorizedException("User disabled");
-        }
+//        if (!user.isEnabled()) {
+//            throw new UnauthorizedException("User disabled");
+//        }
 
         if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {
             throw new UnauthorizedException("Invalid credentials");

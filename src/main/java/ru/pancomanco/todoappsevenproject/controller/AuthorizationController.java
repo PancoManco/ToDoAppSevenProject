@@ -22,6 +22,7 @@ public class AuthorizationController {
 
     private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(7);
     private final AuthenticationService authService;
+    private final RefreshCookieHelper refreshCookieHelper;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequestDto request) {
@@ -50,12 +51,12 @@ public class AuthorizationController {
         authService.logout(refreshToken);
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, RefreshCookieHelper.clear().toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookieHelper.clear().toString())
                 .build();
     }
 
     private ResponseEntity<AuthResponse> authResponse(TokenPair tokens) {
-        ResponseCookie refreshCookie = RefreshCookieHelper.create(
+        ResponseCookie refreshCookie = refreshCookieHelper.create(
                 tokens.refreshToken(),
                 REFRESH_COOKIE_MAX_AGE
         );
