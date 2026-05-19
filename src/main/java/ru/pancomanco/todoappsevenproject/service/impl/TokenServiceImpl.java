@@ -1,10 +1,6 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.mapstruct.Qualifier;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +49,7 @@ public class TokenServiceImpl implements TokenService {
     @Transactional
     @Override
     public TokenPair rotateRefreshTokenPair(String rawRefreshToken) {
-        Jwt jwt = refreshJwtDecoder.decode(rawRefreshToken);
+      //  Jwt jwt = refreshJwtDecoder.decode(rawRefreshToken);
 
         String tokenHash = sha256(rawRefreshToken);
 

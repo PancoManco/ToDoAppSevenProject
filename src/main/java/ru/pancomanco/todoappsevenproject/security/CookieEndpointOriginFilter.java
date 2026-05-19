@@ -17,8 +17,8 @@ public class CookieEndpointOriginFilter extends OncePerRequestFilter {
     private final String allowedOrigin;
 
     private static final Set<String> PROTECTED_PATHS = Set.of(
-            "/api/auth/refresh",
-            "/api/auth/logout"
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/logout"
     );
 
     public CookieEndpointOriginFilter(AuthProperties properties) {

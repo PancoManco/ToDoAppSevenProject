@@ -6,7 +6,7 @@ import java.time.Duration;
 
 public final class RefreshCookieHelper {
     public static final String NAME = "refresh_token";
-    public static final String PATH = "/api/auth";
+    public static final String PATH = "/api/v1/auth";
 
     private RefreshCookieHelper() {}
 

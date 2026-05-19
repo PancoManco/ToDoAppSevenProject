@@ -60,9 +60,7 @@ public class SocialAuthService {
                 profile.providerUserId(),
                 profile.email()
         );
-
         linkedAccountRepository.save(linkedAccount);
-
         return user;
     }
 

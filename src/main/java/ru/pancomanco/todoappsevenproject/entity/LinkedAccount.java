@@ -3,6 +3,7 @@ package ru.pancomanco.todoappsevenproject.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.security.AuthProvider;
 
@@ -17,6 +18,7 @@ import java.security.AuthProvider;
 )
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class LinkedAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

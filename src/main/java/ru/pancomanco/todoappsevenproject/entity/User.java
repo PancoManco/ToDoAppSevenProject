@@ -1,30 +1,32 @@
 package ru.pancomanco.todoappsevenproject.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import net.minidev.json.annotate.JsonIgnore;
 
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
-@RequiredArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "password")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(unique = true, nullable = true)
+    @JsonIgnore
+    @Column(nullable = true)
     private String password;
 
+    @Column(length = 100)
     private String name;
 
+    @Column(length = 500)
     private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
@@ -32,13 +34,12 @@ public class User {
     private Role role = Role.USER;
 
     @Column(nullable = false)
-    private boolean enabled=true;
+    private Boolean enabled=true;
 
     public User (String email, String password) {
         this.email = email;
         this.password = password;
     }
-
 
     public static User socialUser(
             String email,

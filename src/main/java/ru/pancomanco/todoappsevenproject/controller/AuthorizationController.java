@@ -3,7 +3,6 @@ package ru.pancomanco.todoappsevenproject.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +10,7 @@ import ru.pancomanco.todoappsevenproject.dto.AuthResponse;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
 import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
-import ru.pancomanco.todoappsevenproject.dto.response.SignInResponseDto;
-import ru.pancomanco.todoappsevenproject.dto.response.SignUpResponseDto;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
-import ru.pancomanco.todoappsevenproject.service.impl.AuthenticationServiceImpl;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 
 import java.time.Duration;
@@ -24,10 +20,8 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class AuthorizationController {
 
-    private final AuthenticationService authService;
-
     private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(7);
-
+    private final AuthenticationService authService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequestDto request) {

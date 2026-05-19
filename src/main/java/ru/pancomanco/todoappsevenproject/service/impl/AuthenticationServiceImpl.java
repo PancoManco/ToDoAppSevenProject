@@ -1,7 +1,6 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.AllArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

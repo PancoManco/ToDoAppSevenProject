@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,7 +22,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,7 +45,7 @@ public class SecurityConfig {
     SecurityFilterChain oauth2SecurityFilterChain(
             HttpSecurity http,
             OAuth2SuccessHandler successHandler
-    ) throws Exception {
+    ) {
         return http
                 .securityMatcher("/oauth2/**", "/login/oauth2/**")
 
@@ -63,17 +61,15 @@ public class SecurityConfig {
                             response.sendRedirect("http://localhost:5173/login?error=oauth");
                         })
                 )
-
                 .build();
     }
-
 
 
     @Bean
     @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CookieEndpointOriginFilter originFilter,
-                                           JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+                                           JwtAuthenticationConverter jwtAuthenticationConverter) {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
