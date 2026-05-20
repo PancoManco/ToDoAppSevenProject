@@ -1,5 +1,7 @@
 package ru.pancomanco.todoappsevenproject.controllerAdvice;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -11,6 +13,7 @@ import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
 

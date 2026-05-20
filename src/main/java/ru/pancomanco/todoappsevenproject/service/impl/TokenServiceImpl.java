@@ -1,6 +1,7 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class TokenServiceImpl implements TokenService {
 
     private final JwtEncoder jwtEncoder;
@@ -50,6 +52,7 @@ public class TokenServiceImpl implements TokenService {
     @Transactional
     @Override
     public TokenPair issueTokenPair(User user) {
+        refreshTokenRepository.revokeAllActiveTokensByUserId(user.getId());
         String accessToken = createAccessToken(user);
         String refreshToken = createRefreshToken(user);
 

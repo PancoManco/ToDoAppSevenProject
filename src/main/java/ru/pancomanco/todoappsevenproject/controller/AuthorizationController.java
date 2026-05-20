@@ -2,6 +2,7 @@ package ru.pancomanco.todoappsevenproject.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.time.Duration;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthorizationController {
 
     private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(7);
@@ -40,6 +42,8 @@ public class AuthorizationController {
     public ResponseEntity<AuthResponse> refresh(
             @CookieValue(name = RefreshCookieHelper.NAME) String refreshToken
     ) {
+        log.info("Refresh token: {}", refreshToken);
+
         TokenPair tokens = authService.refresh(refreshToken);
         return authResponse(tokens);
     }

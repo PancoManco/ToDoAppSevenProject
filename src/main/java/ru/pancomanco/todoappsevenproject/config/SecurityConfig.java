@@ -2,6 +2,7 @@ package ru.pancomanco.todoappsevenproject.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +40,7 @@ import java.util.List;
 @EnableWebSecurity
 @AllArgsConstructor
 @EnableConfigurationProperties(AuthProperties.class)
+@Slf4j
 public class SecurityConfig {
 
 //    @Bean
@@ -71,11 +73,12 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CookieEndpointOriginFilter originFilter,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) {
+        log.info("filter chain started working");
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**","/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
@@ -126,6 +129,7 @@ public class SecurityConfig {
     @Bean
     @Qualifier("refreshJwtDecoder")
     JwtDecoder refreshJwtDecoder(SecretKey jwtSecretKey, AuthProperties properties) {
+        log.info("refresh jwt decoder starting working");
         NimbusJwtDecoder decoder = NimbusJwtDecoder
                 .withSecretKey(jwtSecretKey)
                 .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)
