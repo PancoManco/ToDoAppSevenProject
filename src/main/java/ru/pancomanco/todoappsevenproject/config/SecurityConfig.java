@@ -43,33 +43,33 @@ import java.util.List;
 @Slf4j
 public class SecurityConfig {
 
-//    @Bean
-//    @Order(1)
-//    SecurityFilterChain oauth2SecurityFilterChain(
-//            HttpSecurity http,
-//            OAuth2SuccessHandler successHandler
-//    ) {
-//        return http
-//                .securityMatcher("/oauth2/**", "/login/oauth2/**")
-//
-//                .csrf(csrf -> csrf.disable())
-//
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()
-//                )
-//
-//                .oauth2Login(oauth2 -> oauth2
-//                        .successHandler(successHandler)
-//                        .failureHandler((request, response, exception) -> {
-//                            response.sendRedirect("http://localhost:5173/login?error=oauth");
-//                        })
-//                )
-//                .build();
-//    }
+    @Bean
+    @Order(1)
+    SecurityFilterChain oauth2SecurityFilterChain(
+            HttpSecurity http,
+            OAuth2SuccessHandler successHandler
+    ) {
+        return http
+                .securityMatcher("/oauth2/**", "/login/oauth2/**")
+
+                .csrf(csrf -> csrf.disable())
+
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(successHandler)
+                        .failureHandler((request, response, exception) -> {
+                            response.sendRedirect("http://localhost:5173/login?error=oauth");
+                        })
+                )
+                .build();
+    }
 
 
     @Bean
-   // @Order(2)
+   @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CookieEndpointOriginFilter originFilter,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) {
@@ -83,7 +83,7 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .addFilterBefore(originFilter, BearerTokenAuthenticationFilter.class)
                 .build();
 

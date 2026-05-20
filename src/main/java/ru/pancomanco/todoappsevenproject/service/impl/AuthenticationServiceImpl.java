@@ -26,13 +26,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenPair register(RegisterRequestDto registerRequestDto) {
-        if (authRepository.existsByEmailIgnoreCase(registerRequestDto.email())) {
+        String email = registerRequestDto.email().trim().toLowerCase();
+
+        if (authRepository.existsByEmailIgnoreCase(email)) {
             throw new EmailAlreadyExistsException("Email already exists");
         }
 
         String passwordHash = passwordEncoder.encode(registerRequestDto.password());
 
-        User user = new User(registerRequestDto.email(), passwordHash);
+        User user = new User(email, passwordHash);
+        user.setName(registerRequestDto.name().trim());
         authRepository.save(user);
 
         // todo email verification
@@ -44,9 +47,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = authRepository.findByEmailIgnoreCase(loginRequestDto.email())
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
-//        if (!user.isEnabled()) {
-//            throw new UnauthorizedException("User disabled");
-//        }
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            throw new UnauthorizedException("User disabled");
+        }
 
         if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {
             throw new UnauthorizedException("Invalid credentials");

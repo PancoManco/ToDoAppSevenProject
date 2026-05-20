@@ -7,7 +7,7 @@ import ru.pancomanco.todoappsevenproject.entity.User;
 import java.util.Optional;
 
 @Repository
-public interface AuthRepository extends JpaRepository<User,Integer> {
+public interface AuthRepository extends JpaRepository<User,Long> {
     Optional<User> findByEmailIgnoreCase(String email);
     boolean existsByEmailIgnoreCase(String email);
 }

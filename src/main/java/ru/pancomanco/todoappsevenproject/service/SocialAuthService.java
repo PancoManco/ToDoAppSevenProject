@@ -29,7 +29,7 @@ public class SocialAuthService {
         SocialProfile profile = extractProfile(provider, attributes);
 
         return linkedAccountRepository
-                .findByProviderAndProviderUserId(provider, profile.providerUserId())
+                .findByProviderAndProviderUserIdWithUser(provider, profile.providerUserId())
                 .map(LinkedAccount::getUser)
                 .orElseGet(() -> createUserAndLinkedAccount(provider, profile));
     }

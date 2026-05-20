@@ -1,7 +1,7 @@
 app:
   security:
     frontend-origin: "http://localhost:5173"
-    oauth2-success-redirect: "http://localhost:5173/oauth/success"
+    oauth2-success-redirect: "http://localhost:5173/oauth-success"
     oauth2-failure-redirect: "http://localhost:5173/login?error=oauth"
 
     jwt:
@@ -30,23 +30,23 @@ spring:
         format_sql: true
   liquibase:
     enabled: false
-#  security:
-#    oauth2:
-#      client:
-#        registration:
-#          google:
-#            client-id: ${GOOGLE_CLIENT_ID:}
-#            client-secret: ${GOOGLE_CLIENT_SECRET:}
-#            scope:
-#              - openid
-#              - email
-#              - profile
-#          github:
-#            client-id: ${GITHUB_CLIENT_ID:}
-#            client-secret: ${GITHUB_CLIENT_SECRET:}
-#            scope:
-#              - read:user
-#              - user:email
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope:
+              - openid
+              - email
+              - profile
+          github:
+            client-id: ${GITHUB_CLIENT_ID:}
+            client-secret: ${GITHUB_CLIENT_SECRET:}
+            scope:
+              - read:user
+              - user:email
 logging:
   level:
     org.springframework.security: DEBUG

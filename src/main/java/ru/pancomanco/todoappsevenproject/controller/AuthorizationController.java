@@ -11,6 +11,7 @@ import ru.pancomanco.todoappsevenproject.dto.AuthResponse;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
 import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
+import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 
@@ -22,9 +23,9 @@ import java.time.Duration;
 @Slf4j
 public class AuthorizationController {
 
-    private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(7);
     private final AuthenticationService authService;
     private final RefreshCookieHelper refreshCookieHelper;
+    private final AuthProperties authProperties;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequestDto request) {
@@ -62,7 +63,7 @@ public class AuthorizationController {
     private ResponseEntity<AuthResponse> authResponse(TokenPair tokens) {
         ResponseCookie refreshCookie = refreshCookieHelper.create(
                 tokens.refreshToken(),
-                REFRESH_COOKIE_MAX_AGE
+                Duration.ofDays(authProperties.jwt().refreshTokenDays())
         );
 
         return ResponseEntity.ok()

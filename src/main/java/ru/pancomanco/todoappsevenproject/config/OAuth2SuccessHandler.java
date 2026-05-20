@@ -51,7 +51,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         ResponseCookie refreshCookie = refreshCookieHelper.create(
                 tokens.refreshToken(),
-                Duration.ofDays(7)
+                Duration.ofDays(properties.jwt().refreshTokenDays())
         );
 
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());

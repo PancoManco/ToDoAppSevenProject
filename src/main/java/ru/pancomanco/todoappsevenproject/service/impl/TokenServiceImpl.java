@@ -52,16 +52,20 @@ public class TokenServiceImpl implements TokenService {
     @Transactional
     @Override
     public TokenPair issueTokenPair(User user) {
-        refreshTokenRepository.revokeAllActiveTokensByUserId(user.getId());
-        String accessToken = createAccessToken(user);
-        String refreshToken = createRefreshToken(user);
+
+        User managedUser = authRepository.findById(user.getId())
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        refreshTokenRepository.revokeAllActiveTokensByUserId(managedUser.getId());
+        String accessToken = createAccessToken(managedUser);
+        String refreshToken = createRefreshToken(managedUser);
 
         String refreshTokenHash = sha256(refreshToken);
         Instant refreshExpiresAt = Instant.now()
                 .plus(Duration.ofDays(properties.jwt().refreshTokenDays()));
 
         refreshTokenRepository.save(
-                new RefreshToken(user, refreshTokenHash, refreshExpiresAt)
+                new RefreshToken(managedUser, refreshTokenHash, refreshExpiresAt)
         );
 
         return new TokenPair(accessToken, refreshToken);
@@ -70,12 +74,21 @@ public class TokenServiceImpl implements TokenService {
     @Transactional
     @Override
     public TokenPair rotateRefreshTokenPair(String rawRefreshToken) {
-      //  Jwt jwt = refreshJwtDecoder.decode(rawRefreshToken);
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            throw new UnauthorizedException("Missing refresh token");
+        }
+
+        Jwt jwt;
+        try {
+            jwt = refreshJwtDecoder.decode(rawRefreshToken);
+        } catch (JwtException ex) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
 
         String tokenHash = sha256(rawRefreshToken);
 
         RefreshToken currentToken = refreshTokenRepository
-                .findByTokenHash(tokenHash)
+                .findByTokenHashForUpdate(tokenHash)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
         if (currentToken.isRevoked()) {
@@ -88,6 +101,10 @@ public class TokenServiceImpl implements TokenService {
             throw new UnauthorizedException("Refresh token expired");
         }
 
+        if (!jwt.getSubject().equals(String.valueOf(currentToken.getUser().getId()))) {
+            refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
+            throw new UnauthorizedException("Invalid refresh token subject");
+        }
         currentToken.revoke();
 
         return issueTokenPair(currentToken.getUser());
