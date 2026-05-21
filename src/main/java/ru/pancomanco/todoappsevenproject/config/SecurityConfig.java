@@ -28,6 +28,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
+import ru.pancomanco.todoappsevenproject.properties.MailProperties;
 import ru.pancomanco.todoappsevenproject.security.CookieEndpointOriginFilter;
 
 import javax.crypto.SecretKey;
@@ -39,7 +40,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({AuthProperties.class, MailProperties.class})
 @Slf4j
 public class SecurityConfig {
 

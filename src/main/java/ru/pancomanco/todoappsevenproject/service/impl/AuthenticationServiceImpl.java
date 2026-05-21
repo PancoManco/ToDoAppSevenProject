@@ -12,6 +12,7 @@ import ru.pancomanco.todoappsevenproject.exception.EmailAlreadyExistsException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
+import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 
 @Service
@@ -22,10 +23,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
-
+    private final EmailVerificationService emailVerificationService;
 
     @Override
-    public TokenPair register(RegisterRequestDto registerRequestDto) {
+    public void register(RegisterRequestDto registerRequestDto) {
         String email = registerRequestDto.email().trim().toLowerCase();
 
         if (authRepository.existsByEmailIgnoreCase(email)) {
@@ -36,10 +37,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         User user = new User(email, passwordHash);
         user.setName(registerRequestDto.name().trim());
+        user.setEnabled(false);
+
         authRepository.save(user);
 
-        // todo email verification
-        return tokenService.issueTokenPair(user);
+        emailVerificationService.sendVerificationCode(user);
     }
 
     @Override
@@ -48,7 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
         if (!Boolean.TRUE.equals(user.getEnabled())) {
-            throw new UnauthorizedException("User disabled");
+            throw new UnauthorizedException("Email is not verified");
         }
 
         if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {

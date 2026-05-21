@@ -6,7 +6,7 @@ import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
 
 public interface AuthenticationService {
 
-    TokenPair register(RegisterRequestDto registerRequestDto);
+    void register(RegisterRequestDto registerRequestDto);
 
     TokenPair login(LoginRequestDto loginRequestDto);
 

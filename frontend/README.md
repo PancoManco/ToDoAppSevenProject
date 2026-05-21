@@ -1,17 +1,74 @@
-# Auth Test Frontend v3
+# Task Planner Frontend
 
-Тестовый frontend для email/password JWT auth + OAuth2 login.
+Нормальная основа frontend-приложения для планировщика задач.
 
-## Страницы
+## Что уже есть
 
-- `/` — login/register + OAuth buttons
-- `/profile` — защищённая страница
-- `/oauth-success` — страница, куда backend редиректит после OAuth success
+- Login
+- Register
+- Email verification screen
+- Resend verification code
+- Forgot password placeholder
+- OAuth success page
+- Protected app layout
+- Protected profile page
+- Dashboard
+- Tasks board пока на локальном состоянии
+- JWT access token в localStorage
+- Refresh token через HttpOnly cookie
 
-## Запуск
+## Backend endpoints, которые ожидает frontend
+
+```txt
+POST /api/v1/auth/register
+POST /api/v1/auth/verify-email
+POST /api/v1/auth/resend-verification-code
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+GET  /api/me
+```
+
+Register expected body:
+
+```json
+{
+  "name": "Panco",
+  "email": "panco@example.com",
+  "password": "123456"
+}
+```
+
+Verify email expected body:
+
+```json
+{
+  "email": "panco@example.com",
+  "code": "123456"
+}
+```
+
+Login expected body:
+
+```json
+{
+  "email": "panco@example.com",
+  "password": "123456"
+}
+```
+
+Auth response expected body:
+
+```json
+{
+  "accessToken": "..."
+}
+```
+
+## Установка
 
 ```bash
-cd auth-test-frontend-v3
+cd task-planner-frontend
 npm install
 npm run dev
 ```
@@ -22,28 +79,32 @@ npm run dev
 http://localhost:5173
 ```
 
-Backend ожидается здесь:
+## Настройка backend URL
 
-```txt
-http://localhost:8080
+Создай `.env` из примера:
+
+```bash
+cp .env.example .env
 ```
 
-## OAuth flow
+Для локального backend:
 
-1. Frontend отправляет браузер на:
-   - `http://localhost:8080/oauth2/authorization/google`
-   - `http://localhost:8080/oauth2/authorization/github`
+```txt
+VITE_API_BASE_URL=http://localhost:8080
+```
 
-2. Backend после успешного OAuth:
-   - создаёт/находит пользователя
-   - создаёт JWT token pair
-   - кладёт refresh token в HttpOnly cookie
-   - редиректит на `http://localhost:5173/oauth-success`
+## Важно для backend CORS
 
-3. Frontend на `/oauth-success` вызывает:
-   - `POST http://localhost:8080/api/v1/auth/refresh`
+Backend должен разрешать origin:
 
-4. Backend возвращает access token.
+```txt
+http://localhost:5173
+```
 
-5. Frontend открывает `/profile` и вызывает:
-   - `GET http://localhost:8080/api/me`
+И frontend делает запросы с:
+
+```js
+credentials: "include"
+```
+
+Поэтому refresh cookie будет работать.

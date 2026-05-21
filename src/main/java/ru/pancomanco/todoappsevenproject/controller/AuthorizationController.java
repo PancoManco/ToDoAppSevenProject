@@ -11,11 +11,15 @@ import ru.pancomanco.todoappsevenproject.dto.AuthResponse;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
 import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
+import ru.pancomanco.todoappsevenproject.dto.request.ResendEmailVerificationRequestDto;
+import ru.pancomanco.todoappsevenproject.dto.request.VerifyEmailRequestDto;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
+import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 
 import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -26,13 +30,39 @@ public class AuthorizationController {
     private final AuthenticationService authService;
     private final RefreshCookieHelper refreshCookieHelper;
     private final AuthProperties authProperties;
+    private final EmailVerificationService emailVerificationService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequestDto request) {
-        TokenPair tokens = authService.register(request);
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
+        authService.register(request);
+
+        return ResponseEntity.accepted()
+                .body(Map.of(
+                        "message", "Verification code sent to email",
+                        "email", request.email()
+                ));
+    }
+    @PostMapping("/verify-email")
+    public ResponseEntity<AuthResponse> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequestDto request
+    ) {
+        TokenPair tokens = emailVerificationService.verifyEmail(
+                request.email(),
+                request.code()
+        );
+
         return authResponse(tokens);
     }
 
+    @PostMapping("/resend-verification-code")
+    public ResponseEntity<?> resendVerificationCode(
+            @Valid @RequestBody ResendEmailVerificationRequestDto request
+    ) {
+        emailVerificationService.resendCode(request.email());
+
+        return ResponseEntity.ok()
+                .body(Map.of("message", "Verification code sent"));
+    }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
         TokenPair tokens = authService.login(request);
