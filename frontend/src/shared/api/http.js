@@ -37,6 +37,8 @@ export async function http(path, options = {}) {
     const message =
       body?.error ||
       body?.message ||
+      body?.errors?.token ||
+      body?.errors?.newPassword ||
       body?.errors?.code ||
       body?.errors?.email ||
       body?.errors?.password ||

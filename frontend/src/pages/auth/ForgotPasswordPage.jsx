@@ -1,14 +1,37 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { KeyRound } from "lucide-react";
+import { authApi } from "../../shared/api/authApi.js";
+import { FormError } from "../../shared/ui/FormError.jsx";
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const data = await authApi.requestPasswordReset({
+        email: email.trim()
+      });
+
+      setSent(true);
+      setMessage(
+        data?.message ||
+          "Если такой email существует, мы отправили ссылку для сброса пароля."
+      );
+    } catch (err) {
+      setError(err.message || "Не удалось отправить ссылку");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -17,11 +40,11 @@ export function ForgotPasswordPage() {
         <div className="big-icon">
           <KeyRound size={30} />
         </div>
-        <p className="eyebrow">Скоро</p>
-        <h2>Восстановление пароля</h2>
+        <p className="eyebrow">Reset password</p>
+        <h2>Забыли пароль?</h2>
         <p>
-          Страница уже подготовлена. Позже сюда подключим backend endpoint для
-          отправки кода или ссылки сброса пароля.
+          Введи email. Если аккаунт существует, мы отправим ссылку для смены
+          пароля.
         </p>
       </div>
 
@@ -38,14 +61,18 @@ export function ForgotPasswordPage() {
           />
         </label>
 
-        {submitted && (
+        {sent && (
           <div className="form-success">
-            Пока backend не подключён. Позже здесь будет отправка инструкции на почту.
+            {message}
+            <br />
+            Проверь почту и открой ссылку вида <code>/reset-password?token=...</code>
           </div>
         )}
 
-        <button className="primary-button" type="submit">
-          Отправить инструкцию
+        <FormError error={error} />
+
+        <button className="primary-button" disabled={loading} type="submit">
+          {loading ? "Отправляем..." : "Отправить ссылку"}
         </button>
       </form>
 

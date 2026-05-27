@@ -1,71 +1,20 @@
-# Task Planner Frontend
+# Task Planner Frontend — Reset Password Link
 
-Нормальная основа frontend-приложения для планировщика задач.
-
-## Что уже есть
+Frontend для планировщика задач с auth flow:
 
 - Login
 - Register
-- Email verification screen
+- Email verification
 - Resend verification code
-- Forgot password placeholder
+- Forgot password через ссылку
+- Reset password по `token` из URL
 - OAuth success page
 - Protected app layout
-- Protected profile page
 - Dashboard
-- Tasks board пока на локальном состоянии
-- JWT access token в localStorage
-- Refresh token через HttpOnly cookie
+- Tasks page
+- Profile page
 
-## Backend endpoints, которые ожидает frontend
-
-```txt
-POST /api/v1/auth/register
-POST /api/v1/auth/verify-email
-POST /api/v1/auth/resend-verification-code
-POST /api/v1/auth/login
-POST /api/v1/auth/refresh
-POST /api/v1/auth/logout
-GET  /api/me
-```
-
-Register expected body:
-
-```json
-{
-  "name": "Panco",
-  "email": "panco@example.com",
-  "password": "123456"
-}
-```
-
-Verify email expected body:
-
-```json
-{
-  "email": "panco@example.com",
-  "code": "123456"
-}
-```
-
-Login expected body:
-
-```json
-{
-  "email": "panco@example.com",
-  "password": "123456"
-}
-```
-
-Auth response expected body:
-
-```json
-{
-  "accessToken": "..."
-}
-```
-
-## Установка
+## Запуск
 
 ```bash
 cd task-planner-frontend
@@ -79,19 +28,104 @@ npm run dev
 http://localhost:5173
 ```
 
-## Настройка backend URL
+## Backend URL
 
-Создай `.env` из примера:
+Скопируй `.env.example` в `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Для локального backend:
-
-```txt
+```env
 VITE_API_BASE_URL=http://localhost:8080
 ```
+
+## Ожидаемые backend endpoints
+
+```txt
+POST /api/v1/auth/register
+POST /api/v1/auth/verify-email
+POST /api/v1/auth/resend-verification-code
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+POST /api/v1/auth/forgot-password
+POST /api/v1/auth/reset-password
+GET  /api/me
+```
+
+## Reset password flow
+
+### 1. Запрос ссылки
+
+Frontend page:
+
+```txt
+/forgot-password
+```
+
+Request:
+
+```http
+POST /api/v1/auth/forgot-password
+```
+
+Body:
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+Expected response:
+
+```json
+{
+  "message": "If this email exists, password reset link has been sent"
+}
+```
+
+### 2. Ссылка в письме
+
+Backend должен отправить ссылку такого вида:
+
+```txt
+http://localhost:5173/reset-password?token=RAW_RESET_TOKEN
+```
+
+### 3. Смена пароля
+
+Frontend page:
+
+```txt
+/reset-password?token=RAW_RESET_TOKEN
+```
+
+Request:
+
+```http
+POST /api/v1/auth/reset-password
+```
+
+Body:
+
+```json
+{
+  "token": "RAW_RESET_TOKEN",
+  "newPassword": "newPassword123"
+}
+```
+
+Expected response:
+
+```json
+{
+  "message": "Password has been reset"
+}
+```
+
+После успеха frontend автоматически перекинет на `/login`.
 
 ## Важно для backend CORS
 
@@ -101,10 +135,8 @@ Backend должен разрешать origin:
 http://localhost:5173
 ```
 
-И frontend делает запросы с:
+Frontend делает запросы с:
 
 ```js
 credentials: "include"
 ```
-
-Поэтому refresh cookie будет работать.

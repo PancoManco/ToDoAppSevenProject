@@ -13,6 +13,7 @@ import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.EmailVerificationCodeRepository;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
+import ru.pancomanco.todoappsevenproject.util.VerificationCodeGenerator;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -36,7 +37,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     public void sendVerificationCode(User user) {
         codeRepository.markUsedAllActiveCodesByUserId(user.getId(), Instant.now());
 
-        String code = generateSixDigitCode(); // need to change with something better
+        String code = VerificationCodeGenerator.getRandomVerificationCode();
         String codeHash = passwordEncoder.encode(code);
 
         EmailVerificationCode verificationCode = new EmailVerificationCode(

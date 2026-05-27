@@ -45,20 +45,19 @@ export const authApi = {
     return http("/api/me", {
       method: "GET"
     });
-  }
+  },
 
-  // Later:
-  // requestPasswordReset(payload) {
-  //   return http("/api/v1/auth/forgot-password", {
-  //     method: "POST",
-  //     body: JSON.stringify(payload)
-  //   });
-  // },
-  //
-  // resetPassword(payload) {
-  //   return http("/api/v1/auth/reset-password", {
-  //     method: "POST",
-  //     body: JSON.stringify(payload)
-  //   });
-  // }
+  requestPasswordReset(payload) {
+    return http("/api/v1/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+
+  resetPassword(payload) {
+    return http("/api/v1/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  }
 };

@@ -9,13 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.pancomanco.todoappsevenproject.dto.AuthResponse;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
-import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
-import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
-import ru.pancomanco.todoappsevenproject.dto.request.ResendEmailVerificationRequestDto;
-import ru.pancomanco.todoappsevenproject.dto.request.VerifyEmailRequestDto;
+import ru.pancomanco.todoappsevenproject.dto.request.*;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
+import ru.pancomanco.todoappsevenproject.service.PasswordResetService;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 
 import java.time.Duration;
@@ -31,6 +29,7 @@ public class AuthorizationController {
     private final RefreshCookieHelper refreshCookieHelper;
     private final AuthProperties authProperties;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
@@ -99,5 +98,30 @@ public class AuthorizationController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new AuthResponse(tokens.accessToken()));
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDto request
+    ) {
+        passwordResetService.sendResetLink(request.email());
+
+        return ResponseEntity.ok()
+                .body(Map.of(
+                        "message",
+                        "If this email exists, password reset link has been sent"
+                ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @Valid @RequestBody ResetPasswordRequestDto request
+    ) {
+        passwordResetService.resetPassword(
+                request.token(),
+                request.newPassword()
+        );
+
+        return ResponseEntity.ok()
+                .body(Map.of("message", "Password has been reset"));
     }
 }

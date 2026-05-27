@@ -7,6 +7,7 @@ import { LoginPage } from "./pages/auth/LoginPage.jsx";
 import { RegisterPage } from "./pages/auth/RegisterPage.jsx";
 import { VerifyEmailPage } from "./pages/auth/VerifyEmailPage.jsx";
 import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage.jsx";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage.jsx";
 import { DashboardPage } from "./pages/app/DashboardPage.jsx";
 import { TasksPage } from "./pages/app/TasksPage.jsx";
 import { ProfilePage } from "./pages/app/ProfilePage.jsx";
@@ -54,6 +55,17 @@ export default function App() {
           <GuestRoute>
             <AuthLayout>
               <ForgotPasswordPage />
+            </AuthLayout>
+          </GuestRoute>
+        }
+      />
+
+      <Route
+        path="/reset-password"
+        element={
+          <GuestRoute>
+            <AuthLayout>
+              <ResetPasswordPage />
             </AuthLayout>
           </GuestRoute>
         }
