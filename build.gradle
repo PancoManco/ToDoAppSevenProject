@@ -20,49 +20,91 @@ repositories {
 }
 
 ext {
-    set('snippetsDir', file("build/generated-snippets"))
+    mapstructVersion = '1.6.3'
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
-    implementation 'org.springframework.boot:spring-boot-starter-restclient'
+    // =========================
+    // Web / REST API
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // =========================
+    // Security / JWT / OAuth2 Client
+    // =========================
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // =========================
+    // Database / JPA / Migrations
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
     runtimeOnly 'org.postgresql:postgresql'
+
+    // =========================
+    // Mail
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // =========================
+    // Mapping
+    // =========================
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    // =========================
+    // Lombok
+    // =========================
+    compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // =========================
+    // Development
+    // =========================
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // =========================
+    // Tests: Core
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+
+    // =========================
+    // Tests: Database / Liquibase
+    // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-restdocs'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-authorization-server-test'
+
+    // =========================
+    // Tests: Security / OAuth2 / JWT
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    // =========================
+    // Tests: Mail
+    // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-mail-test'
+
+    // =========================
+    // Tests: Testcontainers
+    // =========================
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.testcontainers:testcontainers-postgresql'
+
+    // =========================
+    // Tests: Lombok
+    // =========================
     testCompileOnly 'org.projectlombok:lombok'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    implementation("org.mapstruct:mapstruct:1.6.3")
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 }
 
@@ -71,7 +113,3 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
-    dependsOn test
-}

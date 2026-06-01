@@ -10,12 +10,10 @@ import ru.pancomanco.todoappsevenproject.entity.User;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
-import ru.pancomanco.todoappsevenproject.repository.PasswordResetRepository;
 import ru.pancomanco.todoappsevenproject.repository.PasswordResetTokenRepository;
 import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
 import ru.pancomanco.todoappsevenproject.service.PasswordResetService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
-import ru.pancomanco.todoappsevenproject.util.VerificationCodeGenerator;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -49,11 +47,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         Optional<User> userOptional =
                 authRepository.findByEmailIgnoreCase(normalizedEmail);
 
-        /*
-         * Важно:
-         * Даже если email не существует, возвращаем успешный ответ.
-         * Так нельзя перебрать зарегистрированные email.
-         */
         if (userOptional.isEmpty()) {
             return;
         }
@@ -88,6 +81,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     }
 
     @Override
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public void resetPassword(String token, String newPassword) {
         String tokenHash = tokenService.sha256(token);
 

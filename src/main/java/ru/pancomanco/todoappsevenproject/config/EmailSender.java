@@ -6,47 +6,52 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import ru.pancomanco.todoappsevenproject.properties.MailProperties;
+import ru.pancomanco.todoappsevenproject.service.MessageService;
 
 @Component
 @RequiredArgsConstructor
 @EnableConfigurationProperties(MailProperties.class)
 public class EmailSender {
 
+    private static final int VERIFICATION_CODE_TTL_MINUTES = 5;
+    private static final int PASSWORD_RESET_LINK_TTL_MINUTES = 15;
+
     private final JavaMailSender mailSender;
     private final MailProperties mailProperties;
+    private final MessageService messageService;
+
 
     public void sendVerificationCode(String to, String code) {
-        SimpleMailMessage message = new SimpleMailMessage();
-
-        message.setFrom(mailProperties.from());
-        message.setTo(to);
-        message.setSubject("Your verification code");
-        message.setText("""
-                Your verification code is: %s
-
-                This code will expire in 10 minutes.
-                """.formatted(code));
-
-        mailSender.send(message);
+        sendSimpleMessage(
+                to,
+                messageService.get("mail.verification.subject"),
+                messageService.get(
+                        "mail.verification.body",
+                        code,
+                        VERIFICATION_CODE_TTL_MINUTES
+                )
+        );
     }
 
     public void sendPasswordResetLink(String to, String resetLink) {
+        sendSimpleMessage(
+                to,
+                messageService.get("mail.password-reset.subject"),
+                messageService.get(
+                        "mail.password-reset.body",
+                        resetLink,
+                        PASSWORD_RESET_LINK_TTL_MINUTES
+                )
+        );
+    }
+
+    private void sendSimpleMessage(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setFrom(mailProperties.from());
         message.setTo(to);
-        message.setSubject("Reset your password");
-        message.setText("""
-            You requested password reset.
-
-            Open this link to set a new password:
-
-            %s
-
-            This link will expire in 15 minutes.
-
-            If you did not request password reset, ignore this email.
-            """.formatted(resetLink));
+        message.setSubject(subject);
+        message.setText(text);
 
         mailSender.send(message);
     }

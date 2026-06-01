@@ -71,8 +71,8 @@ public class TokenServiceImpl implements TokenService {
         return new TokenPair(accessToken, refreshToken);
     }
 
-    @Transactional
     @Override
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public TokenPair rotateRefreshTokenPair(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             throw new UnauthorizedException("Missing refresh token");

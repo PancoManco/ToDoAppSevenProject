@@ -1,0 +1,316 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: PancoManco
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_users
+                    nullable: false
+
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_users_email
+
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+
+              - column:
+                  name: avatar_url
+                  type: VARCHAR(500)
+
+              - column:
+                  name: role
+                  type: VARCHAR(50)
+                  defaultValue: USER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-refresh-tokens-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_refresh_tokens
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: token_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_refresh_tokens_token_hash
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: revoked
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_refresh_tokens_user_id
+
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_token_hash
+            columns:
+              - column:
+                  name: token_hash
+
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_token_user_id
+            columns:
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 003-create-email-verification-codes-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: email_verification_codes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_email_verification_codes
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: code_hash
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: used_at
+                  type: TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: email_verification_codes
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_email_verification_codes_user_id
+
+        - createIndex:
+            tableName: email_verification_codes
+            indexName: idx_email_verification_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: email_verification_codes
+            indexName: idx_email_verification_expires_at
+            columns:
+              - column:
+                  name: expires_at
+
+  - changeSet:
+      id: 004-create-password-reset-tokens-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: password_reset_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_password_reset_tokens
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: token_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_password_reset_tokens_token_hash
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: used_at
+                  type: TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: password_reset_tokens
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_password_reset_tokens_user_id
+
+        - createIndex:
+            tableName: password_reset_tokens
+            indexName: idx_password_reset_token_hash
+            columns:
+              - column:
+                  name: token_hash
+
+        - createIndex:
+            tableName: password_reset_tokens
+            indexName: idx_password_reset_user_id
+            columns:
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 005-create-linked-accounts-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: linked_accounts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_linked_accounts
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: provider
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: provider_user_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: provider_email
+                  type: VARCHAR(255)
+
+        - addForeignKeyConstraint:
+            baseTableName: linked_accounts
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_linked_accounts_user_id
+
+        - addUniqueConstraint:
+            tableName: linked_accounts
+            columnNames: provider, provider_user_id
+            constraintName: uk_provider_provider_user_id
+
+        - createIndex:
+            tableName: linked_accounts
+            indexName: idx_linked_accounts_user_id
+            columns:
+              - column:
+                  name: user_id

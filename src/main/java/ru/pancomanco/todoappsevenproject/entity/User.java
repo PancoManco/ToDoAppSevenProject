@@ -2,7 +2,7 @@ package ru.pancomanco.todoappsevenproject.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import net.minidev.json.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -56,17 +56,4 @@ public class User {
         return user;
     }
 
-    public static User socialUserWithoutEmail(
-            String name,
-            String avatarUrl
-    ) {
-        User user = new User();
-        user.email = null;
-        user.password = null;
-        user.name = name;
-        user.avatarUrl = avatarUrl;
-        user.enabled = true;
-        user.role = Role.USER;
-        return user;
-    }
 }

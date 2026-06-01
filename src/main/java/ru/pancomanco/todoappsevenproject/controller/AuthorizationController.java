@@ -10,9 +10,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.pancomanco.todoappsevenproject.dto.AuthResponse;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.*;
+import ru.pancomanco.todoappsevenproject.dto.response.MessageResponseDto;
+import ru.pancomanco.todoappsevenproject.dto.response.RegisterResponseDto;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
+import ru.pancomanco.todoappsevenproject.service.MessageService;
 import ru.pancomanco.todoappsevenproject.service.PasswordResetService;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 
@@ -22,7 +25,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Slf4j
 public class AuthorizationController {
 
     private final AuthenticationService authService;
@@ -30,15 +32,16 @@ public class AuthorizationController {
     private final AuthProperties authProperties;
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
+    private final MessageService messageService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<RegisterResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
         authService.register(request);
 
         return ResponseEntity.accepted()
-                .body(Map.of(
-                        "message", "Verification code sent to email",
-                        "email", request.email()
+                .body(new RegisterResponseDto(
+                        messageService.get("auth.register.verification_sent"),
+                        request.email()
                 ));
     }
     @PostMapping("/verify-email")
@@ -49,18 +52,17 @@ public class AuthorizationController {
                 request.email(),
                 request.code()
         );
-
         return authResponse(tokens);
     }
 
     @PostMapping("/resend-verification-code")
-    public ResponseEntity<?> resendVerificationCode(
+    public ResponseEntity<MessageResponseDto> resendVerificationCode(
             @Valid @RequestBody ResendEmailVerificationRequestDto request
     ) {
         emailVerificationService.resendCode(request.email());
 
         return ResponseEntity.ok()
-                .body(Map.of("message", "Verification code sent"));
+                .body(new MessageResponseDto(messageService.get("auth.verification.code_sent")));
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
@@ -72,7 +74,6 @@ public class AuthorizationController {
     public ResponseEntity<AuthResponse> refresh(
             @CookieValue(name = RefreshCookieHelper.NAME) String refreshToken
     ) {
-        log.info("Refresh token: {}", refreshToken);
 
         TokenPair tokens = authService.refresh(refreshToken);
         return authResponse(tokens);
@@ -100,20 +101,19 @@ public class AuthorizationController {
                 .body(new AuthResponse(tokens.accessToken()));
     }
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(
+    public ResponseEntity<MessageResponseDto> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequestDto request
     ) {
         passwordResetService.sendResetLink(request.email());
 
         return ResponseEntity.ok()
-                .body(Map.of(
-                        "message",
-                        "If this email exists, password reset link has been sent"
+                .body(new MessageResponseDto(
+                        messageService.get("auth.password.reset_link_sent")
                 ));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(
+    public ResponseEntity<MessageResponseDto> resetPassword(
             @Valid @RequestBody ResetPasswordRequestDto request
     ) {
         passwordResetService.resetPassword(
@@ -122,6 +122,6 @@ public class AuthorizationController {
         );
 
         return ResponseEntity.ok()
-                .body(Map.of("message", "Password has been reset"));
+                .body(new MessageResponseDto(messageService.get("auth.password.reset_success")));
     }
 }

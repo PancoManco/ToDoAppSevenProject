@@ -38,27 +38,21 @@ public class SocialAuthService {
             AuthProviderEnum provider,
             SocialProfile profile
     ) {
-        User user;
-
-        if (profile.email() != null && !profile.email().isBlank()) {
-            user = userRepository.findByEmailIgnoreCase(profile.email())
-                    .orElseGet(() -> userRepository.save(
-                            User.socialUser(profile.email(), profile.name(), profile.avatarUrl())
-                    ));
-        } else {
-            // GitHub email может быть null.
-            // В таком случае создаём пользователя без email
-            // или отправляем на экран "добавь email".
-            user = userRepository.save(
-                    User.socialUserWithoutEmail(profile.name(), profile.avatarUrl())
-            );
-        }
+        String normalizedEmail = profile.email().trim().toLowerCase();
+        User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
+                .orElseGet(() -> userRepository.save(
+                        User.socialUser(
+                                normalizedEmail,
+                                profile.name(),
+                                profile.avatarUrl()
+                        )
+                ));
 
         LinkedAccount linkedAccount = new LinkedAccount(
                 user,
                 provider,
                 profile.providerUserId(),
-                profile.email()
+                normalizedEmail
         );
         linkedAccountRepository.save(linkedAccount);
         return user;
@@ -67,7 +61,6 @@ public class SocialAuthService {
     private AuthProviderEnum parseProvider(String registrationId) {
         return switch (registrationId.toLowerCase()) {
             case "google" -> AuthProviderEnum.GOOGLE;
-            case "github" -> AuthProviderEnum.GITHUB;
             default -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
         };
     }
@@ -78,7 +71,6 @@ public class SocialAuthService {
     ) {
         return switch (provider) {
             case GOOGLE -> extractGoogleProfile(attributes);
-            case GITHUB -> extractGithubProfile(attributes);
         };
     }
 
@@ -96,22 +88,4 @@ public class SocialAuthService {
         );
     }
 
-    private SocialProfile extractGithubProfile(Map<String, Object> attributes) {
-        String providerUserId = String.valueOf(attributes.get("id"));
-        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
-        String login = (String) attributes.get("login");
-        String avatarUrl = (String) attributes.get("avatar_url");
-
-        if (name == null || name.isBlank()) {
-            name = login;
-        }
-
-        return new SocialProfile(
-                providerUserId,
-                email,
-                name,
-                avatarUrl
-        );
-    }
 }

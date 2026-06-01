@@ -48,21 +48,19 @@ public class SecurityConfig {
     @Order(1)
     SecurityFilterChain oauth2SecurityFilterChain(
             HttpSecurity http,
-            OAuth2SuccessHandler successHandler
+            OAuth2SuccessHandler successHandler,
+            AuthProperties authProperties
     ) {
         return http
                 .securityMatcher("/oauth2/**", "/login/oauth2/**")
-
                 .csrf(csrf -> csrf.disable())
-
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 )
-
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(successHandler)
                         .failureHandler((request, response, exception) -> {
-                            response.sendRedirect("http://localhost:5173/login?error=oauth");
+                            response.sendRedirect(authProperties.oauth2FailureRedirect());
                         })
                 )
                 .build();
@@ -74,17 +72,16 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CookieEndpointOriginFilter originFilter,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) {
-        log.info("filter chain started working");
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/api/v1/auth/**","/error").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(originFilter, BearerTokenAuthenticationFilter.class)
                 .build();
 
@@ -93,11 +90,9 @@ public class SecurityConfig {
     @Bean
     SecretKey jwtSecretKey(AuthProperties properties) {
         byte[] keyBytes = Base64.getDecoder().decode(properties.jwt().secret());
-
         if (keyBytes.length < 32) {
             throw new IllegalStateException("JWT secret must be at least 256 bits");
         }
-
         return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 

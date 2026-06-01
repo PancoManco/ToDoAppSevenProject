@@ -9,7 +9,10 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "refresh_tokens",
-indexes = {@Index(name = "idx_refresh_token_hash",columnList = "tokenHash")})
+        indexes = {
+                @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
+                @Index(name = "idx_refresh_token_user_id", columnList = "user_id")
+        })
 @NoArgsConstructor
 @Getter
 @Setter
@@ -19,18 +22,19 @@ public class RefreshToken {
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "revoked", nullable = false)
     private  boolean revoked = false;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
     public RefreshToken(User user, String tokenHash, Instant expiresAt) {

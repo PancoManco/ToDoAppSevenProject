@@ -31,7 +31,6 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final EmailSender emailSender;
     private final TokenService tokenService;
 
-    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public void sendVerificationCode(User user) {
@@ -52,6 +51,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public TokenPair verifyEmail(String email, String code) {
         String normalizedEmail = email.trim().toLowerCase();
 
@@ -98,8 +98,4 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         sendVerificationCode(user);
     }
 
-    private String generateSixDigitCode() {
-        int code = 100000 + secureRandom.nextInt(900000);
-        return String.valueOf(code);
-    }
 }

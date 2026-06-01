@@ -5,16 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.security.AuthProvider;
-
 @Entity
 @Table(name = "linked_accounts",
         uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_provider_provider_user_id",
-                columnNames = {"provider", "providerUserId"}
-        )
-}
+                @UniqueConstraint(
+                        name = "uk_provider_provider_user_id",
+                        columnNames = {"provider", "provider_user_id"}
+                )
+        }
 )
 @Getter
 @AllArgsConstructor
@@ -25,16 +23,17 @@ public class LinkedAccount {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "provider", nullable = false)
     private AuthProviderEnum provider;
 
-    @Column(nullable = false)
+    @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
-    @Column
+    @Column(name = "provider_email")
     private String providerEmail;
 
 

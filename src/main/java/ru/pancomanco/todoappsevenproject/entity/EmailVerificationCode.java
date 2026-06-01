@@ -10,7 +10,7 @@ import java.time.Instant;
 @Table(name = "email_verification_codes",
         indexes = {
                 @Index(name = "idx_email_verification_user_id", columnList = "user_id"),
-                @Index(name = "idx_email_verification_expires_at", columnList = "expiresAt")
+                @Index(name = "idx_email_verification_expires_at", columnList = "expires_at")
         })
 @Getter
 @NoArgsConstructor
@@ -23,21 +23,22 @@ public class EmailVerificationCode {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "code_hash", nullable = false, length = 100)
     private String codeHash;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
     @Column(nullable = false)
     private int attempts = 0;
 
-    @Column
+    @Column(name = "used_at")
     private Instant usedAt;
 
     public EmailVerificationCode(User user, String codeHash, Instant expiresAt) {
