@@ -8,7 +8,8 @@ import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
 import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
 import ru.pancomanco.todoappsevenproject.entity.User;
-import ru.pancomanco.todoappsevenproject.exception.EmailAlreadyExistsException;
+import ru.pancomanco.todoappsevenproject.exception.EmailVerificationException;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
@@ -30,31 +31,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String email = registerRequestDto.email().trim().toLowerCase();
 
         if (authRepository.existsByEmailIgnoreCase(email)) {
-            throw new EmailAlreadyExistsException("Email already exists");
+            throw new EmailVerificationException(ErrorCode.AUTH_EMAIL_ALREADY_EXISTS);
         }
-
         String passwordHash = passwordEncoder.encode(registerRequestDto.password());
-
         User user = new User(email, passwordHash);
         user.setName(registerRequestDto.name().trim());
         user.setEnabled(false);
-
         authRepository.save(user);
-
         emailVerificationService.sendVerificationCode(user);
     }
 
     @Override
     public TokenPair login(LoginRequestDto loginRequestDto) {
         User user = authRepository.findByEmailIgnoreCase(loginRequestDto.email())
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_INVALID_CREDENTIALS));
 
         if (!Boolean.TRUE.equals(user.getEnabled())) {
-            throw new UnauthorizedException("Email is not verified");
+            throw new EmailVerificationException(ErrorCode.AUTH_EMAIL_NOT_VERIFIED);
         }
 
         if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {
-            throw new UnauthorizedException("Invalid credentials");
+            throw new UnauthorizedException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         return tokenService.issueTokenPair(user);

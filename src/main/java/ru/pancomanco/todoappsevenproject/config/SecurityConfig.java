@@ -125,7 +125,6 @@ public class SecurityConfig {
     @Bean
     @Qualifier("refreshJwtDecoder")
     JwtDecoder refreshJwtDecoder(SecretKey jwtSecretKey, AuthProperties properties) {
-        log.info("refresh jwt decoder starting working");
         NimbusJwtDecoder decoder = NimbusJwtDecoder
                 .withSecretKey(jwtSecretKey)
                 .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)

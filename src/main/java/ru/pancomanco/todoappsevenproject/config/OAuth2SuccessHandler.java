@@ -3,6 +3,7 @@ package ru.pancomanco.todoappsevenproject.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.AppException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.SocialAuthService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
@@ -22,6 +24,7 @@ import java.time.Duration;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final SocialAuthService socialAuthService;
@@ -36,26 +39,39 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException {
 
-        OAuth2AuthenticationToken oauthToken =
-                (OAuth2AuthenticationToken) authentication;
+        try {
+            OAuth2AuthenticationToken oauthToken =
+                    (OAuth2AuthenticationToken) authentication;
 
-        String registrationId = oauthToken.getAuthorizedClientRegistrationId();
-        OAuth2User oauthUser = oauthToken.getPrincipal();
+            String registrationId =
+                    oauthToken.getAuthorizedClientRegistrationId();
 
-        User user = socialAuthService.findOrCreateUser(
-                registrationId,
-                oauthUser.getAttributes()
-        );
+            OAuth2User oauthUser = oauthToken.getPrincipal();
 
-        TokenPair tokens = tokenService.issueTokenPair(user);
+            User user = socialAuthService.findOrCreateUser(
+                    registrationId,
+                    oauthUser.getAttributes()
+            );
 
-        ResponseCookie refreshCookie = refreshCookieHelper.create(
-                tokens.refreshToken(),
-                Duration.ofDays(properties.jwt().refreshTokenDays())
-        );
+            TokenPair tokens = tokenService.issueTokenPair(user);
 
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        response.sendRedirect(properties.oauth2SuccessRedirect());
+            ResponseCookie refreshCookie = refreshCookieHelper.create(
+                    tokens.refreshToken(),
+                    Duration.ofDays(properties.jwt().refreshTokenDays())
+            );
+
+            response.addHeader(
+                    HttpHeaders.SET_COOKIE,
+                    refreshCookie.toString()
+            );
+
+            response.sendRedirect(properties.oauth2SuccessRedirect());
+
+        } catch (AppException ex) {
+            log.warn("OAuth2 login failed: {}", ex.getErrorCode(), ex);
+
+            response.sendRedirect(properties.oauth2FailureRedirect());
+        }
 
 
     }

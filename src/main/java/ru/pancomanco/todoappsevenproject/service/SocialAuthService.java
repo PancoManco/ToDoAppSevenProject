@@ -1,91 +1,11 @@
 package ru.pancomanco.todoappsevenproject.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import ru.pancomanco.todoappsevenproject.entity.AuthProviderEnum;
-import ru.pancomanco.todoappsevenproject.entity.LinkedAccount;
-import ru.pancomanco.todoappsevenproject.entity.SocialProfile;
 import ru.pancomanco.todoappsevenproject.entity.User;
-import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
-import ru.pancomanco.todoappsevenproject.repository.LinkedAccountRepository;
 
 import java.util.Map;
 
-@Service
-@RequiredArgsConstructor
-public class SocialAuthService {
-    private final AuthRepository userRepository;
-    private final LinkedAccountRepository linkedAccountRepository;
 
-
-    @Transactional
-    public User findOrCreateUser(
-            String registrationId,
-            Map<String, Object> attributes
-    ) {
-        AuthProviderEnum provider = parseProvider(registrationId);
-
-        SocialProfile profile = extractProfile(provider, attributes);
-
-        return linkedAccountRepository
-                .findByProviderAndProviderUserIdWithUser(provider, profile.providerUserId())
-                .map(LinkedAccount::getUser)
-                .orElseGet(() -> createUserAndLinkedAccount(provider, profile));
-    }
-
-    private User createUserAndLinkedAccount(
-            AuthProviderEnum provider,
-            SocialProfile profile
-    ) {
-        String normalizedEmail = profile.email().trim().toLowerCase();
-        User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseGet(() -> userRepository.save(
-                        User.socialUser(
-                                normalizedEmail,
-                                profile.name(),
-                                profile.avatarUrl()
-                        )
-                ));
-
-        LinkedAccount linkedAccount = new LinkedAccount(
-                user,
-                provider,
-                profile.providerUserId(),
-                normalizedEmail
-        );
-        linkedAccountRepository.save(linkedAccount);
-        return user;
-    }
-
-    private AuthProviderEnum parseProvider(String registrationId) {
-        return switch (registrationId.toLowerCase()) {
-            case "google" -> AuthProviderEnum.GOOGLE;
-            default -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
-        };
-    }
-
-    private SocialProfile extractProfile(
-            AuthProviderEnum provider,
-            Map<String, Object> attributes
-    ) {
-        return switch (provider) {
-            case GOOGLE -> extractGoogleProfile(attributes);
-        };
-    }
-
-    private SocialProfile extractGoogleProfile(Map<String, Object> attributes) {
-        String providerUserId = (String) attributes.get("sub");
-        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
-        String picture = (String) attributes.get("picture");
-
-        return new SocialProfile(
-                providerUserId,
-                email,
-                name,
-                picture
-        );
-    }
-
+public interface SocialAuthService {
+    User findOrCreateUser(String registrationId,
+                          Map<String, Object> attributes);
 }

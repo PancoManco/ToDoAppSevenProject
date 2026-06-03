@@ -1,12 +1,15 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.todoappsevenproject.config.EmailSender;
 import ru.pancomanco.todoappsevenproject.entity.PasswordResetToken;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
+import ru.pancomanco.todoappsevenproject.exception.PasswordResetException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
@@ -77,25 +80,44 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                            + "/reset-password?token="
                            + URLEncoder.encode(rawToken, StandardCharsets.UTF_8);
 
-        emailSender.sendPasswordResetLink(user.getEmail(), resetLink);
+        try {
+            emailSender.sendPasswordResetLink(user.getEmail(), resetLink);
+        } catch (MailException ex) {
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_EMAIL_SEND_FAILED,
+                    ex
+            );
+        }
     }
 
     @Override
-    @Transactional(noRollbackFor = UnauthorizedException.class)
+    @Transactional(noRollbackFor = PasswordResetException.class)
     public void resetPassword(String token, String newPassword) {
+        if (token == null || token.isBlank()) {
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
+            );
+        }
         String tokenHash = tokenService.sha256(token);
 
         PasswordResetToken resetToken = resetTokenRepository
                 .findByTokenHashForUpdate(tokenHash)
-                .orElseThrow(() -> new UnauthorizedException("Invalid or expired reset link"));
+                .orElseThrow(() -> new PasswordResetException(
+                        ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
+                ));
 
         if (resetToken.isUsed()) {
-            throw new UnauthorizedException("Invalid or expired reset link");
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
+            );
         }
 
         if (resetToken.isExpired()) {
             resetToken.markAsUsed();
-            throw new UnauthorizedException("Invalid or expired reset link");
+
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_TOKEN_EXPIRED
+            );
         }
 
         User user = resetToken.getUser();

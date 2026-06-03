@@ -62,7 +62,7 @@ public class AuthorizationController {
         emailVerificationService.resendCode(request.email());
 
         return ResponseEntity.ok()
-                .body(new MessageResponseDto(messageService.get("auth.verification.code_sent")));
+                .body(new MessageResponseDto(messageService.get("auth.verification.resend_code_sent")));
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
