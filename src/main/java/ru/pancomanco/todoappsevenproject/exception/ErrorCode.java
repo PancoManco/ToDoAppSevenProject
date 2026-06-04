@@ -2,11 +2,13 @@ package ru.pancomanco.todoappsevenproject.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.HttpParser;
 import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+    // AuthenticationService
     AUTH_EMAIL_ALREADY_EXISTS(
             "auth.email.already_exists",
             HttpStatus.CONFLICT
@@ -22,6 +24,7 @@ public enum ErrorCode {
             HttpStatus.FORBIDDEN
     ),
 
+    // VerificationService
     AUTH_VERIFICATION_CODE_INVALID(
             "auth.verification.code_invalid",
             HttpStatus.BAD_REQUEST
@@ -47,6 +50,8 @@ public enum ErrorCode {
             HttpStatus.SERVICE_UNAVAILABLE
     ),
 
+
+    // PasswordResetService
     AUTH_PASSWORD_RESET_TOKEN_INVALID(
         "auth.password_reset.token_invalid",
         HttpStatus.BAD_REQUEST
@@ -62,6 +67,7 @@ public enum ErrorCode {
         HttpStatus.SERVICE_UNAVAILABLE
         ),
 
+    // SocialAuthService
     AUTH_SOCIAL_PROVIDER_UNSUPPORTED(
         "auth.social.provider_unsupported",
         HttpStatus.BAD_REQUEST
@@ -80,7 +86,27 @@ public enum ErrorCode {
     AUTH_SOCIAL_EMAIL_NOT_VERIFIED(
         "auth.social.email_not_verified",
         HttpStatus.BAD_REQUEST
-        );
+        ),
+
+    // TokenService
+    AUTH_USER_NOT_FOUND("auth.user.not_found",
+            HttpStatus.UNAUTHORIZED
+    ),
+    REFRESH_TOKEN_IS_MISSING("token.refresh_token.missing",
+            HttpStatus.UNAUTHORIZED
+    ),
+    INVALID_REFRESH_TOKEN("token.invalid_refresh_token",
+            HttpStatus.UNAUTHORIZED
+    ),
+    REFRESH_TOKEN_REUSE_DETECTED("token.refresh_token_reuse_detected",
+            HttpStatus.FORBIDDEN
+    ),
+    REFRESH_TOKEN_EXPIRED("token.refresh_token_is_expired",
+            HttpStatus.UNAUTHORIZED
+    ),
+    INVALID_REFRESH_TOKEN_SUBJECT("token.invalid_refresh_token_subject",
+            HttpStatus.UNAUTHORIZED
+    );
 
     private final String messageKey;
     private final HttpStatus status;

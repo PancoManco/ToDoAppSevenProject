@@ -1,6 +1,5 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -10,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.RefreshToken;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
+import ru.pancomanco.todoappsevenproject.exception.TokenException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
@@ -54,7 +55,7 @@ public class TokenServiceImpl implements TokenService {
     public TokenPair issueTokenPair(User user) {
 
         User managedUser = authRepository.findById(user.getId())
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
+                .orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_USER_NOT_FOUND));
 
         refreshTokenRepository.revokeAllActiveTokensByUserId(managedUser.getId());
         String accessToken = createAccessToken(managedUser);
@@ -72,38 +73,38 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    @Transactional(noRollbackFor = UnauthorizedException.class)
+    @Transactional(noRollbackFor = TokenException.class)
     public TokenPair rotateRefreshTokenPair(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
-            throw new UnauthorizedException("Missing refresh token");
+            throw new TokenException(ErrorCode.REFRESH_TOKEN_IS_MISSING);
         }
 
         Jwt jwt;
         try {
             jwt = refreshJwtDecoder.decode(rawRefreshToken);
         } catch (JwtException ex) {
-            throw new UnauthorizedException("Invalid refresh token");
+            throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         String tokenHash = sha256(rawRefreshToken);
 
         RefreshToken currentToken = refreshTokenRepository
                 .findByTokenHashForUpdate(tokenHash)
-                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
+                .orElseThrow(() ->  new TokenException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         if (currentToken.isRevoked()) {
             refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
-            throw new UnauthorizedException("Refresh token reuse detected");
+            throw new TokenException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED);
         }
 
         if (currentToken.isExpired()) {
             currentToken.revoke();
-            throw new UnauthorizedException("Refresh token expired");
+            throw new TokenException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         if (!jwt.getSubject().equals(String.valueOf(currentToken.getUser().getId()))) {
             refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
-            throw new UnauthorizedException("Invalid refresh token subject");
+            throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN_SUBJECT);
         }
         currentToken.revoke();
 
