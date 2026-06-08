@@ -1,5 +1,6 @@
 package ru.pancomanco.todoappsevenproject.controllerAdvice;
 
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,12 +37,6 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Invalid token"));
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    ResponseEntity<?> badRequest(EmailAlreadyExistsException ex) {
-        return ResponseEntity.badRequest()
-                .body(Map.of("error", ex.getMessage()));
-    }
-
     @ExceptionHandler(MissingRequestCookieException.class)
     ResponseEntity<?> missingCookie(MissingRequestCookieException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -70,5 +65,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(new MessageResponseDto(message));
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RequestNotPermitted ex) {
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", "60")
+                .body(new MessageResponseDto("Too many attempts ")); // todo message code
     }
 }

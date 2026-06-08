@@ -11,7 +11,7 @@ description = 'ToDoAppSevenProject'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(26)
     }
 }
 
@@ -21,6 +21,7 @@ repositories {
 
 ext {
     mapstructVersion = '1.6.3'
+    resilience4jVersion='2.4.0'
 }
 
 dependencies {
@@ -50,6 +51,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
     // =========================
+    // Resilience4j (Rate Limiter)
+    // =========================
+    implementation "io.github.resilience4j:resilience4j-spring-boot4:${resilience4jVersion}"
+
+    // =========================
     // Mapping
     // =========================
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
@@ -70,8 +76,6 @@ dependencies {
     // Tests: Core
     // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 
     // =========================
     // Tests: Database / Liquibase
@@ -104,12 +108,9 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
 }
 
 tasks.named('test') {
-    outputs.dir snippetsDir
     useJUnitPlatform()
 }
 

@@ -8,13 +8,15 @@ frontend\package.json
 frontend\README.md
 gradle\wrapper\gradle-wrapper.properties
 src\main\resources\application-dev.yml
+src\main\resources\messages.properties
+src\main\resources\db\changelog\db.changelog-master.yaml
 src\main\java\ru\pancomanco\todoappsevenproject\ScanProject.java
 src\main\java\ru\pancomanco\todoappsevenproject\ToDoAppSevenProjectApplication.java
+src\main\resources\db\changelog\changes\001-init-auth-schema.yaml
 src\test\java\ru\pancomanco\todoappsevenproject\TestcontainersConfiguration.java
 src\test\java\ru\pancomanco\todoappsevenproject\TestToDoAppSevenProjectApplication.java
 src\test\java\ru\pancomanco\todoappsevenproject\ToDoAppSevenProjectApplicationTests.java
 src\main\java\ru\pancomanco\todoappsevenproject\config\EmailSender.java
-src\main\java\ru\pancomanco\todoappsevenproject\config\MailConfig.java
 src\main\java\ru\pancomanco\todoappsevenproject\config\OAuth2SuccessHandler.java
 src\main\java\ru\pancomanco\todoappsevenproject\config\SecurityConfig.java
 src\main\java\ru\pancomanco\todoappsevenproject\controllerAdvice\GlobalExceptionHandler.java
@@ -30,9 +32,13 @@ src\main\java\ru\pancomanco\todoappsevenproject\entity\RefreshToken.java
 src\main\java\ru\pancomanco\todoappsevenproject\entity\Role.java
 src\main\java\ru\pancomanco\todoappsevenproject\entity\SocialProfile.java
 src\main\java\ru\pancomanco\todoappsevenproject\entity\User.java
-src\main\java\ru\pancomanco\todoappsevenproject\exception\EmailAlreadyExistsException.java
+src\main\java\ru\pancomanco\todoappsevenproject\exception\AppException.java
+src\main\java\ru\pancomanco\todoappsevenproject\exception\EmailVerificationException.java
+src\main\java\ru\pancomanco\todoappsevenproject\exception\ErrorCode.java
+src\main\java\ru\pancomanco\todoappsevenproject\exception\PasswordResetException.java
+src\main\java\ru\pancomanco\todoappsevenproject\exception\SocialAuthException.java
+src\main\java\ru\pancomanco\todoappsevenproject\exception\TokenException.java
 src\main\java\ru\pancomanco\todoappsevenproject\exception\UnauthorizedException.java
-src\main\java\ru\pancomanco\todoappsevenproject\exception\UserAlreadyExistException.java
 src\main\java\ru\pancomanco\todoappsevenproject\mapper\UserMapper.java
 src\main\java\ru\pancomanco\todoappsevenproject\properties\AuthProperties.java
 src\main\java\ru\pancomanco\todoappsevenproject\properties\MailProperties.java
@@ -44,6 +50,7 @@ src\main\java\ru\pancomanco\todoappsevenproject\repository\RefreshTokenRepositor
 src\main\java\ru\pancomanco\todoappsevenproject\security\CookieEndpointOriginFilter.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\AuthenticationService.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\EmailVerificationService.java
+src\main\java\ru\pancomanco\todoappsevenproject\service\MessageService.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\PasswordResetService.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\SocialAuthService.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\TokenService.java
@@ -55,9 +62,12 @@ src\main\java\ru\pancomanco\todoappsevenproject\dto\request\RegisterRequestDto.j
 src\main\java\ru\pancomanco\todoappsevenproject\dto\request\ResendEmailVerificationRequestDto.java
 src\main\java\ru\pancomanco\todoappsevenproject\dto\request\ResetPasswordRequestDto.java
 src\main\java\ru\pancomanco\todoappsevenproject\dto\request\VerifyEmailRequestDto.java
+src\main\java\ru\pancomanco\todoappsevenproject\dto\response\MessageResponseDto.java
+src\main\java\ru\pancomanco\todoappsevenproject\dto\response\RegisterResponseDto.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\impl\AuthenticationServiceImpl.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\impl\EmailVerificationServiceImpl.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\impl\PasswordResetServiceImpl.java
+src\main\java\ru\pancomanco\todoappsevenproject\service\impl\SocialAuthServiceImpl.java
 src\main\java\ru\pancomanco\todoappsevenproject\service\impl\TokenServiceImpl.java
 
 
@@ -80,7 +90,7 @@ description = 'ToDoAppSevenProject'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -89,49 +99,91 @@ repositories {
 }
 
 ext {
-    set('snippetsDir', file("build/generated-snippets"))
+    mapstructVersion = '1.6.3'
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
-    implementation 'org.springframework.boot:spring-boot-starter-restclient'
+    // =========================
+    // Web / REST API
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // =========================
+    // Security / JWT / OAuth2 Client
+    // =========================
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // =========================
+    // Database / JPA / Migrations
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
     runtimeOnly 'org.postgresql:postgresql'
+
+    // =========================
+    // Mail
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // =========================
+    // Mapping
+    // =========================
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    // =========================
+    // Lombok
+    // =========================
+    compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // =========================
+    // Development
+    // =========================
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // =========================
+    // Tests: Core
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+
+    // =========================
+    // Tests: Database / Liquibase
+    // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-restdocs'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-authorization-server-test'
+
+    // =========================
+    // Tests: Security / OAuth2 / JWT
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    // =========================
+    // Tests: Mail
+    // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-mail-test'
+
+    // =========================
+    // Tests: Testcontainers
+    // =========================
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.testcontainers:testcontainers-postgresql'
+
+    // =========================
+    // Tests: Lombok
+    // =========================
     testCompileOnly 'org.projectlombok:lombok'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    implementation("org.mapstruct:mapstruct:1.6.3")
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 }
 
@@ -140,10 +192,6 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
-    dependsOn test
-}
 
 ================================================================================
 FILE: docker-compose.yml
@@ -178,14 +226,14 @@ rootProject.name = 'ToDoAppSevenProject'
 FILE: frontend\package-lock.json
 ================================================================================
 {
-  "name": "task-planner-frontend",
-  "version": "1.0.0",
+  "name": "task-planner-frontend-reset-link",
+  "version": "1.1.0",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
-      "name": "task-planner-frontend",
-      "version": "1.0.0",
+      "name": "task-planner-frontend-reset-link",
+      "version": "1.1.0",
       "dependencies": {
         "@vitejs/plugin-react": "latest",
         "lucide-react": "latest",
@@ -1335,13 +1383,14 @@ spring:
     driver-class-name: ${DATASOURCE_DRIVER}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
   security:
     oauth2:
       client:
@@ -1353,12 +1402,6 @@ spring:
               - openid
               - email
               - profile
-          github:
-            client-id: ${GITHUB_CLIENT_ID:}
-            client-secret: ${GITHUB_CLIENT_SECRET:}
-            scope:
-              - read:user
-              - user:email
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
@@ -1368,13 +1411,69 @@ spring:
       mail:
         smtp:
           auth: true
-        starttls:
-          enable: true
-          required: true
+          starttls:
+            enable: true
+            required: true
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
 logging:
   level:
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
+
+================================================================================
+FILE: src\main\resources\messages.properties
+================================================================================
+# Controllers
+auth.register.verification_sent=Verification code sent to email
+auth.verification.resend_code_sent=Verification code resent
+auth.password.reset_link_sent=If this email exists, password reset link has been sent
+auth.password.reset_success=Password has been reset
+
+# AuthenticationService
+auth.email.already_exists=Email is already registered
+auth.email.not_verified=Email is not verified
+auth.invalid_credentials=Invalid email or password
+
+# VerificationService
+auth.verification.code_invalid=Invalid verification code
+auth.verification.code_expired=Verification code expired
+auth.verification.attempts_exceeded=Too many verification attempts
+auth.email.already_verified=Email is already verified
+auth.verification.email_send_failed=Failed to send verification email
+
+# PasswordResetService
+auth.password_reset.token_invalid=Invalid password reset link
+auth.password_reset.token_expired=Password reset link has expired
+auth.password_reset.email_send_failed=Failed to send password reset email
+
+# SocialAuthService
+auth.social.provider_unsupported=Unsupported oauth provider
+auth.social.profile_invalid=Invalid oauth profile
+auth.social.email_missing=Google sent no email
+auth.social.email_not_verified=Google email is not verified
+
+# TokenService
+token.refresh_token.missing=Refresh token is missing in the request.
+token.invalid_refresh_token=Invalid or malformed refresh token.
+token.refresh_token_reuse_detected=Refresh token reuse detected. All active sessions have been terminated for security reasons. Please log in again.
+token.refresh_token_is_expired=Refresh token has expired. Please log in again.
+token.invalid_refresh_token_subject=Invalid user subject for this refresh token.
+
+# EmailSender
+mail.verification.subject=Your verification code
+mail.verification.body=Your verification code is: {0}\n\nThis code will expire in {1} minutes.
+mail.password-reset.subject=Reset your password
+mail.password-reset.body=You requested password reset.\n\nOpen this link to set a new password:\n\n{0}\n\nThis link will expire in {1} minutes.\n\nIf you did not request password reset, ignore this email.
+
+================================================================================
+FILE: src\main\resources\db\changelog\db.changelog-master.yaml
+================================================================================
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-init-auth-schema.yaml
 
 ================================================================================
 FILE: src\main\java\ru\pancomanco\todoappsevenproject\ScanProject.java
@@ -1495,6 +1594,326 @@ public class ToDoAppSevenProjectApplication {
 }
 
 ================================================================================
+FILE: src\main\resources\db\changelog\changes\001-init-auth-schema.yaml
+================================================================================
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: PancoManco
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_users
+                    nullable: false
+
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_users_email
+
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+
+              - column:
+                  name: avatar_url
+                  type: VARCHAR(500)
+
+              - column:
+                  name: role
+                  type: VARCHAR(50)
+                  defaultValue: USER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-refresh-tokens-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_refresh_tokens
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: token_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_refresh_tokens_token_hash
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: revoked
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_refresh_tokens_user_id
+
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_token_hash
+            columns:
+              - column:
+                  name: token_hash
+
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_token_user_id
+            columns:
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 003-create-email-verification-codes-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: email_verification_codes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_email_verification_codes
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: code_hash
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: used_at
+                  type: TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: email_verification_codes
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_email_verification_codes_user_id
+
+        - createIndex:
+            tableName: email_verification_codes
+            indexName: idx_email_verification_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: email_verification_codes
+            indexName: idx_email_verification_expires_at
+            columns:
+              - column:
+                  name: expires_at
+
+  - changeSet:
+      id: 004-create-password-reset-tokens-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: password_reset_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_password_reset_tokens
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: token_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_password_reset_tokens_token_hash
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: used_at
+                  type: TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: password_reset_tokens
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_password_reset_tokens_user_id
+
+        - createIndex:
+            tableName: password_reset_tokens
+            indexName: idx_password_reset_token_hash
+            columns:
+              - column:
+                  name: token_hash
+
+        - createIndex:
+            tableName: password_reset_tokens
+            indexName: idx_password_reset_user_id
+            columns:
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 005-create-linked-accounts-table
+      author: panco
+      changes:
+        - createTable:
+            tableName: linked_accounts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_linked_accounts
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: provider
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: provider_user_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: provider_email
+                  type: VARCHAR(255)
+
+        - addForeignKeyConstraint:
+            baseTableName: linked_accounts
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_linked_accounts_user_id
+
+        - addUniqueConstraint:
+            tableName: linked_accounts
+            columnNames: provider, provider_user_id
+            constraintName: uk_provider_provider_user_id
+
+        - createIndex:
+            tableName: linked_accounts
+            indexName: idx_linked_accounts_user_id
+            columns:
+              - column:
+                  name: user_id
+
+================================================================================
 FILE: src\test\java\ru\pancomanco\todoappsevenproject\TestcontainersConfiguration.java
 ================================================================================
 package ru.pancomanco.todoappsevenproject;
@@ -1568,91 +1987,56 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import ru.pancomanco.todoappsevenproject.properties.MailProperties;
+import ru.pancomanco.todoappsevenproject.service.MessageService;
 
 @Component
 @RequiredArgsConstructor
 @EnableConfigurationProperties(MailProperties.class)
 public class EmailSender {
 
+    private static final int VERIFICATION_CODE_TTL_MINUTES = 5;
+    private static final int PASSWORD_RESET_LINK_TTL_MINUTES = 15;
+
     private final JavaMailSender mailSender;
     private final MailProperties mailProperties;
+    private final MessageService messageService;
+
 
     public void sendVerificationCode(String to, String code) {
-        SimpleMailMessage message = new SimpleMailMessage();
-
-        message.setFrom(mailProperties.from());
-        message.setTo(to);
-        message.setSubject("Your verification code");
-        message.setText("""
-                Your verification code is: %s
-
-                This code will expire in 10 minutes.
-                """.formatted(code));
-
-        mailSender.send(message);
+        sendSimpleMessage(
+                to,
+                messageService.get("mail.verification.subject"),
+                messageService.get(
+                        "mail.verification.body",
+                        code,
+                        VERIFICATION_CODE_TTL_MINUTES
+                )
+        );
     }
 
     public void sendPasswordResetLink(String to, String resetLink) {
+        sendSimpleMessage(
+                to,
+                messageService.get("mail.password-reset.subject"),
+                messageService.get(
+                        "mail.password-reset.body",
+                        resetLink,
+                        PASSWORD_RESET_LINK_TTL_MINUTES
+                )
+        );
+    }
+
+    private void sendSimpleMessage(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setFrom(mailProperties.from());
         message.setTo(to);
-        message.setSubject("Reset your password");
-        message.setText("""
-            You requested password reset.
-
-            Open this link to set a new password:
-
-            %s
-
-            This link will expire in 15 minutes.
-
-            If you did not request password reset, ignore this email.
-            """.formatted(resetLink));
+        message.setSubject(subject);
+        message.setText(text);
 
         mailSender.send(message);
     }
 
-}
-
-================================================================================
-FILE: src\main\java\ru\pancomanco\todoappsevenproject\config\MailConfig.java
-================================================================================
-package ru.pancomanco.todoappsevenproject.config;
-
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-
-import java.util.Properties;
-
-@Configuration
-public class MailConfig {
-
-    @Bean
-    JavaMailSender javaMailSender(
-            @Value("${spring.mail.host}") String host,
-            @Value("${spring.mail.port}") int port,
-            @Value("${spring.mail.username}") String username,
-            @Value("${spring.mail.password}") String password
-    ) {
-        JavaMailSenderImpl sender = new JavaMailSenderImpl();
-
-        sender.setHost(host);
-        sender.setPort(port);
-        sender.setUsername(username);
-        sender.setPassword(password);
-
-        Properties props = sender.getJavaMailProperties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "true");
-
-        return sender;
-    }
 }
 
 ================================================================================
@@ -1663,6 +2047,7 @@ package ru.pancomanco.todoappsevenproject.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -1672,6 +2057,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.AppException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.SocialAuthService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
@@ -1682,6 +2068,7 @@ import java.time.Duration;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final SocialAuthService socialAuthService;
@@ -1696,26 +2083,39 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException {
 
-        OAuth2AuthenticationToken oauthToken =
-                (OAuth2AuthenticationToken) authentication;
+        try {
+            OAuth2AuthenticationToken oauthToken =
+                    (OAuth2AuthenticationToken) authentication;
 
-        String registrationId = oauthToken.getAuthorizedClientRegistrationId();
-        OAuth2User oauthUser = oauthToken.getPrincipal();
+            String registrationId =
+                    oauthToken.getAuthorizedClientRegistrationId();
 
-        User user = socialAuthService.findOrCreateUser(
-                registrationId,
-                oauthUser.getAttributes()
-        );
+            OAuth2User oauthUser = oauthToken.getPrincipal();
 
-        TokenPair tokens = tokenService.issueTokenPair(user);
+            User user = socialAuthService.findOrCreateUser(
+                    registrationId,
+                    oauthUser.getAttributes()
+            );
 
-        ResponseCookie refreshCookie = refreshCookieHelper.create(
-                tokens.refreshToken(),
-                Duration.ofDays(properties.jwt().refreshTokenDays())
-        );
+            TokenPair tokens = tokenService.issueTokenPair(user);
 
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        response.sendRedirect(properties.oauth2SuccessRedirect());
+            ResponseCookie refreshCookie = refreshCookieHelper.create(
+                    tokens.refreshToken(),
+                    Duration.ofDays(properties.jwt().refreshTokenDays())
+            );
+
+            response.addHeader(
+                    HttpHeaders.SET_COOKIE,
+                    refreshCookie.toString()
+            );
+
+            response.sendRedirect(properties.oauth2SuccessRedirect());
+
+        } catch (AppException ex) {
+            log.warn("OAuth2 login failed: {}", ex.getErrorCode(), ex);
+
+            response.sendRedirect(properties.oauth2FailureRedirect());
+        }
 
 
     }
@@ -1775,21 +2175,19 @@ public class SecurityConfig {
     @Order(1)
     SecurityFilterChain oauth2SecurityFilterChain(
             HttpSecurity http,
-            OAuth2SuccessHandler successHandler
+            OAuth2SuccessHandler successHandler,
+            AuthProperties authProperties
     ) {
         return http
                 .securityMatcher("/oauth2/**", "/login/oauth2/**")
-
                 .csrf(csrf -> csrf.disable())
-
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 )
-
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(successHandler)
                         .failureHandler((request, response, exception) -> {
-                            response.sendRedirect("http://localhost:5173/login?error=oauth");
+                            response.sendRedirect(authProperties.oauth2FailureRedirect());
                         })
                 )
                 .build();
@@ -1801,17 +2199,16 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CookieEndpointOriginFilter originFilter,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) {
-        log.info("filter chain started working");
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/api/v1/auth/**","/error").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(originFilter, BearerTokenAuthenticationFilter.class)
                 .build();
 
@@ -1820,11 +2217,9 @@ public class SecurityConfig {
     @Bean
     SecretKey jwtSecretKey(AuthProperties properties) {
         byte[] keyBytes = Base64.getDecoder().decode(properties.jwt().secret());
-
         if (keyBytes.length < 32) {
             throw new IllegalStateException("JWT secret must be at least 256 bits");
         }
-
         return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
@@ -1857,7 +2252,6 @@ public class SecurityConfig {
     @Bean
     @Qualifier("refreshJwtDecoder")
     JwtDecoder refreshJwtDecoder(SecretKey jwtSecretKey, AuthProperties properties) {
-        log.info("refresh jwt decoder starting working");
         NimbusJwtDecoder decoder = NimbusJwtDecoder
                 .withSecretKey(jwtSecretKey)
                 .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)
@@ -1933,25 +2327,29 @@ FILE: src\main\java\ru\pancomanco\todoappsevenproject\controllerAdvice\GlobalExc
 ================================================================================
 package ru.pancomanco.todoappsevenproject.controllerAdvice;
 
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.pancomanco.todoappsevenproject.exception.EmailAlreadyExistsException;
+import ru.pancomanco.todoappsevenproject.dto.response.MessageResponseDto;
+import ru.pancomanco.todoappsevenproject.exception.AppException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
+import ru.pancomanco.todoappsevenproject.service.MessageService;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    private final MessageService messageService;
 
     @ExceptionHandler(UnauthorizedException.class)
     ResponseEntity<?> unauthorized(UnauthorizedException ex) {
@@ -1965,11 +2363,11 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Invalid token"));
     }
 
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    ResponseEntity<?> badRequest(EmailAlreadyExistsException ex) {
-        return ResponseEntity.badRequest()
-                .body(Map.of("error", ex.getMessage()));
-    }
+//    @ExceptionHandler(EmailAlreadyExistsException.class)
+//    ResponseEntity<?> badRequest(EmailAlreadyExistsException ex) {
+//        return ResponseEntity.badRequest()
+//                .body(Map.of("error", ex.getMessage()));
+//    }
 
     @ExceptionHandler(MissingRequestCookieException.class)
     ResponseEntity<?> missingCookie(MissingRequestCookieException ex) {
@@ -1977,16 +2375,28 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Missing refresh token"));
     }
 
+
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<MessageResponseDto> handleAppException(AppException ex) {
+        String message = messageService.get(ex.getErrorCode().getMessageKey());
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(new MessageResponseDto(message));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    ResponseEntity<?> validation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
-        );
-
-        return ResponseEntity.badRequest()
-                .body(Map.of("errors", errors));
+    public ResponseEntity<MessageResponseDto> handleValidationException(
+            MethodArgumentNotValidException ex
+    ) {
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(FieldError::getDefaultMessage)
+                .orElse(messageService.get("validation.failed"));
+        return ResponseEntity
+                .badRequest()
+                .body(new MessageResponseDto(message));
     }
 }
 
@@ -2005,9 +2415,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.pancomanco.todoappsevenproject.dto.AuthResponse;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.*;
+import ru.pancomanco.todoappsevenproject.dto.response.MessageResponseDto;
+import ru.pancomanco.todoappsevenproject.dto.response.RegisterResponseDto;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
+import ru.pancomanco.todoappsevenproject.service.MessageService;
 import ru.pancomanco.todoappsevenproject.service.PasswordResetService;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 
@@ -2017,7 +2430,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Slf4j
 public class AuthorizationController {
 
     private final AuthenticationService authService;
@@ -2025,15 +2437,16 @@ public class AuthorizationController {
     private final AuthProperties authProperties;
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
+    private final MessageService messageService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<RegisterResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
         authService.register(request);
 
         return ResponseEntity.accepted()
-                .body(Map.of(
-                        "message", "Verification code sent to email",
-                        "email", request.email()
+                .body(new RegisterResponseDto(
+                        messageService.get("auth.register.verification_sent"),
+                        request.email()
                 ));
     }
     @PostMapping("/verify-email")
@@ -2044,18 +2457,17 @@ public class AuthorizationController {
                 request.email(),
                 request.code()
         );
-
         return authResponse(tokens);
     }
 
     @PostMapping("/resend-verification-code")
-    public ResponseEntity<?> resendVerificationCode(
+    public ResponseEntity<MessageResponseDto> resendVerificationCode(
             @Valid @RequestBody ResendEmailVerificationRequestDto request
     ) {
         emailVerificationService.resendCode(request.email());
 
         return ResponseEntity.ok()
-                .body(Map.of("message", "Verification code sent"));
+                .body(new MessageResponseDto(messageService.get("auth.verification.resend_code_sent")));
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
@@ -2067,7 +2479,6 @@ public class AuthorizationController {
     public ResponseEntity<AuthResponse> refresh(
             @CookieValue(name = RefreshCookieHelper.NAME) String refreshToken
     ) {
-        log.info("Refresh token: {}", refreshToken);
 
         TokenPair tokens = authService.refresh(refreshToken);
         return authResponse(tokens);
@@ -2095,20 +2506,19 @@ public class AuthorizationController {
                 .body(new AuthResponse(tokens.accessToken()));
     }
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(
+    public ResponseEntity<MessageResponseDto> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequestDto request
     ) {
         passwordResetService.sendResetLink(request.email());
 
         return ResponseEntity.ok()
-                .body(Map.of(
-                        "message",
-                        "If this email exists, password reset link has been sent"
+                .body(new MessageResponseDto(
+                        messageService.get("auth.password.reset_link_sent")
                 ));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(
+    public ResponseEntity<MessageResponseDto> resetPassword(
             @Valid @RequestBody ResetPasswordRequestDto request
     ) {
         passwordResetService.resetPassword(
@@ -2117,7 +2527,7 @@ public class AuthorizationController {
         );
 
         return ResponseEntity.ok()
-                .body(Map.of("message", "Password has been reset"));
+                .body(new MessageResponseDto(messageService.get("auth.password.reset_success")));
     }
 }
 
@@ -2173,7 +2583,7 @@ FILE: src\main\java\ru\pancomanco\todoappsevenproject\entity\AuthProviderEnum.ja
 package ru.pancomanco.todoappsevenproject.entity;
 
 public enum AuthProviderEnum {
-    GOOGLE,GITHUB
+    GOOGLE
 }
 
 ================================================================================
@@ -2191,7 +2601,7 @@ import java.time.Instant;
 @Table(name = "email_verification_codes",
         indexes = {
                 @Index(name = "idx_email_verification_user_id", columnList = "user_id"),
-                @Index(name = "idx_email_verification_expires_at", columnList = "expiresAt")
+                @Index(name = "idx_email_verification_expires_at", columnList = "expires_at")
         })
 @Getter
 @NoArgsConstructor
@@ -2204,21 +2614,22 @@ public class EmailVerificationCode {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "code_hash", nullable = false, length = 100)
     private String codeHash;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
     @Column(nullable = false)
     private int attempts = 0;
 
-    @Column
+    @Column(name = "used_at")
     private Instant usedAt;
 
     public EmailVerificationCode(User user, String codeHash, Instant expiresAt) {
@@ -2258,16 +2669,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.security.AuthProvider;
-
 @Entity
 @Table(name = "linked_accounts",
         uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_provider_provider_user_id",
-                columnNames = {"provider", "providerUserId"}
-        )
-}
+                @UniqueConstraint(
+                        name = "uk_provider_provider_user_id",
+                        columnNames = {"provider", "provider_user_id"}
+                )
+        }
 )
 @Getter
 @AllArgsConstructor
@@ -2278,16 +2687,17 @@ public class LinkedAccount {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "provider", nullable = false)
     private AuthProviderEnum provider;
 
-    @Column(nullable = false)
+    @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
-    @Column
+    @Column(name = "provider_email")
     private String providerEmail;
 
 
@@ -2319,7 +2729,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "password_reset_tokens",
         indexes = {
-                @Index(name = "idx_password_reset_token_hash", columnList = "tokenHash"),
+                @Index(name = "idx_password_reset_token_hash", columnList = "token_hash"),
                 @Index(name = "idx_password_reset_user_id", columnList = "user_id")
         })
 @Getter
@@ -2331,18 +2741,19 @@ public class PasswordResetToken {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
-    @Column
+    @Column(name = "used_at")
     private Instant usedAt;
 
     public PasswordResetToken(User user, String tokenHash, Instant expiresAt) {
@@ -2378,7 +2789,10 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "refresh_tokens",
-indexes = {@Index(name = "idx_refresh_token_hash",columnList = "tokenHash")})
+        indexes = {
+                @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
+                @Index(name = "idx_refresh_token_user_id", columnList = "user_id")
+        })
 @NoArgsConstructor
 @Getter
 @Setter
@@ -2388,18 +2802,19 @@ public class RefreshToken {
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "revoked", nullable = false)
     private  boolean revoked = false;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
     public RefreshToken(User user, String tokenHash, Instant expiresAt) {
@@ -2447,7 +2862,7 @@ package ru.pancomanco.todoappsevenproject.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import net.minidev.json.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -2501,30 +2916,214 @@ public class User {
         return user;
     }
 
-    public static User socialUserWithoutEmail(
-            String name,
-            String avatarUrl
-    ) {
-        User user = new User();
-        user.email = null;
-        user.password = null;
-        user.name = name;
-        user.avatarUrl = avatarUrl;
-        user.enabled = true;
-        user.role = Role.USER;
-        return user;
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\AppException.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+public abstract class AppException extends RuntimeException {
+
+    private final ErrorCode errorCode;
+
+    protected AppException(ErrorCode errorCode) {
+        super(errorCode.name());
+        this.errorCode = errorCode;
+    }
+
+    protected AppException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.name(), cause);
+        this.errorCode = errorCode;
+    }
+
+    public HttpStatus getStatus() {
+        return errorCode.getStatus();
     }
 }
 
 ================================================================================
-FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\EmailAlreadyExistsException.java
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\EmailVerificationException.java
 ================================================================================
 package ru.pancomanco.todoappsevenproject.exception;
 
-public class EmailAlreadyExistsException extends RuntimeException {
-    public EmailAlreadyExistsException(String message) {
-        super(message);
+public class EmailVerificationException extends AppException {
+
+    public EmailVerificationException(ErrorCode errorCode) {
+        super(errorCode);
     }
+
+    public EmailVerificationException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\ErrorCode.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.HttpParser;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@RequiredArgsConstructor
+public enum ErrorCode {
+    // AuthenticationService
+    AUTH_EMAIL_ALREADY_EXISTS(
+            "auth.email.already_exists",
+            HttpStatus.CONFLICT
+    ),
+
+    AUTH_INVALID_CREDENTIALS(
+            "auth.invalid_credentials",
+            HttpStatus.UNAUTHORIZED
+    ),
+
+    AUTH_EMAIL_NOT_VERIFIED(
+            "auth.email.not_verified",
+            HttpStatus.FORBIDDEN
+    ),
+
+    // VerificationService
+    AUTH_VERIFICATION_CODE_INVALID(
+            "auth.verification.code_invalid",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    AUTH_VERIFICATION_CODE_EXPIRED(
+            "auth.verification.code_expired",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    AUTH_VERIFICATION_ATTEMPTS_EXCEEDED(
+            "auth.verification.attempts_exceeded",
+            HttpStatus.TOO_MANY_REQUESTS
+    ),
+
+    AUTH_EMAIL_ALREADY_VERIFIED(
+            "auth.email.already_verified",
+            HttpStatus.CONFLICT
+    ),
+
+    AUTH_VERIFICATION_EMAIL_SEND_FAILED(
+            "auth.verification.email_send_failed",
+            HttpStatus.SERVICE_UNAVAILABLE
+    ),
+
+
+    // PasswordResetService
+    AUTH_PASSWORD_RESET_TOKEN_INVALID(
+        "auth.password_reset.token_invalid",
+        HttpStatus.BAD_REQUEST
+        ),
+
+    AUTH_PASSWORD_RESET_TOKEN_EXPIRED(
+        "auth.password_reset.token_expired",
+        HttpStatus.BAD_REQUEST
+        ),
+
+    AUTH_PASSWORD_RESET_EMAIL_SEND_FAILED(
+        "auth.password_reset.email_send_failed",
+        HttpStatus.SERVICE_UNAVAILABLE
+        ),
+
+    // SocialAuthService
+    AUTH_SOCIAL_PROVIDER_UNSUPPORTED(
+        "auth.social.provider_unsupported",
+        HttpStatus.BAD_REQUEST
+        ),
+
+    AUTH_SOCIAL_PROFILE_INVALID(
+        "auth.social.profile_invalid",
+        HttpStatus.BAD_REQUEST
+        ),
+
+    AUTH_SOCIAL_EMAIL_MISSING(
+        "auth.social.email_missing",
+        HttpStatus.BAD_REQUEST
+        ),
+
+    AUTH_SOCIAL_EMAIL_NOT_VERIFIED(
+        "auth.social.email_not_verified",
+        HttpStatus.BAD_REQUEST
+        ),
+
+    // TokenService
+    AUTH_USER_NOT_FOUND("auth.user.not_found",
+            HttpStatus.UNAUTHORIZED
+    ),
+    REFRESH_TOKEN_IS_MISSING("token.refresh_token.missing",
+            HttpStatus.UNAUTHORIZED
+    ),
+    INVALID_REFRESH_TOKEN("token.invalid_refresh_token",
+            HttpStatus.UNAUTHORIZED
+    ),
+    REFRESH_TOKEN_REUSE_DETECTED("token.refresh_token_reuse_detected",
+            HttpStatus.FORBIDDEN
+    ),
+    REFRESH_TOKEN_EXPIRED("token.refresh_token_is_expired",
+            HttpStatus.UNAUTHORIZED
+    ),
+    INVALID_REFRESH_TOKEN_SUBJECT("token.invalid_refresh_token_subject",
+            HttpStatus.UNAUTHORIZED
+    );
+
+    private final String messageKey;
+    private final HttpStatus status;
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\PasswordResetException.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.exception;
+
+public class PasswordResetException extends AppException {
+    public PasswordResetException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+
+    public PasswordResetException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\SocialAuthException.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.exception;
+
+public class SocialAuthException extends AppException {
+
+    public SocialAuthException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+
+    public SocialAuthException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\TokenException.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.exception;
+
+public class TokenException extends AppException{
+    public TokenException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+
+    public TokenException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+
 }
 
 ================================================================================
@@ -2532,19 +3131,20 @@ FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\UnauthorizedExce
 ================================================================================
 package ru.pancomanco.todoappsevenproject.exception;
 
-public class UnauthorizedException extends RuntimeException{
-    public UnauthorizedException(String message){ super(message); }
-}
+import org.springframework.http.HttpStatus;
 
-================================================================================
-FILE: src\main\java\ru\pancomanco\todoappsevenproject\exception\UserAlreadyExistException.java
-================================================================================
-package ru.pancomanco.todoappsevenproject.exception;
+public class UnauthorizedException extends AppException{
 
-public class UserAlreadyExistException extends RuntimeException {
-    public UserAlreadyExistException(String message) {
-        super(message);
+    public UnauthorizedException(ErrorCode errorCode) {
+        super(errorCode);
     }
+
+    public UnauthorizedException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+//    public UnauthorizedException(ErrorCode errorCode) {
+//        super(errorCode, HttpStatus.UNAUTHORIZED);
+//    }
 }
 
 ================================================================================
@@ -2677,7 +3277,7 @@ public interface EmailVerificationCodeRepository
             where c.user.id = :userId
               and c.usedAt is null
             """)
-    int markUsedAllActiveCodesByUserId(
+    int markAllActiveCodesAsUsedByUserId(
             @Param("userId") Long userId,
             @Param("now") Instant now
     );
@@ -2896,6 +3496,32 @@ public interface EmailVerificationService {
 }
 
 ================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\MessageService.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class MessageService {
+
+    private final MessageSource messageSource;
+
+    public String get(String code, Object... args) {
+        return messageSource.getMessage(
+                code,
+                args,
+                code,
+                LocaleContextHolder.getLocale()
+        );
+    }
+}
+
+================================================================================
 FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\PasswordResetService.java
 ================================================================================
 package ru.pancomanco.todoappsevenproject.service;
@@ -2912,120 +3538,14 @@ FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\SocialAuthService.
 ================================================================================
 package ru.pancomanco.todoappsevenproject.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import ru.pancomanco.todoappsevenproject.entity.AuthProviderEnum;
-import ru.pancomanco.todoappsevenproject.entity.LinkedAccount;
-import ru.pancomanco.todoappsevenproject.entity.SocialProfile;
 import ru.pancomanco.todoappsevenproject.entity.User;
-import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
-import ru.pancomanco.todoappsevenproject.repository.LinkedAccountRepository;
 
 import java.util.Map;
 
-@Service
-@RequiredArgsConstructor
-public class SocialAuthService {
-    private final AuthRepository userRepository;
-    private final LinkedAccountRepository linkedAccountRepository;
 
-
-    @Transactional
-    public User findOrCreateUser(
-            String registrationId,
-            Map<String, Object> attributes
-    ) {
-        AuthProviderEnum provider = parseProvider(registrationId);
-
-        SocialProfile profile = extractProfile(provider, attributes);
-
-        return linkedAccountRepository
-                .findByProviderAndProviderUserIdWithUser(provider, profile.providerUserId())
-                .map(LinkedAccount::getUser)
-                .orElseGet(() -> createUserAndLinkedAccount(provider, profile));
-    }
-
-    private User createUserAndLinkedAccount(
-            AuthProviderEnum provider,
-            SocialProfile profile
-    ) {
-        User user;
-
-        if (profile.email() != null && !profile.email().isBlank()) {
-            user = userRepository.findByEmailIgnoreCase(profile.email())
-                    .orElseGet(() -> userRepository.save(
-                            User.socialUser(profile.email(), profile.name(), profile.avatarUrl())
-                    ));
-        } else {
-            // GitHub email может быть null.
-            // В таком случае создаём пользователя без email
-            // или отправляем на экран "добавь email".
-            user = userRepository.save(
-                    User.socialUserWithoutEmail(profile.name(), profile.avatarUrl())
-            );
-        }
-
-        LinkedAccount linkedAccount = new LinkedAccount(
-                user,
-                provider,
-                profile.providerUserId(),
-                profile.email()
-        );
-        linkedAccountRepository.save(linkedAccount);
-        return user;
-    }
-
-    private AuthProviderEnum parseProvider(String registrationId) {
-        return switch (registrationId.toLowerCase()) {
-            case "google" -> AuthProviderEnum.GOOGLE;
-            case "github" -> AuthProviderEnum.GITHUB;
-            default -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
-        };
-    }
-
-    private SocialProfile extractProfile(
-            AuthProviderEnum provider,
-            Map<String, Object> attributes
-    ) {
-        return switch (provider) {
-            case GOOGLE -> extractGoogleProfile(attributes);
-            case GITHUB -> extractGithubProfile(attributes);
-        };
-    }
-
-    private SocialProfile extractGoogleProfile(Map<String, Object> attributes) {
-        String providerUserId = (String) attributes.get("sub");
-        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
-        String picture = (String) attributes.get("picture");
-
-        return new SocialProfile(
-                providerUserId,
-                email,
-                name,
-                picture
-        );
-    }
-
-    private SocialProfile extractGithubProfile(Map<String, Object> attributes) {
-        String providerUserId = String.valueOf(attributes.get("id"));
-        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
-        String login = (String) attributes.get("login");
-        String avatarUrl = (String) attributes.get("avatar_url");
-
-        if (name == null || name.isBlank()) {
-            name = login;
-        }
-
-        return new SocialProfile(
-                providerUserId,
-                email,
-                name,
-                avatarUrl
-        );
-    }
+public interface SocialAuthService {
+    User findOrCreateUser(String registrationId,
+                          Map<String, Object> attributes);
 }
 
 ================================================================================
@@ -3226,6 +3746,27 @@ public record VerifyEmailRequestDto(
 }
 
 ================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\dto\response\MessageResponseDto.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.dto.response;
+
+public record MessageResponseDto(
+        String message
+) {
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\dto\response\RegisterResponseDto.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.dto.response;
+
+public record RegisterResponseDto(
+        String message,
+        String email
+) {
+}
+
+================================================================================
 FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\impl\AuthenticationServiceImpl.java
 ================================================================================
 package ru.pancomanco.todoappsevenproject.service.impl;
@@ -3238,7 +3779,8 @@ import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.dto.request.LoginRequestDto;
 import ru.pancomanco.todoappsevenproject.dto.request.RegisterRequestDto;
 import ru.pancomanco.todoappsevenproject.entity.User;
-import ru.pancomanco.todoappsevenproject.exception.EmailAlreadyExistsException;
+import ru.pancomanco.todoappsevenproject.exception.EmailVerificationException;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
@@ -3260,31 +3802,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String email = registerRequestDto.email().trim().toLowerCase();
 
         if (authRepository.existsByEmailIgnoreCase(email)) {
-            throw new EmailAlreadyExistsException("Email already exists");
+            throw new EmailVerificationException(ErrorCode.AUTH_EMAIL_ALREADY_EXISTS);
         }
-
         String passwordHash = passwordEncoder.encode(registerRequestDto.password());
-
         User user = new User(email, passwordHash);
         user.setName(registerRequestDto.name().trim());
         user.setEnabled(false);
-
         authRepository.save(user);
-
         emailVerificationService.sendVerificationCode(user);
     }
 
     @Override
     public TokenPair login(LoginRequestDto loginRequestDto) {
         User user = authRepository.findByEmailIgnoreCase(loginRequestDto.email())
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_INVALID_CREDENTIALS));
 
         if (!Boolean.TRUE.equals(user.getEnabled())) {
-            throw new UnauthorizedException("Email is not verified");
+            throw new EmailVerificationException(ErrorCode.AUTH_EMAIL_NOT_VERIFIED);
         }
 
         if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {
-            throw new UnauthorizedException("Invalid credentials");
+            throw new UnauthorizedException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         return tokenService.issueTokenPair(user);
@@ -3307,6 +3845,7 @@ FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\impl\EmailVerifica
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -3314,16 +3853,17 @@ import ru.pancomanco.todoappsevenproject.config.EmailSender;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.EmailVerificationCode;
 import ru.pancomanco.todoappsevenproject.entity.User;
-import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
+import ru.pancomanco.todoappsevenproject.exception.EmailVerificationException;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.EmailVerificationCodeRepository;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 import ru.pancomanco.todoappsevenproject.util.VerificationCodeGenerator;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -3337,11 +3877,17 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final EmailSender emailSender;
     private final TokenService tokenService;
 
-    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public void sendVerificationCode(User user) {
-        codeRepository.markUsedAllActiveCodesByUserId(user.getId(), Instant.now());
+
+        if (Boolean.TRUE.equals(user.getEnabled())) {
+            throw new EmailVerificationException(
+                    ErrorCode.AUTH_EMAIL_ALREADY_VERIFIED
+            );
+        }
+
+        codeRepository.markAllActiveCodesAsUsedByUserId(user.getId(), Instant.now());
 
         String code = VerificationCodeGenerator.getRandomVerificationCode();
         String codeHash = passwordEncoder.encode(code);
@@ -3353,37 +3899,58 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         );
 
         codeRepository.save(verificationCode);
-
-        emailSender.sendVerificationCode(user.getEmail(), code);
+        try {
+            emailSender.sendVerificationCode(user.getEmail(), code);
+        } catch (MailException ex) {
+            throw new EmailVerificationException(
+                    ErrorCode.AUTH_VERIFICATION_EMAIL_SEND_FAILED, ex
+            );
+        }
     }
 
     @Override
+    @Transactional(noRollbackFor = EmailVerificationException.class)
     public TokenPair verifyEmail(String email, String code) {
         String normalizedEmail = email.trim().toLowerCase();
 
         User user = authRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> new UnauthorizedException("Invalid verification code"));
+                .orElseThrow(() -> new EmailVerificationException(
+                        ErrorCode.AUTH_VERIFICATION_CODE_INVALID
+                ));
+
+        if (Boolean.TRUE.equals(user.getEnabled())) {
+            throw new EmailVerificationException(
+                    ErrorCode.AUTH_EMAIL_ALREADY_VERIFIED
+            );
+        }
 
         EmailVerificationCode verificationCode = codeRepository
                 .findLatestActiveCodeForUpdate(user.getId())
-                .orElseThrow(() -> new UnauthorizedException("Invalid verification code"));
+                .orElseThrow(() -> new EmailVerificationException(
+                        ErrorCode.AUTH_VERIFICATION_CODE_INVALID
+                ));
 
         if (verificationCode.isExpired()) {
             verificationCode.markAsUsed();
-            throw new UnauthorizedException("Verification code expired");
+            throw new EmailVerificationException(
+                    ErrorCode.AUTH_VERIFICATION_CODE_EXPIRED
+            );
         }
 
         if (!verificationCode.hasAttemptsLeft()) {
             verificationCode.markAsUsed();
-            throw new UnauthorizedException("Too many verification attempts");
+            throw new EmailVerificationException(
+                    ErrorCode.AUTH_VERIFICATION_ATTEMPTS_EXCEEDED
+            );
         }
 
         verificationCode.increaseAttempts();
 
         if (!passwordEncoder.matches(code, verificationCode.getCodeHash())) {
-            throw new UnauthorizedException("Invalid verification code");
+            throw new EmailVerificationException(
+                    ErrorCode.AUTH_VERIFICATION_CODE_INVALID
+            );
         }
-
         verificationCode.markAsUsed();
         user.setEnabled(true);
 
@@ -3393,21 +3960,17 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     @Override
     public void resendCode(String email) {
         String normalizedEmail = email.trim().toLowerCase();
-
-        User user = authRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-
+        Optional<User> userOptional = authRepository.findByEmailIgnoreCase(normalizedEmail);
+        if (userOptional.isEmpty()) {
+            return;
+        }
+        User user = userOptional.get();
         if (Boolean.TRUE.equals(user.getEnabled())) {
             return;
         }
-
         sendVerificationCode(user);
     }
 
-    private String generateSixDigitCode() {
-        int code = 100000 + secureRandom.nextInt(900000);
-        return String.valueOf(code);
-    }
 }
 
 ================================================================================
@@ -3416,12 +3979,15 @@ FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\impl\PasswordReset
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.todoappsevenproject.config.EmailSender;
 import ru.pancomanco.todoappsevenproject.entity.PasswordResetToken;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
+import ru.pancomanco.todoappsevenproject.exception.PasswordResetException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
@@ -3462,11 +4028,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         Optional<User> userOptional =
                 authRepository.findByEmailIgnoreCase(normalizedEmail);
 
-        /*
-         * Важно:
-         * Даже если email не существует, возвращаем успешный ответ.
-         * Так нельзя перебрать зарегистрированные email.
-         */
         if (userOptional.isEmpty()) {
             return;
         }
@@ -3497,24 +4058,44 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                            + "/reset-password?token="
                            + URLEncoder.encode(rawToken, StandardCharsets.UTF_8);
 
-        emailSender.sendPasswordResetLink(user.getEmail(), resetLink);
+        try {
+            emailSender.sendPasswordResetLink(user.getEmail(), resetLink);
+        } catch (MailException ex) {
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_EMAIL_SEND_FAILED,
+                    ex
+            );
+        }
     }
 
     @Override
+    @Transactional(noRollbackFor = PasswordResetException.class)
     public void resetPassword(String token, String newPassword) {
+        if (token == null || token.isBlank()) {
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
+            );
+        }
         String tokenHash = tokenService.sha256(token);
 
         PasswordResetToken resetToken = resetTokenRepository
                 .findByTokenHashForUpdate(tokenHash)
-                .orElseThrow(() -> new UnauthorizedException("Invalid or expired reset link"));
+                .orElseThrow(() -> new PasswordResetException(
+                        ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
+                ));
 
         if (resetToken.isUsed()) {
-            throw new UnauthorizedException("Invalid or expired reset link");
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
+            );
         }
 
         if (resetToken.isExpired()) {
             resetToken.markAsUsed();
-            throw new UnauthorizedException("Invalid or expired reset link");
+
+            throw new PasswordResetException(
+                    ErrorCode.AUTH_PASSWORD_RESET_TOKEN_EXPIRED
+            );
         }
 
         User user = resetToken.getUser();
@@ -3537,11 +4118,161 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 }
 
 ================================================================================
-FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\impl\TokenServiceImpl.java
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\impl\SocialAuthServiceImpl.java
 ================================================================================
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.pancomanco.todoappsevenproject.entity.AuthProviderEnum;
+import ru.pancomanco.todoappsevenproject.entity.LinkedAccount;
+import ru.pancomanco.todoappsevenproject.entity.SocialProfile;
+import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
+import ru.pancomanco.todoappsevenproject.exception.SocialAuthException;
+import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
+import ru.pancomanco.todoappsevenproject.repository.LinkedAccountRepository;
+import ru.pancomanco.todoappsevenproject.service.SocialAuthService;
+
+import java.util.Map;
+
+@RequiredArgsConstructor
+@Service
+public class SocialAuthServiceImpl implements SocialAuthService {
+
+    private final AuthRepository authRepository;
+    private final LinkedAccountRepository linkedAccountRepository;
+
+
+    @Transactional
+    @Override
+    public User findOrCreateUser(
+            String registrationId,
+            Map<String, Object> attributes
+    ) {
+        AuthProviderEnum provider = parseProvider(registrationId);
+
+        SocialProfile profile = extractProfile(provider, attributes);
+
+        return linkedAccountRepository
+                .findByProviderAndProviderUserIdWithUser(provider, profile.providerUserId())
+                .map(LinkedAccount::getUser)
+                .orElseGet(() -> createUserAndLinkedAccount(provider, profile));
+    }
+
+    private User createUserAndLinkedAccount(
+            AuthProviderEnum provider,
+            SocialProfile profile
+    ) {
+        String normalizedEmail = profile.email().trim().toLowerCase();
+        User user = authRepository.findByEmailIgnoreCase(normalizedEmail)
+                .orElseGet(() -> authRepository.save(
+                        User.socialUser(
+                                normalizedEmail,
+                                profile.name(),
+                                profile.avatarUrl()
+                        )
+                ));
+
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            user.setEnabled(true);
+        }
+
+        LinkedAccount linkedAccount = new LinkedAccount(
+                user,
+                provider,
+                profile.providerUserId(),
+                normalizedEmail
+        );
+        linkedAccountRepository.save(linkedAccount);
+        return user;
+    }
+
+    private AuthProviderEnum parseProvider(String registrationId) {
+        if (registrationId == null || registrationId.isBlank()) {
+            throw new SocialAuthException(
+                    ErrorCode.AUTH_SOCIAL_PROVIDER_UNSUPPORTED
+            );
+        }
+        try {
+            AuthProviderEnum provider =
+                    AuthProviderEnum.valueOf(registrationId.toUpperCase());
+
+            if (provider != AuthProviderEnum.GOOGLE) {
+                throw new SocialAuthException(
+                        ErrorCode.AUTH_SOCIAL_PROVIDER_UNSUPPORTED
+                );
+            }
+            return provider;
+        } catch (IllegalArgumentException ex) {
+            throw new SocialAuthException(
+                    ErrorCode.AUTH_SOCIAL_PROVIDER_UNSUPPORTED,
+                    ex
+            );
+        }
+//        return switch (registrationId.toLowerCase()) {
+//            case "google" -> AuthProviderEnum.GOOGLE;
+//            default -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
+//        };
+    }
+
+    private SocialProfile extractProfile(
+            AuthProviderEnum provider,
+            Map<String, Object> attributes
+    ) {
+        return switch (provider) {
+            case GOOGLE -> extractGoogleProfile(attributes);
+        };
+    }
+
+    private SocialProfile extractGoogleProfile(Map<String, Object> attributes) {
+        String providerUserId = (String) attributes.get("sub");
+        String email = (String) attributes.get("email");
+        String name = (String) attributes.get("name");
+        String picture = (String) attributes.get("picture");
+
+        Object emailVerifiedValue = attributes.get("email_verified");
+        boolean emailVerified = Boolean.TRUE.equals(emailVerifiedValue);
+
+        if (providerUserId == null || providerUserId.isBlank()) {
+            throw new SocialAuthException(
+                    ErrorCode.AUTH_SOCIAL_PROFILE_INVALID
+            );
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new SocialAuthException(
+                    ErrorCode.AUTH_SOCIAL_EMAIL_MISSING
+            );
+        }
+
+        if (!emailVerified) {
+            throw new SocialAuthException(
+                    ErrorCode.AUTH_SOCIAL_EMAIL_NOT_VERIFIED
+            );
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        String displayName = name != null && !name.isBlank()
+                ? name.trim()
+                : normalizedEmail;
+
+        return new SocialProfile(
+                providerUserId.trim(),
+                normalizedEmail,
+                displayName,
+                picture
+        );
+    }
+}
+
+================================================================================
+FILE: src\main\java\ru\pancomanco\todoappsevenproject\service\impl\TokenServiceImpl.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.service.impl;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -3551,6 +4282,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.RefreshToken;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
+import ru.pancomanco.todoappsevenproject.exception.TokenException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
@@ -3595,7 +4328,7 @@ public class TokenServiceImpl implements TokenService {
     public TokenPair issueTokenPair(User user) {
 
         User managedUser = authRepository.findById(user.getId())
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
+                .orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_USER_NOT_FOUND));
 
         refreshTokenRepository.revokeAllActiveTokensByUserId(managedUser.getId());
         String accessToken = createAccessToken(managedUser);
@@ -3612,39 +4345,39 @@ public class TokenServiceImpl implements TokenService {
         return new TokenPair(accessToken, refreshToken);
     }
 
-    @Transactional
     @Override
+    @Transactional(noRollbackFor = TokenException.class)
     public TokenPair rotateRefreshTokenPair(String rawRefreshToken) {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
-            throw new UnauthorizedException("Missing refresh token");
+            throw new TokenException(ErrorCode.REFRESH_TOKEN_IS_MISSING);
         }
 
         Jwt jwt;
         try {
             jwt = refreshJwtDecoder.decode(rawRefreshToken);
         } catch (JwtException ex) {
-            throw new UnauthorizedException("Invalid refresh token");
+            throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         String tokenHash = sha256(rawRefreshToken);
 
         RefreshToken currentToken = refreshTokenRepository
                 .findByTokenHashForUpdate(tokenHash)
-                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
+                .orElseThrow(() ->  new TokenException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         if (currentToken.isRevoked()) {
             refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
-            throw new UnauthorizedException("Refresh token reuse detected");
+            throw new TokenException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED);
         }
 
         if (currentToken.isExpired()) {
             currentToken.revoke();
-            throw new UnauthorizedException("Refresh token expired");
+            throw new TokenException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         if (!jwt.getSubject().equals(String.valueOf(currentToken.getUser().getId()))) {
             refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
-            throw new UnauthorizedException("Invalid refresh token subject");
+            throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN_SUBJECT);
         }
         currentToken.revoke();
 

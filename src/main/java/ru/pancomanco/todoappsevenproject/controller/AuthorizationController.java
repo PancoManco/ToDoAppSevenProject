@@ -1,5 +1,6 @@
 package ru.pancomanco.todoappsevenproject.controller;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,7 @@ public class AuthorizationController {
     }
 
     @PostMapping("/resend-verification-code")
+    @RateLimiter(name = "authLimiter")
     public ResponseEntity<MessageResponseDto> resendVerificationCode(
             @Valid @RequestBody ResendEmailVerificationRequestDto request
     ) {
@@ -65,6 +67,7 @@ public class AuthorizationController {
                 .body(new MessageResponseDto(messageService.get("auth.verification.resend_code_sent")));
     }
     @PostMapping("/login")
+    @RateLimiter(name = "authLimiter")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
         TokenPair tokens = authService.login(request);
         return authResponse(tokens);
@@ -101,6 +104,7 @@ public class AuthorizationController {
                 .body(new AuthResponse(tokens.accessToken()));
     }
     @PostMapping("/forgot-password")
+    @RateLimiter(name = "authLimiter")
     public ResponseEntity<MessageResponseDto> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequestDto request
     ) {

@@ -44,21 +44,33 @@ spring:
               - email
               - profile
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
     properties:
       mail:
         smtp:
-          auth: true
+          auth: false
           starttls:
-            enable: true
-            required: true
+            enable: false
+            required: false
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
+resilience4j:
+  ratelimiter:
+    instances:
+      authLimiter:
+        limit-for-period: 5
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        register-health-indicator: true
+      defaultLimiter:
+        limit-for-period: 50
+        limit-refresh-period: 10s
+        timeout-duration: 0s
 logging:
   level:
     org.springframework.security: DEBUG
