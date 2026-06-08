@@ -119,9 +119,12 @@ public class TokenServiceImpl implements TokenService {
             return;
         }
         String tokenHash = sha256(rawRefreshToken);
-        refreshTokenRepository
-                .findByTokenHashAndRevokedFalse(tokenHash)
-                .ifPresent(RefreshToken::revoke);
+//        refreshTokenRepository
+//                .findByTokenHashAndRevokedFalse(tokenHash)
+//                .ifPresent(RefreshToken::revoke);
+//
+//        String tokenHash = sha256(rawRefreshToken);
+        refreshTokenRepository.revokeByTokenHashIfActive(tokenHash);
     }
 
     @Override

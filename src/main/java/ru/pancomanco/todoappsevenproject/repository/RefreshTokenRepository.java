@@ -10,15 +10,22 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import ru.pancomanco.todoappsevenproject.entity.RefreshToken;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    Optional<RefreshToken> findByTokenHash(String tokenHash);
 
+    //   Optional<RefreshToken> findByTokenHashAndRevokedFalse(String tokenHash);
 
-    Optional<RefreshToken> findByTokenHashAndRevokedFalse(String tokenHash);
-
+    @Modifying
+    @Query("""
+        update RefreshToken rt
+        set rt.revoked = true
+        where rt.tokenHash = :tokenHash
+          and rt.revoked = false
+        """)
+    int revokeByTokenHashIfActive(@Param("tokenHash") String tokenHash);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -36,4 +43,18 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
             where rt.user.id = :userId and rt.revoked=false
             """)
     int revokeAllActiveTokensByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("""
+            delete from RefreshToken t
+            where t.expiresAt < :now
+               or (
+                    t.revoked = true
+                    and t.createdAt < :revokedCreatedBefore
+               )
+            """)
+    int deleteExpiredOrRevokedBefore(
+            @Param("now") Instant now,
+            @Param("revokedCreatedBefore") Instant revokedCreatedBefore
+    );
 }

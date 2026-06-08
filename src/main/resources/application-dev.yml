@@ -14,6 +14,8 @@ app:
       same-site: "Lax"
   mail:
     from: ${MAIL_FROM}
+  rate-limit:
+    enabled: true
 spring:
   application:
     name: toDoApplication
@@ -59,18 +61,10 @@ spring:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
-resilience4j:
-  ratelimiter:
-    instances:
-      authLimiter:
-        limit-for-period: 5
-        limit-refresh-period: 60s
-        timeout-duration: 0s
-        register-health-indicator: true
-      defaultLimiter:
-        limit-for-period: 50
-        limit-refresh-period: 10s
-        timeout-duration: 0s
+  data:
+    redis:
+      host:localhost
+      port:6379
 logging:
   level:
     org.springframework.security: DEBUG

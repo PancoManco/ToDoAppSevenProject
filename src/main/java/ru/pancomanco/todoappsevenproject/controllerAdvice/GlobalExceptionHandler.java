@@ -3,6 +3,7 @@ package ru.pancomanco.todoappsevenproject.controllerAdvice;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.pancomanco.todoappsevenproject.dto.response.MessageResponseDto;
 import ru.pancomanco.todoappsevenproject.exception.AppException;
+import ru.pancomanco.todoappsevenproject.exception.RateLimitExceededException;
 import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.service.MessageService;
 
@@ -67,13 +69,13 @@ public class GlobalExceptionHandler {
                 .body(new MessageResponseDto(message));
     }
 
-    @ExceptionHandler(RequestNotPermitted.class)
-    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RequestNotPermitted ex) {
-        log.warn("Rate limit exceeded: {}", ex.getMessage());
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RateLimitExceededException ex) {
+        log.warn("Rate limit exceeded. Retry after {} seconds", ex.getRetryAfterSeconds());
 
         return ResponseEntity
                 .status(HttpStatus.TOO_MANY_REQUESTS)
-                .header("Retry-After", "60")
-                .body(new MessageResponseDto("Too many attempts ")); // todo message code
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(new MessageResponseDto(messageService.get("auth.rate_limit.exceeded")));
     }
 }

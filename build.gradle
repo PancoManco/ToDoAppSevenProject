@@ -11,7 +11,7 @@ description = 'ToDoAppSevenProject'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(26)
+        languageVersion = JavaLanguageVersion.of(23)
     }
 }
 
@@ -21,7 +21,7 @@ repositories {
 
 ext {
     mapstructVersion = '1.6.3'
-    resilience4jVersion='2.4.0'
+    bucket4jVersion = '8.19.0'
 }
 
 dependencies {
@@ -51,9 +51,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
     // =========================
-    // Resilience4j (Rate Limiter)
+    // Bucket4j (Rate Limiter)
     // =========================
-    implementation "io.github.resilience4j:resilience4j-spring-boot4:${resilience4jVersion}"
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${bucket4jVersion}"
 
     // =========================
     // Mapping

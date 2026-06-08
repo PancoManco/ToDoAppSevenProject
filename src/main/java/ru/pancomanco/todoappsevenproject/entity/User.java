@@ -4,8 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.time.Instant;
+
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_enabled_created_at", columnList = "enabled, created_at")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,13 +41,25 @@ public class User {
     private Role role = Role.USER;
 
     @Column(nullable = false)
-    private Boolean enabled=true;
+    private Boolean enabled=false;
 
-    public User (String email, String password) {
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+//    public User (String email, String password) {
+//        this.email = email;
+//        this.password = password;
+//    }
+
+    public User(String email, String password) {
         this.email = email;
         this.password = password;
+        this.enabled = false;
+        this.role = Role.USER;
     }
-
     public static User socialUser(
             String email,
             String name,
@@ -55,5 +74,28 @@ public class User {
         user.role = Role.USER;
         return user;
     }
+    @PrePersist
+    void prePersist() {
+        Instant now = Instant.now();
 
+        if (createdAt == null) {
+            createdAt = now;
+        }
+
+        if (updatedAt == null) {
+            updatedAt = now;
+        }
+
+        if (enabled == null) {
+            enabled = false;
+        }
+        if (role == null) {
+            role = Role.USER;
+        }
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }

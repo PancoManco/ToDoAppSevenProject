@@ -50,4 +50,32 @@ public interface EmailVerificationCodeRepository
             @Param("userId") Long userId,
             @Param("now") Instant now
     );
+
+    @Modifying
+    @Query("""
+            delete from EmailVerificationCode c
+            where c.expiresAt < :now
+               or (
+                    c.usedAt is not null
+                    and c.usedAt < :usedBefore
+               )
+            """)
+    int deleteExpiredOrUsedBefore(
+            @Param("now") Instant now,
+            @Param("usedBefore") Instant usedBefore
+    );
+
+    @Modifying
+    @Query("""
+            delete from EmailVerificationCode c
+            where c.user.id in (
+                select u.id
+                from User u
+                where u.enabled = false
+                  and u.createdAt < :userCreatedBefore
+            )
+            """)
+    int deleteCodesForUnverifiedUsersCreatedBefore(
+            @Param("userCreatedBefore") Instant userCreatedBefore
+    );
 }

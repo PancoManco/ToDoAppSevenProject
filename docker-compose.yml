@@ -25,5 +25,15 @@ services:
       - "8025:8025"
     environment:
       - MP_MAX_MESSAGES=500
+  redis:
+    image: redis:7-alpine
+    container_name: redis_container
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
 volumes:
   postgres-data:
+  redis-data:
