@@ -10,13 +10,13 @@ import ru.pancomanco.todoappsevenproject.entity.PasswordResetToken;
 import ru.pancomanco.todoappsevenproject.entity.User;
 import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
 import ru.pancomanco.todoappsevenproject.exception.PasswordResetException;
-import ru.pancomanco.todoappsevenproject.exception.UnauthorizedException;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.PasswordResetTokenRepository;
 import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
 import ru.pancomanco.todoappsevenproject.service.PasswordResetService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
+import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -45,10 +45,10 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     public void sendResetLink(String email) {
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = EmailUtil.normalize(email);
 
         Optional<User> userOptional =
-                authRepository.findByEmailIgnoreCase(normalizedEmail);
+                authRepository.findByEmail(normalizedEmail);
 
         if (userOptional.isEmpty()) {
             return;

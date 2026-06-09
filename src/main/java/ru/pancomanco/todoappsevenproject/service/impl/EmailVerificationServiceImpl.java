@@ -15,6 +15,7 @@ import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.EmailVerificationCodeRepository;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
+import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 import ru.pancomanco.todoappsevenproject.util.VerificationCodeGenerator;
 
 import java.time.Duration;
@@ -67,9 +68,9 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     @Override
     @Transactional(noRollbackFor = EmailVerificationException.class)
     public TokenPair verifyEmail(String email, String code) {
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = EmailUtil.normalize(email);
 
-        User user = authRepository.findByEmailIgnoreCase(normalizedEmail)
+        User user = authRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new EmailVerificationException(
                         ErrorCode.AUTH_VERIFICATION_CODE_INVALID
                 ));
@@ -115,8 +116,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     @Override
     public void resendCode(String email) {
-        String normalizedEmail = email.trim().toLowerCase();
-        Optional<User> userOptional = authRepository.findByEmailIgnoreCase(normalizedEmail);
+        String normalizedEmail = EmailUtil.normalize(email);
+        Optional<User> userOptional = authRepository.findByEmail(normalizedEmail);
         if (userOptional.isEmpty()) {
             return;
         }

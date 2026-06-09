@@ -6,9 +6,9 @@ import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import ru.pancomanco.todoappsevenproject.properties.RateLimitProperties;
 
 import java.time.Duration;
 
@@ -16,10 +16,9 @@ import java.time.Duration;
 public class RateLimitConfig {
     @Bean(destroyMethod = "shutdown")
     RedisClient bucket4jRedisClient(
-            @Value("${spring.data.redis.host}") String host,
-            @Value("${spring.data.redis.port}") int port
+            RateLimitProperties rateLimitProperties
     ) {
-        return RedisClient.create("redis://" + host + ":" + port);
+        return RedisClient.create("redis://" + rateLimitProperties.host() + ":" + rateLimitProperties.port());
     }
 
     @Bean(destroyMethod = "close")

@@ -1,6 +1,5 @@
 package ru.pancomanco.todoappsevenproject.controllerAdvice;
 
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

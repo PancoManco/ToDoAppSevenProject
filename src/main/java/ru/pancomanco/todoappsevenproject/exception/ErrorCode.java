@@ -2,7 +2,6 @@ package ru.pancomanco.todoappsevenproject.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.http.parser.HttpParser;
 import org.springframework.http.HttpStatus;
 
 @Getter
@@ -53,40 +52,40 @@ public enum ErrorCode {
 
     // PasswordResetService
     AUTH_PASSWORD_RESET_TOKEN_INVALID(
-        "auth.password_reset.token_invalid",
-        HttpStatus.BAD_REQUEST
-        ),
+            "auth.password_reset.token_invalid",
+            HttpStatus.BAD_REQUEST
+    ),
 
     AUTH_PASSWORD_RESET_TOKEN_EXPIRED(
-        "auth.password_reset.token_expired",
-        HttpStatus.BAD_REQUEST
-        ),
+            "auth.password_reset.token_expired",
+            HttpStatus.BAD_REQUEST
+    ),
 
     AUTH_PASSWORD_RESET_EMAIL_SEND_FAILED(
-        "auth.password_reset.email_send_failed",
-        HttpStatus.SERVICE_UNAVAILABLE
-        ),
+            "auth.password_reset.email_send_failed",
+            HttpStatus.SERVICE_UNAVAILABLE
+    ),
 
     // SocialAuthService
     AUTH_SOCIAL_PROVIDER_UNSUPPORTED(
-        "auth.social.provider_unsupported",
-        HttpStatus.BAD_REQUEST
-        ),
+            "auth.social.provider_unsupported",
+            HttpStatus.BAD_REQUEST
+    ),
 
     AUTH_SOCIAL_PROFILE_INVALID(
-        "auth.social.profile_invalid",
-        HttpStatus.BAD_REQUEST
-        ),
+            "auth.social.profile_invalid",
+            HttpStatus.BAD_REQUEST
+    ),
 
     AUTH_SOCIAL_EMAIL_MISSING(
-        "auth.social.email_missing",
-        HttpStatus.BAD_REQUEST
-        ),
+            "auth.social.email_missing",
+            HttpStatus.BAD_REQUEST
+    ),
 
     AUTH_SOCIAL_EMAIL_NOT_VERIFIED(
-        "auth.social.email_not_verified",
-        HttpStatus.BAD_REQUEST
-        ),
+            "auth.social.email_not_verified",
+            HttpStatus.BAD_REQUEST
+    ),
 
     // TokenService
     AUTH_USER_NOT_FOUND("auth.user.not_found",

@@ -15,8 +15,8 @@ import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.service.AuthenticationService;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
+import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -31,12 +31,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void register(RegisterRequestDto registerRequestDto) {
-        String email = normalizeEmail(registerRequestDto.email());
+        String email = EmailUtil.normalize(registerRequestDto.email());
         String passwordHash = passwordEncoder.encode(registerRequestDto.password());
         String name = normalizeName(registerRequestDto.name());
 
         Optional<User> existingUserOptional =
-                authRepository.findByEmailIgnoreCase(email);
+                authRepository.findByEmail(email);
 
         if (existingUserOptional.isPresent()) {
             User existingUser = existingUserOptional.get();
@@ -62,19 +62,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenPair login(LoginRequestDto loginRequestDto) {
-        String email = normalizeEmail(loginRequestDto.email());
-
-        User user = authRepository.findByEmailIgnoreCase(email)
+        String email = EmailUtil.normalize(loginRequestDto.email());
+        User user = authRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException(
                         ErrorCode.AUTH_INVALID_CREDENTIALS
                 ));
-
         if (!Boolean.TRUE.equals(user.getEnabled())) {
             throw new EmailVerificationException(
                     ErrorCode.AUTH_EMAIL_NOT_VERIFIED
             );
         }
-
         if (!passwordEncoder.matches(
                 loginRequestDto.password(),
                 user.getPassword()
@@ -83,7 +80,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     ErrorCode.AUTH_INVALID_CREDENTIALS
             );
         }
-
         return tokenService.issueTokenPair(user);
     }
 
@@ -108,10 +104,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setEnabled(false);
 
         emailVerificationService.sendVerificationCode(user);
-    }
-
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String normalizeName(String name) {

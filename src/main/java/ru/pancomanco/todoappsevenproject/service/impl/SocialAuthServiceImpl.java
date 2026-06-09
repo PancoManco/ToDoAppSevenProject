@@ -12,6 +12,7 @@ import ru.pancomanco.todoappsevenproject.exception.SocialAuthException;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.LinkedAccountRepository;
 import ru.pancomanco.todoappsevenproject.service.SocialAuthService;
+import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 
 import java.util.Map;
 
@@ -43,8 +44,8 @@ public class SocialAuthServiceImpl implements SocialAuthService {
             AuthProviderEnum provider,
             SocialProfile profile
     ) {
-        String normalizedEmail = profile.email().trim().toLowerCase();
-        User user = authRepository.findByEmailIgnoreCase(normalizedEmail)
+        String normalizedEmail = EmailUtil.normalize(profile.email());
+        User user = authRepository.findByEmail(normalizedEmail)
                 .orElseGet(() -> authRepository.save(
                         User.socialUser(
                                 normalizedEmail,
@@ -131,7 +132,7 @@ public class SocialAuthServiceImpl implements SocialAuthService {
             );
         }
 
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = EmailUtil.normalize(email);
 
         String displayName = name != null && !name.isBlank()
                 ? name.trim()

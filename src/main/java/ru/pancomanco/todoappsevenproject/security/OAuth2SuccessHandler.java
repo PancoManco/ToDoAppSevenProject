@@ -1,4 +1,4 @@
-package ru.pancomanco.todoappsevenproject.config;
+package ru.pancomanco.todoappsevenproject.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
