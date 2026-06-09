@@ -33,7 +33,7 @@ http://localhost:5173
 Скопируй `.env.example` в `.env`:
 
 ```bash
-cp .env.example .env
+cp .env.prod.local.example .env.prod.local
 ```
 
 ```env

@@ -3,6 +3,7 @@ package ru.pancomanco.todoappsevenproject.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 
 import java.time.Instant;
 
@@ -76,6 +77,7 @@ public class User {
     }
     @PrePersist
     void prePersist() {
+        email = EmailUtil.normalize(email);
         Instant now = Instant.now();
 
         if (createdAt == null) {
@@ -96,6 +98,7 @@ public class User {
 
     @PreUpdate
     void preUpdate() {
+        email = EmailUtil.normalize(email);
         updatedAt = Instant.now();
     }
 }

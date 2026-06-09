@@ -1,0 +1,22 @@
+app:
+  security:
+    cookie:
+      secure: ${COOKIE_SECURE:false}
+      same-site: ${COOKIE_SAME_SITE:Lax}
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+server:
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    root: INFO
+    ru.pancomanco.todoappsevenproject: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
