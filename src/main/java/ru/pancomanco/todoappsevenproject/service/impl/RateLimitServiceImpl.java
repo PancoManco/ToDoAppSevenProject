@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.pancomanco.todoappsevenproject.exception.RateLimitExceededException;
 import ru.pancomanco.todoappsevenproject.service.RateLimitService;
+import ru.pancomanco.todoappsevenproject.util.HashUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -24,41 +25,46 @@ public class RateLimitServiceImpl  implements RateLimitService {
 
     @Override
     public void checkRegister(String ip, String email) {
+        String emailHash = HashUtil.sha256Base64UrlNormalizedEmail(email);
         check("register:ip:" + ip, 5, Duration.ofMinutes(10));
-        check("register:email:" + hashEmail(email), 3, Duration.ofHours(1));
+        check("register:email:" + emailHash, 3, Duration.ofHours(1));
     }
 
     @Override
     public void checkLogin(String ip, String email) {
+        String emailHash = HashUtil.sha256Base64UrlNormalizedEmail(email);
         check("login:ip:" + ip, 20, Duration.ofMinutes(1));
-        check("login:email:" + hashEmail(email), 5, Duration.ofMinutes(1));
-        check("login:ip-email:" + ip + ":" + hashEmail(email), 10, Duration.ofMinutes(1));
+        check("login:email:" + emailHash, 5, Duration.ofMinutes(1));
+        check("login:ip-email:" + ip + ":" + emailHash, 10, Duration.ofMinutes(1));
     }
 
     @Override
     public void checkVerifyEmail(String ip, String email) {
+        String emailHash = HashUtil.sha256Base64UrlNormalizedEmail(email);
         check("verify-email:ip:" + ip, 30, Duration.ofMinutes(10));
-        check("verify-email:email:" + hashEmail(email), 10, Duration.ofMinutes(10));
+        check("verify-email:email:" + emailHash, 10, Duration.ofMinutes(10));
     }
 
     @Override
     public void checkResendVerification(String ip, String email) {
+        String emailHash = HashUtil.sha256Base64UrlNormalizedEmail(email);
         check("resend-verification:ip:" + ip, 5, Duration.ofMinutes(10));
-        check("resend-verification:email:" + hashEmail(email), 2, Duration.ofMinutes(1));
-        check("resend-verification:email-hour:" + hashEmail(email), 5, Duration.ofHours(1));
+        check("resend-verification:email:" + emailHash, 2, Duration.ofMinutes(1));
+        check("resend-verification:email-hour:" + emailHash, 5, Duration.ofHours(1));
     }
 
     @Override
     public void checkForgotPassword(String ip, String email) {
+        String emailHash = HashUtil.sha256Base64UrlNormalizedEmail(email);
         check("forgot-password:ip:" + ip, 10, Duration.ofMinutes(15));
-        check("forgot-password:email:" + hashEmail(email), 3, Duration.ofMinutes(15));
-        check("forgot-password:email-hour:" + hashEmail(email), 5, Duration.ofHours(1));
+        check("forgot-password:email:" + emailHash, 3, Duration.ofMinutes(15));
+        check("forgot-password:email-hour:" + emailHash, 5, Duration.ofHours(1));
     }
 
     @Override
     public void checkResetPassword(String ip, String token) {
         check("reset-password:ip:" + ip, 10, Duration.ofMinutes(10));
-        check("reset-password:token:" + hash(token), 5, Duration.ofMinutes(10));
+        check("reset-password:token:" + HashUtil.sha256Base64Url(token), 5, Duration.ofMinutes(10));
     }
 
     private void check(String key, long capacity, Duration refillPeriod) {
@@ -85,24 +91,6 @@ public class RateLimitServiceImpl  implements RateLimitService {
         }
     }
 
-    private String hashEmail(String email) {
-        String normalized = email == null
-                ? ""
-                : email.trim().toLowerCase(Locale.ROOT);
 
-        return hash(normalized);
-    }
 
-    private String hash(String value) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] raw = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-
-            return Base64.getUrlEncoder()
-                    .withoutPadding()
-                    .encodeToString(raw);
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failed to hash rate limit key", ex);
-        }
-    }
 }

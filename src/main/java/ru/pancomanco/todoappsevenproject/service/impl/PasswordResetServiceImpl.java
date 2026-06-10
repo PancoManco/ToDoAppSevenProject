@@ -17,6 +17,7 @@ import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
 import ru.pancomanco.todoappsevenproject.service.PasswordResetService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 import ru.pancomanco.todoappsevenproject.util.EmailUtil;
+import ru.pancomanco.todoappsevenproject.util.HashUtil;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +67,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         );
 
         String rawToken = generateResetToken();
-        String tokenHash = tokenService.sha256(rawToken);
+        String tokenHash = HashUtil.sha256Hex(rawToken);
 
         PasswordResetToken resetToken = new PasswordResetToken(
                 user,
@@ -98,7 +99,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                     ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
             );
         }
-        String tokenHash = tokenService.sha256(token);
+        String tokenHash = HashUtil.sha256Hex(token);
 
         PasswordResetToken resetToken = resetTokenRepository
                 .findByTokenHashForUpdate(tokenHash)

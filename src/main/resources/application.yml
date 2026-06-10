@@ -77,6 +77,24 @@ spring:
     encoding: UTF-8
     fallback-to-system-locale: false
 
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics
+    endpoint:
+      health:
+        probes:
+          enabled: true
+        show-details: never
+    health:
+      db:
+        enabled: true
+      redis:
+        enabled: true
+      mail:
+        enabled: true
+
 logging:
   level:
     root: INFO

@@ -74,6 +74,11 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // =========================
+    // Monitoring / Actuator
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // =========================
     // Tests: Core
     // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

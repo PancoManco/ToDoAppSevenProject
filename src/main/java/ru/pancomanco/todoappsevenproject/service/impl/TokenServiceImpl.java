@@ -16,6 +16,7 @@ import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
+import ru.pancomanco.todoappsevenproject.util.HashUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -61,7 +62,7 @@ public class TokenServiceImpl implements TokenService {
         String accessToken = createAccessToken(managedUser);
         String refreshToken = createRefreshToken(managedUser);
 
-        String refreshTokenHash = sha256(refreshToken);
+        String refreshTokenHash = HashUtil.sha256Hex(refreshToken);
         Instant refreshExpiresAt = Instant.now()
                 .plus(Duration.ofDays(properties.jwt().refreshTokenDays()));
 
@@ -86,7 +87,7 @@ public class TokenServiceImpl implements TokenService {
             throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        String tokenHash = sha256(rawRefreshToken);
+        String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
 
         RefreshToken currentToken = refreshTokenRepository
                 .findByTokenHashForUpdate(tokenHash)
@@ -118,7 +119,7 @@ public class TokenServiceImpl implements TokenService {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             return;
         }
-        String tokenHash = sha256(rawRefreshToken);
+        String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
 //        refreshTokenRepository
 //                .findByTokenHashAndRevokedFalse(tokenHash)
 //                .ifPresent(RefreshToken::revoke);
@@ -170,14 +171,4 @@ public class TokenServiceImpl implements TokenService {
 
     }
 
-    @Override
-    public String sha256(String value) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            throw new IllegalStateException("Could not hash token", e);
-        }
-    }
 }

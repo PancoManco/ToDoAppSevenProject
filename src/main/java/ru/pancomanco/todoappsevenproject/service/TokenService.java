@@ -10,5 +10,4 @@ public interface TokenService {
     void revokeRefreshTokenPair(String rawRefreshToken);
     String createAccessToken(User user);
     String createRefreshToken(User user);
-    String sha256(String value);
 }

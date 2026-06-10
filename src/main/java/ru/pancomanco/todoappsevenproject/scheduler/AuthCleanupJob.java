@@ -56,14 +56,6 @@ public class AuthCleanupJob {
                         revokedRefreshTokenCutoff
                 );
 
-        /**
-         * Важно:
-         * сначала удаляем verification codes для zombie users,
-         * потом самих users.
-         *
-         * Иначе FK email_verification_codes.user_id -> users.id
-         * может не дать удалить пользователя.
-         */
         int deletedCodesForZombieUsers =
                 emailVerificationCodeRepository.deleteCodesForUnverifiedUsersCreatedBefore(
                         unverifiedUserCutoff
