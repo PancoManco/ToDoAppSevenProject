@@ -46,7 +46,7 @@ public interface EmailVerificationCodeRepository
             where c.user.id = :userId
               and c.usedAt is null
             """)
-    int markAllActiveCodesAsUsedByUserId(
+    void markAllActiveCodesAsUsedByUserId(
             @Param("userId") Long userId,
             @Param("now") Instant now
     );

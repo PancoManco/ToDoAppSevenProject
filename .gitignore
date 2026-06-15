@@ -36,7 +36,8 @@ out/
 
 ### VS Code ###
 .vscode/
-.env
+.env.local.dev
+.env.local.prod
 .env.*
 !.env.example
 node_modules/

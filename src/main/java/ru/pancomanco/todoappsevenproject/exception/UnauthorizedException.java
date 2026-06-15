@@ -1,6 +1,5 @@
 package ru.pancomanco.todoappsevenproject.exception;
 
-import org.springframework.http.HttpStatus;
 
 public class UnauthorizedException extends AppException{
 

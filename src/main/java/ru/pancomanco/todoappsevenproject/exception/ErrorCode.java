@@ -87,24 +87,41 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST
     ),
 
+    AUTH_SOCIAL_UNVERIFIED_EMAIL_CONFLICT(
+            "auth.social.unverified_email_conflict",
+            HttpStatus.CONFLICT
+    ),
+
     // TokenService
-    AUTH_USER_NOT_FOUND("auth.user.not_found",
+    AUTH_USER_NOT_FOUND(
+            "auth.user.not_found",
             HttpStatus.UNAUTHORIZED
     ),
-    REFRESH_TOKEN_IS_MISSING("token.refresh_token.missing",
+    REFRESH_TOKEN_IS_MISSING(
+            "token.refresh_token.missing",
             HttpStatus.UNAUTHORIZED
     ),
-    INVALID_REFRESH_TOKEN("token.invalid_refresh_token",
+    INVALID_REFRESH_TOKEN(
+            "token.invalid_refresh_token",
             HttpStatus.UNAUTHORIZED
     ),
-    REFRESH_TOKEN_REUSE_DETECTED("token.refresh_token_reuse_detected",
+    REFRESH_TOKEN_REUSE_DETECTED(
+            "token.refresh_token_reuse_detected",
             HttpStatus.FORBIDDEN
     ),
-    REFRESH_TOKEN_EXPIRED("token.refresh_token_is_expired",
+    REFRESH_TOKEN_EXPIRED(
+            "token.refresh_token_is_expired",
             HttpStatus.UNAUTHORIZED
     ),
-    INVALID_REFRESH_TOKEN_SUBJECT("token.invalid_refresh_token_subject",
+    INVALID_REFRESH_TOKEN_SUBJECT(
+            "token.invalid_refresh_token_subject",
             HttpStatus.UNAUTHORIZED
+    ),
+
+    // RateLimitService
+    AUTH_RATE_LIMIT_EXCEEDED(
+            "auth.rate_limit.exceeded",
+            HttpStatus.TOO_MANY_REQUESTS
     );
 
     private final String messageKey;

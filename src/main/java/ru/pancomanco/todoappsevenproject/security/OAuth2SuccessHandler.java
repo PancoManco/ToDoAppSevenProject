@@ -52,7 +52,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                     registrationId,
                     oauthUser.getAttributes()
             );
-
+            log.info("OAuth2 login successful: provider={}, userId={}, email={}",
+                    registrationId, user.getId(), user.getEmail());
             TokenPair tokens = tokenService.issueTokenPair(user);
 
             ResponseCookie refreshCookie = refreshCookieHelper.create(
@@ -68,8 +69,12 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect(properties.oauth2SuccessRedirect());
 
         } catch (AppException ex) {
-            log.warn("OAuth2 login failed: {}", ex.getErrorCode(), ex);
-
+            log.warn("OAuth2 login failed: provider={}, error={}",
+                    request.getRequestURI(), ex.getErrorCode().getMessageKey());
+            response.sendRedirect(properties.oauth2FailureRedirect());
+        } catch (Exception ex) {
+            log.error("OAuth2 login failed (Unexpected): provider={}, error={}",
+                    request.getRequestURI(), ex.getMessage(), ex);
             response.sendRedirect(properties.oauth2FailureRedirect());
         }
 

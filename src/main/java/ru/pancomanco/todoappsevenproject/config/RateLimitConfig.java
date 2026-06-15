@@ -1,5 +1,7 @@
 package ru.pancomanco.todoappsevenproject.config;
 
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
@@ -14,6 +16,38 @@ import java.time.Duration;
 
 @Configuration
 public class RateLimitConfig {
+
+    public static final BucketConfiguration REGISTER_IP_LIMIT = buildConfig(5, Duration.ofMinutes(10));
+    public static final BucketConfiguration REGISTER_EMAIL_LIMIT = buildConfig(3, Duration.ofHours(1));
+
+    public static final BucketConfiguration LOGIN_IP_LIMIT = buildConfig(20, Duration.ofMinutes(1));
+    public static final BucketConfiguration LOGIN_EMAIL_LIMIT = buildConfig(5, Duration.ofMinutes(1));
+    public static final BucketConfiguration LOGIN_IP_EMAIL_LIMIT = buildConfig(10, Duration.ofMinutes(1));
+
+    public static final BucketConfiguration VERIFY_EMAIL_IP_LIMIT = buildConfig(30, Duration.ofMinutes(10));
+    public static final BucketConfiguration VERIFY_EMAIL_EMAIL_LIMIT = buildConfig(10, Duration.ofMinutes(10));
+
+    public static final BucketConfiguration RESEND_VERIFICATION_IP_LIMIT = buildConfig(5, Duration.ofMinutes(10));
+    public static final BucketConfiguration RESEND_VERIFICATION_EMAIL_LIMIT = buildConfig(2, Duration.ofMinutes(1));
+    public static final BucketConfiguration RESEND_VERIFICATION_EMAIL_HOUR_LIMIT = buildConfig(5, Duration.ofHours(1));
+
+    public static final BucketConfiguration FORGOT_PASSWORD_IP_LIMIT = buildConfig(10, Duration.ofMinutes(15));
+    public static final BucketConfiguration FORGOT_PASSWORD_EMAIL_LIMIT = buildConfig(3, Duration.ofMinutes(15));
+    public static final BucketConfiguration FORGOT_PASSWORD_EMAIL_HOUR_LIMIT = buildConfig(5, Duration.ofHours(1));
+
+    public static final BucketConfiguration RESET_PASSWORD_IP_LIMIT = buildConfig(10, Duration.ofMinutes(10));
+    public static final BucketConfiguration RESET_PASSWORD_TOKEN_LIMIT = buildConfig(5, Duration.ofMinutes(10));
+
+    private static BucketConfiguration buildConfig(long capacity, Duration refillPeriod) {
+        return BucketConfiguration.builder()
+                .addLimit(Bandwidth.builder()
+                        .capacity(capacity)
+                        .refillGreedy(capacity, refillPeriod)
+                        .build())
+                .build();
+    }
+
+
     @Bean(destroyMethod = "shutdown")
     RedisClient bucket4jRedisClient(
             RateLimitProperties rateLimitProperties

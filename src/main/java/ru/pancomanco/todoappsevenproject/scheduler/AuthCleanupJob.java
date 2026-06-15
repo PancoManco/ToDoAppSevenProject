@@ -31,6 +31,7 @@ public class AuthCleanupJob {
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void cleanupAuthData() {
+        log.debug("Starting scheduled auth cleanup job...");
         Instant now = Instant.now();
 
         Instant unverifiedUserCutoff = now.minus(UNVERIFIED_USER_TTL);

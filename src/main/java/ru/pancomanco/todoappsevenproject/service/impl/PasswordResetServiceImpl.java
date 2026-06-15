@@ -1,6 +1,7 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PasswordResetServiceImpl implements PasswordResetService {
 
     private static final Duration RESET_TOKEN_TTL = Duration.ofMinutes(15);
@@ -39,7 +41,6 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final PasswordEncoder passwordEncoder;
     private final EmailSender emailSender;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final TokenService tokenService;
     private final AuthProperties properties;
 
     private final SecureRandom secureRandom = new SecureRandom();
@@ -52,12 +53,14 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                 authRepository.findByEmail(normalizedEmail);
 
         if (userOptional.isEmpty()) {
+            log.debug("Password reset requested for non-existent email: {}. Ignored for security (Blind Response).", email);
             return;
         }
 
         User user = userOptional.get();
 
         if (!Boolean.TRUE.equals(user.getEnabled())) {
+            log.debug("Password reset requested for unverified email: {}. Ignored for security.", email);
             return;
         }
 
@@ -83,7 +86,9 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         try {
             emailSender.sendPasswordResetLink(user.getEmail(), resetLink);
+            log.info("Password reset link sent to email: {}", email);
         } catch (MailException ex) {
+            log.error("Failed to send password reset email to: {}. Reason: {}", email, ex.getMessage());
             throw new PasswordResetException(
                     ErrorCode.AUTH_PASSWORD_RESET_EMAIL_SEND_FAILED,
                     ex
@@ -101,13 +106,14 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         }
         String tokenHash = HashUtil.sha256Hex(token);
 
-        PasswordResetToken resetToken = resetTokenRepository
-                .findByTokenHashForUpdate(tokenHash)
-                .orElseThrow(() -> new PasswordResetException(
-                        ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
-                ));
+        PasswordResetToken resetToken = resetTokenRepository.findByTokenHashForUpdate(tokenHash)
+                .orElseThrow(() -> {
+                    log.warn("Attempt to reset password with invalid/unknown token hash");
+                    return new PasswordResetException(ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID);
+                });
 
         if (resetToken.isUsed()) {
+            log.warn("Attempt to use expired password reset token for user ID: {}", resetToken.getUser().getId());
             throw new PasswordResetException(
                     ErrorCode.AUTH_PASSWORD_RESET_TOKEN_INVALID
             );
@@ -115,19 +121,16 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         if (resetToken.isExpired()) {
             resetToken.markAsUsed();
-
+            log.warn("Attempt to use expired password reset token for user ID: {}", resetToken.getUser().getId());
             throw new PasswordResetException(
                     ErrorCode.AUTH_PASSWORD_RESET_TOKEN_EXPIRED
             );
         }
-
         User user = resetToken.getUser();
-
         resetToken.markAsUsed();
-
         user.setPassword(passwordEncoder.encode(newPassword));
-
         refreshTokenRepository.revokeAllActiveTokensByUserId(user.getId());
+        log.info("Password successfully reset and all sessions revoked for user ID: {}, email: {}", user.getId(), user.getEmail());
     }
 
     private String generateResetToken() {

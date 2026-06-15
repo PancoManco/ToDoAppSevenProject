@@ -62,6 +62,8 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(successHandler)
                         .failureHandler((request, response, exception) -> {
+                            log.warn("OAuth2 authentication failed . URI: {}, Error: {}, IP: {}",
+                                    request.getRequestURI(), exception.getMessage(), request.getRemoteAddr());
                             response.sendRedirect(authProperties.oauth2FailureRedirect());
                         })
                 )
@@ -121,7 +123,6 @@ public class SecurityConfig {
         decoder.setJwtValidator(
                 new DelegatingOAuth2TokenValidator<>(issuerValidator, tokenTypeValidator)
         );
-
         return decoder;
     }
 
@@ -142,7 +143,6 @@ public class SecurityConfig {
         decoder.setJwtValidator(
                 new DelegatingOAuth2TokenValidator<>(issuerValidator, tokenTypeValidator)
         );
-
         return decoder;
     }
 

@@ -1,6 +1,7 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.todoappsevenproject.entity.AuthProviderEnum;
@@ -15,9 +16,11 @@ import ru.pancomanco.todoappsevenproject.service.SocialAuthService;
 import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class SocialAuthServiceImpl implements SocialAuthService {
 
     private final AuthRepository authRepository;
@@ -31,7 +34,6 @@ public class SocialAuthServiceImpl implements SocialAuthService {
             Map<String, Object> attributes
     ) {
         AuthProviderEnum provider = parseProvider(registrationId);
-
         SocialProfile profile = extractProfile(provider, attributes);
 
         return linkedAccountRepository
@@ -45,27 +47,54 @@ public class SocialAuthServiceImpl implements SocialAuthService {
             SocialProfile profile
     ) {
         String normalizedEmail = EmailUtil.normalize(profile.email());
-        User user = authRepository.findByEmail(normalizedEmail)
-                .orElseGet(() -> authRepository.save(
-                        User.socialUser(
-                                normalizedEmail,
-                                profile.name(),
-                                profile.avatarUrl()
-                        )
-                ));
-
-        if (!Boolean.TRUE.equals(user.getEnabled())) {
-            user.setEnabled(true);
+        Optional<User> existingUserOpt = authRepository.findByEmail(normalizedEmail);
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            if (!Boolean.TRUE.equals(existingUser.getEnabled())) {
+                log.warn("SECURITY ALERT: OAuth login attempt for unverified local account. Email: {}, Provider: {}", normalizedEmail, provider);
+                throw new SocialAuthException(ErrorCode.AUTH_SOCIAL_UNVERIFIED_EMAIL_CONFLICT);
+            }
+            boolean alreadyLinked = linkedAccountRepository.existsByUserAndProvider(existingUser, provider);
+            if (!alreadyLinked) {
+                LinkedAccount linkedAccount = new LinkedAccount(
+                        existingUser, provider, profile.providerUserId(), normalizedEmail
+                );
+                linkedAccountRepository.save(linkedAccount);
+            }
+            return existingUser;
         }
-
+        User newUser = User.socialUser(normalizedEmail, profile.name(), profile.avatarUrl());
+        authRepository.save(newUser);
         LinkedAccount linkedAccount = new LinkedAccount(
-                user,
+                newUser,
                 provider,
                 profile.providerUserId(),
                 normalizedEmail
         );
         linkedAccountRepository.save(linkedAccount);
-        return user;
+        log.info("Successfully linked OAuth provider [{}] to existing user ID: {}", provider, newUser.getId());
+        return newUser;
+//        User user = authRepository.findByEmail(normalizedEmail)
+//                .orElseGet(() -> authRepository.save(
+//                        User.socialUser(
+//                                normalizedEmail,
+//                                profile.name(),
+//                                profile.avatarUrl()
+//                        )
+//                ));
+//
+//        if (!Boolean.TRUE.equals(user.getEnabled())) {
+//            user.setEnabled(true);
+//        }
+//
+//        LinkedAccount linkedAccount = new LinkedAccount(
+//                user,
+//                provider,
+//                profile.providerUserId(),
+//                normalizedEmail
+//        );
+//        linkedAccountRepository.save(linkedAccount);
+//        return user;
     }
 
     private AuthProviderEnum parseProvider(String registrationId) {
@@ -115,18 +144,21 @@ public class SocialAuthServiceImpl implements SocialAuthService {
         boolean emailVerified = Boolean.TRUE.equals(emailVerifiedValue);
 
         if (providerUserId == null || providerUserId.isBlank()) {
+            log.warn("OAuth profile rejected: Missing 'sub' (providerUserId) from Google. Attributes keys: {}", attributes.keySet());
             throw new SocialAuthException(
                     ErrorCode.AUTH_SOCIAL_PROFILE_INVALID
             );
         }
 
         if (email == null || email.isBlank()) {
+            log.warn("OAuth profile rejected: Missing 'email' from Google for sub: {}", providerUserId);
             throw new SocialAuthException(
                     ErrorCode.AUTH_SOCIAL_EMAIL_MISSING
             );
         }
 
         if (!emailVerified) {
+            log.warn("OAuth profile rejected: Google email is not verified for sub: {}, email: {}", providerUserId, email);
             throw new SocialAuthException(
                     ErrorCode.AUTH_SOCIAL_EMAIL_NOT_VERIFIED
             );

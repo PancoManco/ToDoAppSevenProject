@@ -1,11 +1,11 @@
 package ru.pancomanco.todoappsevenproject.exception;
 
-public class RateLimitExceededException extends RuntimeException {
+public class RateLimitExceededException extends AppException {
 
     private final long retryAfterSeconds;
 
-    public RateLimitExceededException(long retryAfterSeconds) {
-        super("Rate limit exceeded");
+    public RateLimitExceededException(ErrorCode errorCode, long retryAfterSeconds) {
+        super(errorCode);
         this.retryAfterSeconds = retryAfterSeconds;
     }
 

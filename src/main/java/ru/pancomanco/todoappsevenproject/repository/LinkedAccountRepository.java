@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.pancomanco.todoappsevenproject.entity.AuthProviderEnum;
 import ru.pancomanco.todoappsevenproject.entity.LinkedAccount;
+import ru.pancomanco.todoappsevenproject.entity.User;
 
 import java.util.Optional;
 
@@ -22,4 +23,5 @@ public interface LinkedAccountRepository extends JpaRepository<LinkedAccount, Lo
             @Param("provider") AuthProviderEnum provider,
             @Param("providerUserId") String providerUserId
     );
+    boolean existsByUserAndProvider(User user, AuthProviderEnum provider);
 }

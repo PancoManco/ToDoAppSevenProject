@@ -1,6 +1,7 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class EmailVerificationServiceImpl implements EmailVerificationService {
     private static final Duration CODE_TTL = Duration.ofMinutes(5);
 
@@ -58,7 +60,9 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         codeRepository.save(verificationCode);
         try {
             emailSender.sendVerificationCode(user.getEmail(), code);
+            log.info("Verification code sent successfully to email: {}", user.getEmail());
         } catch (MailException ex) {
+            log.error("Failed to send verification code to email: {}. Reason: {}", user.getEmail(), ex.getMessage());
             throw new EmailVerificationException(
                     ErrorCode.AUTH_VERIFICATION_EMAIL_SEND_FAILED, ex
             );
@@ -76,6 +80,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 ));
 
         if (Boolean.TRUE.equals(user.getEnabled())) {
+            log.debug("Attempt to verify already enabled account for email: {}", email);
             throw new EmailVerificationException(
                     ErrorCode.AUTH_EMAIL_ALREADY_VERIFIED
             );
@@ -96,6 +101,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
         if (!verificationCode.hasAttemptsLeft()) {
             verificationCode.markAsUsed();
+            log.warn("Verification attempts exceeded for email: {}. Account locked from verification.", email);
             throw new EmailVerificationException(
                     ErrorCode.AUTH_VERIFICATION_ATTEMPTS_EXCEEDED
             );
@@ -104,13 +110,15 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         verificationCode.increaseAttempts();
 
         if (!passwordEncoder.matches(code, verificationCode.getCodeHash())) {
+            log.warn("Invalid verification code attempt for email: {}. Attempts: {}/{}",
+                    email, verificationCode.getAttempts(), EmailVerificationCode.MAX_ATTEMPTS);
             throw new EmailVerificationException(
                     ErrorCode.AUTH_VERIFICATION_CODE_INVALID
             );
         }
         verificationCode.markAsUsed();
         user.setEnabled(true);
-
+        log.info("Email successfully verified for user ID: {}, email: {}", user.getId(), email);
         return tokenService.issueTokenPair(user);
     }
 
@@ -119,10 +127,12 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         String normalizedEmail = EmailUtil.normalize(email);
         Optional<User> userOptional = authRepository.findByEmail(normalizedEmail);
         if (userOptional.isEmpty()) {
+            log.debug("Resend code requested for non-existent email: {}. Ignored for security.", email);
             return;
         }
         User user = userOptional.get();
         if (Boolean.TRUE.equals(user.getEnabled())) {
+            log.debug("Resend code requested for already verified email: {}. Ignored.", email);
             return;
         }
         sendVerificationCode(user);

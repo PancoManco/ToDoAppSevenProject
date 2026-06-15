@@ -58,6 +58,7 @@ public class TokenServiceImpl implements TokenService {
         User managedUser = authRepository.findById(user.getId())
                 .orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_USER_NOT_FOUND));
 
+        log.debug("Issuing new token pair for user ID: {}. Revoking previous active sessions.", managedUser.getId());
         refreshTokenRepository.revokeAllActiveTokensByUserId(managedUser.getId());
         String accessToken = createAccessToken(managedUser);
         String refreshToken = createRefreshToken(managedUser);
@@ -94,21 +95,26 @@ public class TokenServiceImpl implements TokenService {
                 .orElseThrow(() ->  new TokenException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         if (currentToken.isRevoked()) {
+            log.warn("SECURITY ALERT: Refresh token reuse detected for user ID: {}. All sessions terminated.",
+                    currentToken.getUser().getId());
             refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
             throw new TokenException(ErrorCode.REFRESH_TOKEN_REUSE_DETECTED);
         }
 
         if (currentToken.isExpired()) {
+            log.debug("Expired refresh token used for user ID: {}", currentToken.getUser().getId());
             currentToken.revoke();
             throw new TokenException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         if (!jwt.getSubject().equals(String.valueOf(currentToken.getUser().getId()))) {
+            log.error("SECURITY ALERT: Refresh token subject mismatch! JWT subject: {}, DB user ID: {}",
+                    jwt.getSubject(), currentToken.getUser().getId());
             refreshTokenRepository.revokeAllActiveTokensByUserId(currentToken.getUser().getId());
             throw new TokenException(ErrorCode.INVALID_REFRESH_TOKEN_SUBJECT);
         }
+        log.debug("Successfully rotated refresh token for user ID: {}", currentToken.getUser().getId());
         currentToken.revoke();
-
         return issueTokenPair(currentToken.getUser());
 
     }
@@ -125,7 +131,12 @@ public class TokenServiceImpl implements TokenService {
 //                .ifPresent(RefreshToken::revoke);
 //
 //        String tokenHash = sha256(rawRefreshToken);
-        refreshTokenRepository.revokeByTokenHashIfActive(tokenHash);
+        int updatedRows = refreshTokenRepository.revokeByTokenHashIfActive(tokenHash);
+        if (updatedRows > 0) {
+            log.debug("Successfully revoked refresh token (hash matched).");
+        } else {
+            log.debug("Attempted to revoke refresh token, but it was already revoked or not found.");
+        }
     }
 
     @Override

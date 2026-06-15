@@ -26,27 +26,32 @@ public class GlobalExceptionHandler {
 
     private final MessageService messageService;
 
-    @ExceptionHandler(UnauthorizedException.class)
-    ResponseEntity<?> unauthorized(UnauthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", ex.getMessage()));
-    }
+//    @ExceptionHandler(UnauthorizedException.class)
+//    ResponseEntity<?> unauthorized(UnauthorizedException ex) {
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                .body(Map.of("error", ex.getMessage()));
+//    }
 
     @ExceptionHandler(JwtException.class)
-    ResponseEntity<?> jwtError(JwtException ex) {
+    ResponseEntity<MessageResponseDto> jwtError(JwtException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid token"));
+                .body(new MessageResponseDto("Invalid token"));
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
-    ResponseEntity<?> missingCookie(MissingRequestCookieException ex) {
+    ResponseEntity<MessageResponseDto> missingCookie(MissingRequestCookieException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Missing refresh token"));
+                .body(new MessageResponseDto("Missing refresh token"));
     }
 
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<MessageResponseDto> handleAppException(AppException ex) {
+        if (ex.getStatus().is4xxClientError()) {
+            log.debug("Exception: {} - {}", ex.getErrorCode(), ex.getMessage());
+        } else {
+            log.warn("Exception: {} - {}", ex.getErrorCode(), ex.getMessage());
+        }
         String message = messageService.get(ex.getErrorCode().getMessageKey());
         return ResponseEntity
                 .status(ex.getStatus())
@@ -57,6 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<MessageResponseDto> handleValidationException(
             MethodArgumentNotValidException ex
     ) {
+        log.debug("Validation failed: {}", ex.getBindingResult().getAllErrors());
         String message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -68,13 +74,13 @@ public class GlobalExceptionHandler {
                 .body(new MessageResponseDto(message));
     }
 
-    @ExceptionHandler(RateLimitExceededException.class)
-    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RateLimitExceededException ex) {
-        log.warn("Rate limit exceeded. Retry after {} seconds", ex.getRetryAfterSeconds());
-
-        return ResponseEntity
-                .status(HttpStatus.TOO_MANY_REQUESTS)
-                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
-                .body(new MessageResponseDto(messageService.get("auth.rate_limit.exceeded")));
-    }
+//    @ExceptionHandler(RateLimitExceededException.class)
+//    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RateLimitExceededException ex) {
+//        log.warn("Rate limit exceeded. Retry after {} seconds", ex.getRetryAfterSeconds());
+//
+//        return ResponseEntity
+//                .status(HttpStatus.TOO_MANY_REQUESTS)
+//                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+//                .body(new MessageResponseDto(messageService.get("auth.rate_limit.exceeded")));
+//    }
 }

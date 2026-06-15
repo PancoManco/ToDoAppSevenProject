@@ -1,6 +1,7 @@
 package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.Optional;
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthRepository authRepository;
@@ -42,6 +44,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User existingUser = existingUserOptional.get();
 
             if (Boolean.TRUE.equals(existingUser.getEnabled())) {
+                log.warn("Registration attempt with already existing email: {}", email);
                 throw new EmailVerificationException(
                         ErrorCode.AUTH_EMAIL_ALREADY_EXISTS
                 );
@@ -58,16 +61,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setEnabled(false);
         authRepository.save(user);
         emailVerificationService.sendVerificationCode(user);
+        log.info("Successful registration for user ID: {}, email: {}", user.getId(), email);
     }
 
     @Override
     public TokenPair login(LoginRequestDto loginRequestDto) {
         String email = EmailUtil.normalize(loginRequestDto.email());
         User user = authRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException(
-                        ErrorCode.AUTH_INVALID_CREDENTIALS
-                ));
+                .orElseThrow(() -> {
+                    log.debug("Login attempt with unregistered email: {}", email);
+                    return new UnauthorizedException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+                });
         if (!Boolean.TRUE.equals(user.getEnabled())) {
+            log.warn("Login attempt with unverified email: {}", email);
             throw new EmailVerificationException(
                     ErrorCode.AUTH_EMAIL_NOT_VERIFIED
             );
@@ -76,10 +82,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 loginRequestDto.password(),
                 user.getPassword()
         )) {
+            log.warn("Failed login attempt (invalid password) for email: {}", email);
             throw new UnauthorizedException(
                     ErrorCode.AUTH_INVALID_CREDENTIALS
             );
         }
+        log.info("Successful login for user ID: {}, email: {}", user.getId(), email);
         return tokenService.issueTokenPair(user);
     }
 
@@ -98,6 +106,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String passwordHash,
             String name
     ) {
+        log.info("Starting UnverifiedRegistration ...");
         user.setPassword(passwordHash);
         user.setName(name);
         user.setAvatarUrl(null);

@@ -51,9 +51,6 @@ public class EmailVerificationCode {
         return expiresAt.isBefore(Instant.now());
     }
 
-    public boolean isUsed() {
-        return usedAt != null;
-    }
 
     public boolean hasAttemptsLeft() {
         return attempts < MAX_ATTEMPTS;
