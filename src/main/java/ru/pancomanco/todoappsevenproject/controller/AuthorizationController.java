@@ -151,4 +151,6 @@ public class AuthorizationController {
         return ResponseEntity.ok()
                 .body(new MessageResponseDto(messageService.get("auth.password.reset_success")));
     }
+
+
 }

@@ -74,13 +74,13 @@ public class GlobalExceptionHandler {
                 .body(new MessageResponseDto(message));
     }
 
-//    @ExceptionHandler(RateLimitExceededException.class)
-//    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RateLimitExceededException ex) {
-//        log.warn("Rate limit exceeded. Retry after {} seconds", ex.getRetryAfterSeconds());
-//
-//        return ResponseEntity
-//                .status(HttpStatus.TOO_MANY_REQUESTS)
-//                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
-//                .body(new MessageResponseDto(messageService.get("auth.rate_limit.exceeded")));
-//    }
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<MessageResponseDto> handleRateLimitExceeded(RateLimitExceededException ex) {
+        log.warn("Rate limit exceeded. Retry after {} seconds", ex.getRetryAfterSeconds());
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(new MessageResponseDto(messageService.get("auth.rate_limit.exceeded")));
+    }
 }

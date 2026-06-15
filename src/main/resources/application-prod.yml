@@ -13,6 +13,15 @@ spring:
     endpoint:
       health:
         show-details: never
+        probes:
+          enabled: true
+    health:
+      db:
+        enabled: true
+      redis:
+        enabled: true
+      mail:
+        enabled: true
 server:
   forward-headers-strategy: framework
 
