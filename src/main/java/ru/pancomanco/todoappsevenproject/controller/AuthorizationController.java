@@ -44,7 +44,7 @@ public class AuthorizationController {
 
         authService.register(request);
 
-        return ResponseEntity.accepted()
+        return ResponseEntity.ok()
                 .body(new RegisterResponseDto(
                         messageService.get("auth.register.verification_sent"),
                         request.email()

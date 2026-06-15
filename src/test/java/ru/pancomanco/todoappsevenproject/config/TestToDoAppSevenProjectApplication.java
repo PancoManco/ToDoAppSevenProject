@@ -1,6 +1,7 @@
-package ru.pancomanco.todoappsevenproject;
+package ru.pancomanco.todoappsevenproject.config;
 
 import org.springframework.boot.SpringApplication;
+import ru.pancomanco.todoappsevenproject.ToDoAppSevenProjectApplication;
 
 public class TestToDoAppSevenProjectApplication {
 
