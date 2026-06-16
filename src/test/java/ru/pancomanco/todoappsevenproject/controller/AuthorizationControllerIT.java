@@ -19,9 +19,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.utility.TestcontainersConfiguration;
+
+import ru.pancomanco.todoappsevenproject.config.TestcontainersConfiguration;
 import ru.pancomanco.todoappsevenproject.config.EmailSender;
 import ru.pancomanco.todoappsevenproject.dto.request.*;
 import ru.pancomanco.todoappsevenproject.entity.EmailVerificationCode;
@@ -46,14 +48,13 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.testcontainers.shaded.org.bouncycastle.asn1.x500.style.RFC4519Style.description;
 
 
 @SpringBootTest
@@ -77,8 +78,8 @@ public class AuthorizationControllerIT {
     @Autowired private TokenService tokenService;
     @Autowired private PasswordResetTokenRepository passwordResetTokenRepository;
 
-    @MockBean private EmailSender emailSender;
-    @MockBean private RateLimitService rateLimitService;
+    @MockitoBean private EmailSender emailSender;
+    @MockitoBean private RateLimitService rateLimitService;
 
     @BeforeEach
     void resetMocks() {
@@ -365,13 +366,9 @@ public class AuthorizationControllerIT {
             performVerifyEmail(new VerifyEmailRequestDto(email, VALID_CODE))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(header().exists(HttpHeaders.SET_COOKIE))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("refresh_token=")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("HttpOnly")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("Path=/api/v1/auth")));
+                    .andExpect(cookie().exists("refresh_token"))
+                    .andExpect(cookie().httpOnly("refresh_token",true))
+                    .andExpect(cookie().path("refresh_token","api/v1/auth"));
 
             User updated = authRepository.findByEmail(email).orElseThrow();
             assertThat(updated.getEnabled()).isTrue();
@@ -541,11 +538,9 @@ public class AuthorizationControllerIT {
             performLogin(new LoginRequestDto(email, VALID_PASSWORD))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(header().exists(HttpHeaders.SET_COOKIE))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("refresh_token=")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("HttpOnly")));
+                    .andExpect(cookie().exists("refresh_token"))
+                    .andExpect(cookie().httpOnly("refresh_token", true));
+
         }
 
         @Test
@@ -567,8 +562,7 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isOk());
 
             assertThat(refreshTokenRepository.findAll())
-                    .anyMatch(rt -> rt.getUser().getId().equals(user.getId())
-                                    && !rt.isRevoked());
+                    .anyMatch(rt -> rt.getUser().getId().equals(user.getId()) && !rt.isRevoked());
         }
 
         @Test
@@ -703,15 +697,14 @@ public class AuthorizationControllerIT {
             performRefresh(refreshToken, frontendOrigin)
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                    .andExpect(header().exists(HttpHeaders.SET_COOKIE))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("refresh_token=")));
+                    .andExpect(cookie().exists("refresh_token"))
+                    .andExpect(header().exists(HttpHeaders.SET_COOKIE));
+
         }
 
         @Test
         void refresh_Successful_RevokesOldToken() throws Exception {
             String email = generateUniqueEmail();
-            User user = createVerifiedUser(email);
             String oldRefreshToken = loginAndExtractRefreshToken(email);
             String oldHash = HashUtil.sha256Hex(oldRefreshToken);
 
@@ -840,13 +833,13 @@ public class AuthorizationControllerIT {
             String refreshToken = loginAndExtractRefreshToken(email);
             String tokenHash = HashUtil.sha256Hex(refreshToken);
 
-            performLogout(refreshToken, frontendOrigin)
-                    .andExpect(status().isNoContent())
-                    .andExpect(header().exists(HttpHeaders.SET_COOKIE))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("refresh_token=")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("Max-Age=0")));
+                performLogout(refreshToken, frontendOrigin)
+                        .andExpect(status().isNoContent())
+                        .andExpect(cookie().exists("refresh_token"))
+                        .andExpect(cookie().value("refresh_token", ""))
+                        .andExpect(cookie().maxAge("refresh_token", 0))
+                        .andExpect(cookie().httpOnly("refresh_token", true));
+
 
             RefreshToken stored = refreshTokenRepository
                     .findByTokenHashForUpdate(tokenHash)
@@ -858,9 +851,8 @@ public class AuthorizationControllerIT {
         void logout_MissingCookie_ReturnsNoContent() throws Exception {
             performLogout(null, frontendOrigin)
                     .andExpect(status().isNoContent())
-                    .andExpect(header().exists(HttpHeaders.SET_COOKIE))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE,
-                            containsString("Max-Age=0")));
+                    .andExpect(cookie().exists("refresh_token"))
+                    .andExpect(cookie().maxAge("refresh_token", 0));
         }
 
         @Test
@@ -920,8 +912,6 @@ public class AuthorizationControllerIT {
         void logout_DoesNotAffectOtherUsersTokens() throws Exception {
             String emailA = generateUniqueEmail();
             String emailB = generateUniqueEmail();
-            User userA = createVerifiedUser(emailA);
-            User userB = createVerifiedUser(emailB);
 
             String tokenA = loginAndExtractRefreshToken(emailA);
             String tokenB = loginAndExtractRefreshToken(emailB);
