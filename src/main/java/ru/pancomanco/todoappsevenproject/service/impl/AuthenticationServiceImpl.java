@@ -63,7 +63,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         emailVerificationService.sendVerificationCode(user);
         log.info("Successful registration for user ID: {}, email: {}", user.getId(), email);
     }
-
     @Override
     public TokenPair login(LoginRequestDto loginRequestDto) {
         String email = EmailUtil.normalize(loginRequestDto.email());

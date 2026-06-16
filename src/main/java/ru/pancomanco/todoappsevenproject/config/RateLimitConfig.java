@@ -10,11 +10,13 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import ru.pancomanco.todoappsevenproject.properties.RateLimitProperties;
 
 import java.time.Duration;
 
 @Configuration
+@Profile("!test")
 public class RateLimitConfig {
 
     public static final BucketConfiguration REGISTER_IP_LIMIT = buildConfig(5, Duration.ofMinutes(10));

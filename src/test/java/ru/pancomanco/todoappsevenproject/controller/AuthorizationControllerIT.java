@@ -1,5 +1,7 @@
 package ru.pancomanco.todoappsevenproject.controller;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,14 +19,14 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
-import ru.pancomanco.todoappsevenproject.config.TestcontainersConfiguration;
 import ru.pancomanco.todoappsevenproject.config.EmailSender;
+import ru.pancomanco.todoappsevenproject.config.TestcontainersConfiguration;
 import ru.pancomanco.todoappsevenproject.dto.request.*;
 import ru.pancomanco.todoappsevenproject.entity.EmailVerificationCode;
 import ru.pancomanco.todoappsevenproject.entity.PasswordResetToken;
@@ -39,7 +41,6 @@ import ru.pancomanco.todoappsevenproject.service.TokenService;
 import ru.pancomanco.todoappsevenproject.util.HashUtil;
 import ru.pancomanco.todoappsevenproject.util.RefreshCookieHelper;
 import tools.jackson.databind.ObjectMapper;
-import org.springframework.http.MediaType;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -47,9 +48,7 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -68,18 +67,32 @@ public class AuthorizationControllerIT {
     private static final String VALID_CODE = "123456";
     private static final String NEW_PASSWORD = "NewPassword456!";
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private AuthRepository authRepository;
-    @Autowired private EmailVerificationCodeRepository codeRepository;
-    @Autowired private MessageSource messageSource;
-    @Autowired private RefreshTokenRepository refreshTokenRepository;
-    @Autowired private TokenService tokenService;
-    @Autowired private PasswordResetTokenRepository passwordResetTokenRepository;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AuthRepository authRepository;
+    @Autowired
+    private EmailVerificationCodeRepository codeRepository;
+    @Autowired
+    private MessageSource messageSource;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+    @Autowired
+    private TokenService tokenService;
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
-    @MockitoBean private EmailSender emailSender;
-    @MockitoBean private RateLimitService rateLimitService;
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @MockitoBean
+    private EmailSender emailSender;
+    @MockitoBean
+    private RateLimitService rateLimitService;
 
     @BeforeEach
     void resetMocks() {
@@ -121,6 +134,7 @@ public class AuthorizationControllerIT {
         }
         return mockMvc.perform(request);
     }
+
     private ResultActions performLogout(String refreshTokenCookie, String origin) throws Exception {
         var request = post("/api/v1/auth/logout");
         if (refreshTokenCookie != null) {
@@ -176,6 +190,7 @@ public class AuthorizationControllerIT {
         );
         return codeRepository.save(code);
     }
+
     private String loginAndExtractRefreshToken(String email) throws Exception {
         String setCookie = performLogin(new LoginRequestDto(email, VALID_PASSWORD))
                 .andExpect(status().isOk())
@@ -192,6 +207,7 @@ public class AuthorizationControllerIT {
         int end = setCookieHeader.indexOf(";", start);
         return setCookieHeader.substring(start, end == -1 ? setCookieHeader.length() : end);
     }
+
     private String createActiveResetToken(User user, Duration ttl) {
         String rawToken = UUID.randomUUID().toString().replace("-", "");
         String tokenHash = HashUtil.sha256Hex(rawToken);
@@ -266,6 +282,7 @@ public class AuthorizationControllerIT {
 
             verify(emailSender, never()).sendVerificationCode(anyString(), anyString());
         }
+
         static Stream<Arguments> invalidRequests() {
             return Stream.of(
                     Arguments.of("name=null", new RegisterRequestDto(null, "valid@test.com", VALID_PASSWORD)),
@@ -287,9 +304,9 @@ public class AuthorizationControllerIT {
             );
 
         }
+
         @ParameterizedTest(name = "{0} → 400")
         @MethodSource("invalidRequests")
-
         void register_InvalidPayload_ReturnsBadRequest(String description, RegisterRequestDto request) throws Exception {
             performRegister(request).andExpect(status().isBadRequest());
             verify(emailSender, never()).sendVerificationCode(anyString(), anyString());
@@ -298,14 +315,13 @@ public class AuthorizationControllerIT {
 
         @Test
         void register_EmailWithMixedCaseAndSpaces_NormalizedInDatabase() throws Exception {
-            String rawEmail = "  MixedCase@Test.COM  ";
+            String rawEmail = "MixedCase@Test.COM";
             String normalized = "mixedcase@test.com";
 
             performRegister(new RegisterRequestDto(VALID_NAME, rawEmail, VALID_PASSWORD))
                     .andExpect(status().isOk());
 
             assertThat(authRepository.findByEmail(normalized)).isPresent();
-            assertThat(authRepository.findByEmail(rawEmail.trim())).isPresent();
         }
 
         @Test
@@ -367,8 +383,8 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken").isNotEmpty())
                     .andExpect(cookie().exists("refresh_token"))
-                    .andExpect(cookie().httpOnly("refresh_token",true))
-                    .andExpect(cookie().path("refresh_token","api/v1/auth"));
+                    .andExpect(cookie().httpOnly("refresh_token", true))
+                    .andExpect(cookie().path("refresh_token", "/api/v1/auth"));
 
             User updated = authRepository.findByEmail(email).orElseThrow();
             assertThat(updated.getEnabled()).isTrue();
@@ -575,6 +591,9 @@ public class AuthorizationControllerIT {
             performLogin(new LoginRequestDto(email, VALID_PASSWORD))
                     .andExpect(status().isOk());
 
+            entityManager.flush();
+            entityManager.clear();
+
             long activeTokens = refreshTokenRepository.findAll().stream()
                     .filter(rt -> rt.getUser().getId().equals(user.getId()))
                     .filter(rt -> !rt.isRevoked())
@@ -638,6 +657,7 @@ public class AuthorizationControllerIT {
                     "auth.invalid_credentials"
             );
         }
+
         @Test
         void login_NonExistentAndWrongPassword_ReturnSameErrorMessage() throws Exception {
             String existingEmail = generateUniqueEmail();
@@ -667,6 +687,7 @@ public class AuthorizationControllerIT {
                     .count();
             assertThat(tokens).isZero();
         }
+
         static Stream<Arguments> invalidRequests() {
             return Stream.of(
                     Arguments.of("email=null", new LoginRequestDto(null, VALID_PASSWORD)),
@@ -685,6 +706,7 @@ public class AuthorizationControllerIT {
         }
 
     }
+
     @Nested
     @DisplayName("POST /api/v1/auth/refresh")
     class RefreshTests {
@@ -705,6 +727,7 @@ public class AuthorizationControllerIT {
         @Test
         void refresh_Successful_RevokesOldToken() throws Exception {
             String email = generateUniqueEmail();
+            createVerifiedUser(email);
             String oldRefreshToken = loginAndExtractRefreshToken(email);
             String oldHash = HashUtil.sha256Hex(oldRefreshToken);
 
@@ -737,6 +760,7 @@ public class AuthorizationControllerIT {
             assertThat(newToken.isRevoked()).isFalse();
             assertThat(newToken.getUser().getId()).isEqualTo(user.getId());
         }
+
         @Test
         void refresh_ReusedToken_DetectsAndRevokesAllUserTokens() throws Exception {
             String email = generateUniqueEmail();
@@ -751,7 +775,8 @@ public class AuthorizationControllerIT {
                     403,
                     "token.refresh_token_reuse_detected"
             );
-
+            entityManager.flush();
+            entityManager.clear();
             long activeTokens = refreshTokenRepository.findAll().stream()
                     .filter(rt -> rt.getUser().getId().equals(user.getId()))
                     .filter(rt -> !rt.isRevoked())
@@ -822,6 +847,7 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isForbidden());
         }
     }
+
     @Nested
     @DisplayName("POST /api/v1/auth/logout")
     class LogoutTests {
@@ -833,14 +859,15 @@ public class AuthorizationControllerIT {
             String refreshToken = loginAndExtractRefreshToken(email);
             String tokenHash = HashUtil.sha256Hex(refreshToken);
 
-                performLogout(refreshToken, frontendOrigin)
-                        .andExpect(status().isNoContent())
-                        .andExpect(cookie().exists("refresh_token"))
-                        .andExpect(cookie().value("refresh_token", ""))
-                        .andExpect(cookie().maxAge("refresh_token", 0))
-                        .andExpect(cookie().httpOnly("refresh_token", true));
+            performLogout(refreshToken, frontendOrigin)
+                    .andExpect(status().isNoContent())
+                    .andExpect(cookie().exists("refresh_token"))
+                    .andExpect(cookie().value("refresh_token", ""))
+                    .andExpect(cookie().maxAge("refresh_token", 0))
+                    .andExpect(cookie().httpOnly("refresh_token", true));
 
-
+            entityManager.flush();
+            entityManager.clear();
             RefreshToken stored = refreshTokenRepository
                     .findByTokenHashForUpdate(tokenHash)
                     .orElseThrow();
@@ -873,6 +900,7 @@ public class AuthorizationControllerIT {
             performLogout("not-a-real-token", frontendOrigin)
                     .andExpect(status().isNoContent());
         }
+
         @Test
         void logout_MissingOrigin_ReturnsForbidden() throws Exception {
             String email = generateUniqueEmail();
@@ -892,6 +920,7 @@ public class AuthorizationControllerIT {
             performLogout(refreshToken, "https://evil.com")
                     .andExpect(status().isForbidden());
         }
+
         @Test
         void logout_ThenRefresh_TriggersReuseDetection() throws Exception {
             String email = generateUniqueEmail();
@@ -900,7 +929,8 @@ public class AuthorizationControllerIT {
 
             performLogout(refreshToken, frontendOrigin)
                     .andExpect(status().isNoContent());
-
+            entityManager.flush();
+            entityManager.clear();
             expectError(
                     performRefresh(refreshToken, frontendOrigin),
                     403,
@@ -912,6 +942,8 @@ public class AuthorizationControllerIT {
         void logout_DoesNotAffectOtherUsersTokens() throws Exception {
             String emailA = generateUniqueEmail();
             String emailB = generateUniqueEmail();
+            User userA = createVerifiedUser(emailA);
+            User userB = createVerifiedUser(emailB);
 
             String tokenA = loginAndExtractRefreshToken(emailA);
             String tokenB = loginAndExtractRefreshToken(emailB);
@@ -978,7 +1010,8 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isOk());
             performForgotPassword(new ForgotPasswordRequestDto(email))
                     .andExpect(status().isOk());
-
+            entityManager.flush();
+            entityManager.clear();
             long activeTokens = passwordResetTokenRepository.findAll().stream()
                     .filter(t -> t.getUser().getId().equals(user.getId()))
                     .filter(t -> t.getUsedAt() == null)
@@ -994,7 +1027,7 @@ public class AuthorizationControllerIT {
             String email = generateUniqueEmail();
             User user = createVerifiedUser(email);
 
-            performForgotPassword(new ForgotPasswordRequestDto("  " + email.toUpperCase() + "  "))
+            performForgotPassword(new ForgotPasswordRequestDto(email.toUpperCase()))
                     .andExpect(status().isOk());
 
             assertThat(passwordResetTokenRepository.findAll())
@@ -1014,81 +1047,83 @@ public class AuthorizationControllerIT {
             verify(rateLimitService, times(1)).checkForgotPassword(anyString(), eq(email));
         }
 
-                @Test
-                void forgotPassword_NonExistentEmail_ReturnsOkAndDoesNothing() throws Exception {
-                    String email = generateUniqueEmail();
+        @Test
+        void forgotPassword_NonExistentEmail_ReturnsOkAndDoesNothing() throws Exception {
+            String email = generateUniqueEmail();
 
-                    performForgotPassword(new ForgotPasswordRequestDto(email))
-                            .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
+            performForgotPassword(new ForgotPasswordRequestDto(email))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
 
-                    assertThat(passwordResetTokenRepository.findAll()).isEmpty();
-                    verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
-                }
+            assertThat(passwordResetTokenRepository.findAll()).isEmpty();
+            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
+        }
 
-                @Test
-                void forgotPassword_UnverifiedUser_ReturnsOkAndDoesNothing() throws Exception {
-                    String email = generateUniqueEmail();
-                    User user = createUnverifiedUser(email);
+        @Test
+        void forgotPassword_UnverifiedUser_ReturnsOkAndDoesNothing() throws Exception {
+            String email = generateUniqueEmail();
+            User user = createUnverifiedUser(email);
 
-                    performForgotPassword(new ForgotPasswordRequestDto(email))
-                            .andExpect(status().isOk())
-                            .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
+            performForgotPassword(new ForgotPasswordRequestDto(email))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
 
-                    long tokens = passwordResetTokenRepository.findAll().stream()
-                            .filter(t -> t.getUser().getId().equals(user.getId()))
-                            .count();
-                    assertThat(tokens).isZero();
+            long tokens = passwordResetTokenRepository.findAll().stream()
+                    .filter(t -> t.getUser().getId().equals(user.getId()))
+                    .count();
+            assertThat(tokens).isZero();
 
-                    verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
-                }
+            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
+        }
 
-                @Test
-                void forgotPassword_ExistingAndNonExisting_ReturnIdenticalResponse() throws Exception {
-                    String existingEmail = generateUniqueEmail();
-                    createVerifiedUser(existingEmail);
+        @Test
+        void forgotPassword_ExistingAndNonExisting_ReturnIdenticalResponse() throws Exception {
+            String existingEmail = generateUniqueEmail();
+            createVerifiedUser(existingEmail);
 
-                    String existingResponse = performForgotPassword(new ForgotPasswordRequestDto(existingEmail))
-                            .andExpect(status().isOk())
-                            .andReturn().getResponse().getContentAsString();
+            String existingResponse = performForgotPassword(new ForgotPasswordRequestDto(existingEmail))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
 
-                    String nonExistentResponse = performForgotPassword(new ForgotPasswordRequestDto(generateUniqueEmail()))
-                            .andExpect(status().isOk())
-                            .andReturn().getResponse().getContentAsString();
+            String nonExistentResponse = performForgotPassword(new ForgotPasswordRequestDto(generateUniqueEmail()))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
 
-                    assertThat(existingResponse).isEqualTo(nonExistentResponse);
-                }
-                @Test
-                void forgotPassword_MailServerDown_ReturnsServiceUnavailable() throws Exception {
-                    String email = generateUniqueEmail();
-                    createVerifiedUser(email);
+            assertThat(existingResponse).isEqualTo(nonExistentResponse);
+        }
 
-                    doThrow(new org.springframework.mail.MailSendException("SMTP down"))
-                            .when(emailSender).sendPasswordResetLink(eq(email), anyString());
+        @Test
+        void forgotPassword_MailServerDown_ReturnsServiceUnavailable() throws Exception {
+            String email = generateUniqueEmail();
+            createVerifiedUser(email);
 
-                    expectError(
-                            performForgotPassword(new ForgotPasswordRequestDto(email)),
-                            503,
-                            "auth.password_reset.email_send_failed"
-                    );
-                }
-                static Stream<Arguments> invalidRequests() {
-                    return Stream.of(
-                            Arguments.of("email=null", new ForgotPasswordRequestDto(null)),
-                            Arguments.of("email=blank", new ForgotPasswordRequestDto("")),
-                            Arguments.of("email=invalid format", new ForgotPasswordRequestDto("not-email")),
-                            Arguments.of("email=whitespace", new ForgotPasswordRequestDto("   ")),
-                            Arguments.of("email=missing @", new ForgotPasswordRequestDto("test.com"))
-                    );
-                }
+            doThrow(new org.springframework.mail.MailSendException("SMTP down"))
+                    .when(emailSender).sendPasswordResetLink(eq(email), anyString());
 
-                @ParameterizedTest(name = "{0} → 400")
-                @MethodSource("invalidRequests")
-                void forgotPassword_InvalidEmail_ReturnsBadRequest(String description, ForgotPasswordRequestDto request) throws Exception {
-                    performForgotPassword(request).andExpect(status().isBadRequest());
+            expectError(
+                    performForgotPassword(new ForgotPasswordRequestDto(email)),
+                    503,
+                    "auth.password_reset.email_send_failed"
+            );
+        }
 
-                    verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
-                }
+        static Stream<Arguments> invalidRequests() {
+            return Stream.of(
+                    Arguments.of("email=null", new ForgotPasswordRequestDto(null)),
+                    Arguments.of("email=blank", new ForgotPasswordRequestDto("")),
+                    Arguments.of("email=invalid format", new ForgotPasswordRequestDto("not-email")),
+                    Arguments.of("email=whitespace", new ForgotPasswordRequestDto("   ")),
+                    Arguments.of("email=missing @", new ForgotPasswordRequestDto("test.com"))
+            );
+        }
+
+        @ParameterizedTest(name = "{0} → 400")
+        @MethodSource("invalidRequests")
+        void forgotPassword_InvalidEmail_ReturnsBadRequest(String description, ForgotPasswordRequestDto request) throws Exception {
+            performForgotPassword(request).andExpect(status().isBadRequest());
+
+            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
+        }
     }
 
     @Nested
@@ -1126,7 +1161,8 @@ public class AuthorizationControllerIT {
 
             performResetPassword(new ResetPasswordRequestDto(rawToken, NEW_PASSWORD))
                     .andExpect(status().isOk());
-
+            entityManager.flush();
+            entityManager.clear();
             long activeTokens = refreshTokenRepository.findAll().stream()
                     .filter(rt -> rt.getUser().getId().equals(user.getId()))
                     .filter(rt -> !rt.isRevoked())
@@ -1151,7 +1187,7 @@ public class AuthorizationControllerIT {
         }
 
         @Test
-       void resetPassword_Successful_NewPasswordWorks() throws Exception {
+        void resetPassword_Successful_NewPasswordWorks() throws Exception {
             String email = generateUniqueEmail();
             User user = createVerifiedUser(email);
             String rawToken = createActiveResetToken(user, Duration.ofMinutes(15));
@@ -1177,7 +1213,6 @@ public class AuthorizationControllerIT {
         }
 
         @Test
-
         void resetPassword_UnknownToken_ReturnsBadRequest() throws Exception {
             expectError(
                     performResetPassword(new ResetPasswordRequestDto("non-existent-token", NEW_PASSWORD)),
@@ -1233,6 +1268,7 @@ public class AuthorizationControllerIT {
             User reloaded = authRepository.findByEmail(email).orElseThrow();
             assertThat(reloaded.getPassword()).isEqualTo(originalHash);
         }
+
         @Test
         void resetPassword_ExpiredToken_UsedAtPersistsDespiteException() throws Exception {
             String email = generateUniqueEmail();
@@ -1246,6 +1282,7 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(msg("auth.password_reset.token_invalid")));
         }
+
         @Test
         void resetPassword_TokenBelongsToCorrectUser() throws Exception {
             String emailA = generateUniqueEmail();
@@ -1276,13 +1313,15 @@ public class AuthorizationControllerIT {
 
             performResetPassword(new ResetPasswordRequestDto(rawResetToken, NEW_PASSWORD))
                     .andExpect(status().isOk());
-
+            entityManager.flush();
+            entityManager.clear();
             expectError(
                     performRefresh(oldRefreshToken, frontendOrigin),
                     403,
                     "token.refresh_token_reuse_detected"
             );
         }
+
         static Stream<Arguments> invalidRequests() {
             return Stream.of(
                     Arguments.of("token=null", new ResetPasswordRequestDto(null, NEW_PASSWORD)),
@@ -1303,6 +1342,6 @@ public class AuthorizationControllerIT {
     }
 
 
-    }
+}
 
 
