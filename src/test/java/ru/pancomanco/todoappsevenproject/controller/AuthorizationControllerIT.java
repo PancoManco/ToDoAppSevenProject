@@ -36,6 +36,7 @@ import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.EmailVerificationCodeRepository;
 import ru.pancomanco.todoappsevenproject.repository.PasswordResetTokenRepository;
 import ru.pancomanco.todoappsevenproject.repository.RefreshTokenRepository;
+import ru.pancomanco.todoappsevenproject.scheduler.AuthCleanupJob;
 import ru.pancomanco.todoappsevenproject.service.RateLimitService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 import ru.pancomanco.todoappsevenproject.util.HashUtil;
@@ -93,6 +94,8 @@ public class AuthorizationControllerIT {
     private EmailSender emailSender;
     @MockitoBean
     private RateLimitService rateLimitService;
+    @MockitoBean
+    private AuthCleanupJob authCleanupJob;
 
     @BeforeEach
     void resetMocks() {

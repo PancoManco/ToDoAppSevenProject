@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class RateLimitServiceImpl  implements RateLimitService {
+public class  RateLimitServiceImpl  implements RateLimitService {
     private final ProxyManager<byte[]> bucket4jProxyManager;
 
     @Override
