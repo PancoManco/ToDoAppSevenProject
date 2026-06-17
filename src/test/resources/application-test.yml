@@ -37,7 +37,6 @@ spring:
           starttls:
             enable: false
             required: false
-
   security:
     oauth2:
       client:

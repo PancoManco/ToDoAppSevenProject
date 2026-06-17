@@ -8,15 +8,15 @@ import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import ru.pancomanco.todoappsevenproject.properties.RateLimitProperties;
 
 import java.time.Duration;
 
 @Configuration
-@Profile("!test")
+@ConditionalOnProperty(name = "app.rate-limit.enabled", havingValue = "true", matchIfMissing = true)
 public class RateLimitConfig {
 
     public static final BucketConfiguration REGISTER_IP_LIMIT = buildConfig(5, Duration.ofMinutes(10));
@@ -48,7 +48,6 @@ public class RateLimitConfig {
                         .build())
                 .build();
     }
-
 
     @Bean(destroyMethod = "shutdown")
     RedisClient bucket4jRedisClient(

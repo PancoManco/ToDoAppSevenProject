@@ -26,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import ru.pancomanco.todoappsevenproject.config.EmailSender;
+import ru.pancomanco.todoappsevenproject.config.TestRateLimitConfig;
 import ru.pancomanco.todoappsevenproject.config.TestcontainersConfiguration;
 import ru.pancomanco.todoappsevenproject.dto.request.*;
 import ru.pancomanco.todoappsevenproject.entity.EmailVerificationCode;
@@ -60,7 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = true)
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, TestRateLimitConfig.class})
 @Transactional
 public class AuthorizationControllerIT {
     private static final String VALID_PASSWORD = "Password123!";
