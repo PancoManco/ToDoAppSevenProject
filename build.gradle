@@ -1,125 +1,42 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.6'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '4.0.6' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
-group = 'ru.pancoManco'
-version = '0.0.1-SNAPSHOT'
-description = 'ToDoAppSevenProject'
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(26)
+    group = 'ru.pancoManco'
+    version = '0.0.1-SNAPSHOT'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(26)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        // Lombok — нужен всем сервисам
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+
+        // Базовые тесты — нужны всем сервисам
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+        testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
     }
 }
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    mapstructVersion = '1.6.3'
-    bucket4jVersion = '8.19.0'
-}
-
-dependencies {
-    // =========================
-    // Web / REST API
-    // =========================
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    // =========================
-    // Security / JWT / OAuth2 Client
-    // =========================
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
-    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
-
-    // =========================
-    // Database / JPA / Migrations
-    // =========================
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
-    runtimeOnly 'org.postgresql:postgresql'
-
-    // =========================
-    // Mail
-    // =========================
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-    // =========================
-    // Bucket4j (Rate Limiter)
-    // =========================
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
-    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${bucket4jVersion}"
-
-    // =========================
-    // Mapping
-    // =========================
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
-
-    // =========================
-    // Lombok
-    // =========================
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-
-    // =========================
-    // Development
-    // =========================
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    // =========================
-    // Monitoring / Actuator
-    // =========================
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // =========================
-    // Tests: Core
-    // =========================
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    // =========================
-    // Tests: Database / Liquibase
-    // =========================
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-
-
-    // =========================
-    // Tests: Security / OAuth2 / JWT
-    // =========================
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server-test'
-
-    // =========================
-    // Tests: Mail
-    // =========================
-    testImplementation 'org.springframework.boot:spring-boot-starter-mail-test'
-
-    // =========================
-    // Tests: Testcontainers
-    // =========================
-    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
-    testImplementation 'org.testcontainers:testcontainers-postgresql'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // =========================
-    // Tests: Lombok
-    // =========================
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
-
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-}
-

@@ -1,0 +1,78 @@
+ext {
+    mapstructVersion = '1.6.3'
+    bucket4jVersion = '8.19.0'
+}
+
+dependencies {
+    // =========================
+    // Web / REST API
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // =========================
+    // Security / JWT / OAuth2 Client
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+
+    // =========================
+    // Database / JPA / Migrations
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // =========================
+    // Mail
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // =========================
+    // Bucket4j (Rate Limiter)
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${bucket4jVersion}"
+
+    // =========================
+    // Mapping
+    // =========================
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    // =========================
+    // Development
+    // =========================
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // =========================
+    // Monitoring / Actuator
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // =========================
+    // Tests: Database / Liquibase
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    // =========================
+    // Tests: Security / OAuth2 / JWT
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server-test'
+
+    // =========================
+    // Tests: Mail
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-mail-test'
+
+    // =========================
+    // Tests: Testcontainers (postgres-специфичный)
+    // =========================
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+}
