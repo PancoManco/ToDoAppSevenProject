@@ -11,5 +11,5 @@ public class ToDoAppSevenProjectApplication {
     public static void main(String[] args) {
         SpringApplication.run(ToDoAppSevenProjectApplication.class, args);
     }
-
+    // before restructure
 }
