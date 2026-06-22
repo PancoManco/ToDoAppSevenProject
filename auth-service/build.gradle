@@ -72,7 +72,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-mail-test'
 
     // =========================
-    // Tests: Testcontainers (postgres-специфичный)
+    // Tests: Testcontainers
     // =========================
     testImplementation 'org.testcontainers:testcontainers-postgresql'
 }

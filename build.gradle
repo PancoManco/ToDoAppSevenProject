@@ -14,7 +14,7 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(26)
+            languageVersion = JavaLanguageVersion.of(21)
         }
     }
 
@@ -23,13 +23,13 @@ subprojects {
     }
 
     dependencies {
-        // Lombok — нужен всем сервисам
+        // Lombok
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testCompileOnly 'org.projectlombok:lombok'
         testAnnotationProcessor 'org.projectlombok:lombok'
 
-        // Базовые тесты — нужны всем сервисам
+        // Basic tests
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation 'org.springframework.boot:spring-boot-testcontainers'
         testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
@@ -38,5 +38,14 @@ subprojects {
 
     tasks.named('test') {
         useJUnitPlatform()
+        maxHeapSize = "2G"
+
+        testLogging {
+            events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
+            exceptionFormat "full"
+            showExceptions true
+            showCauses true
+            showStackTraces true
+        }
     }
 }
