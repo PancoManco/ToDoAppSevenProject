@@ -1,2 +1,3 @@
 rootProject.name = 'ToDoAppSevenProject'
 include 'auth-service'
+include 'api-gateway'

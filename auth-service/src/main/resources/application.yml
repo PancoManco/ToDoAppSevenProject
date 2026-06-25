@@ -1,3 +1,5 @@
+server:
+  port: 8081
 app:
   security:
     frontend-origin: ${FRONTEND_ORIGIN}

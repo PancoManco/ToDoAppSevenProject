@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -25,52 +26,35 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
-@EnableWebFluxSecurity
 @Slf4j
+@EnableWebFluxSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .pathMatchers(
                                 "/api/v1/auth/**",
                                 "/.well-known/**",
-                                "/actuator/**"
+                                "/actuator/health/**"
                         ).permitAll()
-                        .pathMatchers("/api/me").authenticated()
-                        .pathMatchers("/api/v1/tasks/**").authenticated()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(grantedAuthoritiesExtractor()))
+                        .jwt(jwt -> {})
                         .authenticationEntryPoint((exchange, ex) -> {
-                            log.warn("JWT authentication failed: {} - Path: {}",
+                            log.warn("JWT auth failed: {} - Path: {}",
                                     ex.getMessage(),
                                     exchange.getRequest().getURI().getPath());
-                            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                             return exchange.getResponse().setComplete();
                         })
                 )
                 .build();
-    }
-
-    private Converter<Jwt, Mono<AbstractAuthenticationToken>> grantedAuthoritiesExtractor() {
-        Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter = jwt -> {
-            List<String> roles = jwt.getClaimAsStringList("roles");
-            if (roles == null || roles.isEmpty()) {
-                return List.of();
-            }
-            return roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                    .collect(Collectors.toList());
-        };
-
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-
-        return new ReactiveJwtAuthenticationConverterAdapter(jwtConverter);
     }
 }
