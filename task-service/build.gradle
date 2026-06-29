@@ -1,0 +1,39 @@
+dependencies {
+    // =========================
+    // Web / REST API
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // =========================
+    // Security / JWT (resource server — валидация токенов через JWKS)
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+
+    // =========================
+    // Database / JPA / Migrations
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // =========================
+    // Monitoring / Actuator
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // =========================
+    // Tests: Database / Web / Security
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server-test'
+
+    // =========================
+    // Tests: Testcontainers (postgres)
+    // =========================
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+}
