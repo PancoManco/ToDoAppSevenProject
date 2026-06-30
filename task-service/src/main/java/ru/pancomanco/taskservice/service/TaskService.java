@@ -3,7 +3,6 @@ package ru.pancomanco.taskservice.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.pancomanco.taskservice.dto.*;
 import ru.pancomanco.taskservice.dto.request.CreateTaskRequestDto;
 import ru.pancomanco.taskservice.dto.request.UpdateTaskRequestDto;
 import ru.pancomanco.taskservice.dto.response.TaskResponseDto;

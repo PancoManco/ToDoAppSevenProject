@@ -111,7 +111,12 @@ spring:
               uri: ${AUTH_SERVICE_URL:http://localhost:8081}
               predicates:
                 - Path=/api/me
-            # ========== TASK-SERVICE ========== TODO
+            # ========== TASK-SERVICE ==========
+            - id: task-service
+              uri: ${TASK_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/tasks/**
+
 
 management:
   endpoints:
