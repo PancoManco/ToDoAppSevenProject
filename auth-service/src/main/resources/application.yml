@@ -28,6 +28,15 @@ spring:
   application:
     name: toDoApplication
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
   datasource:
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}

@@ -53,6 +53,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // =========================
+    // Kafka (producer outbox)
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+
+    // =========================
     // Tests: Database / Liquibase
     // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'

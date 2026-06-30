@@ -10,11 +10,13 @@ import ru.pancomanco.todoappsevenproject.config.EmailSender;
 import ru.pancomanco.todoappsevenproject.dto.TokenPair;
 import ru.pancomanco.todoappsevenproject.entity.EmailVerificationCode;
 import ru.pancomanco.todoappsevenproject.entity.User;
+import ru.pancomanco.todoappsevenproject.messaging.event.UserVerifiedEvent;
 import ru.pancomanco.todoappsevenproject.exception.EmailVerificationException;
 import ru.pancomanco.todoappsevenproject.exception.ErrorCode;
 import ru.pancomanco.todoappsevenproject.repository.AuthRepository;
 import ru.pancomanco.todoappsevenproject.repository.EmailVerificationCodeRepository;
 import ru.pancomanco.todoappsevenproject.service.EmailVerificationService;
+import ru.pancomanco.todoappsevenproject.messaging.outbox.OutboxService;
 import ru.pancomanco.todoappsevenproject.service.TokenService;
 import ru.pancomanco.todoappsevenproject.util.EmailUtil;
 import ru.pancomanco.todoappsevenproject.util.VerificationCodeGenerator;
@@ -22,6 +24,7 @@ import ru.pancomanco.todoappsevenproject.util.VerificationCodeGenerator;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -35,7 +38,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final PasswordEncoder passwordEncoder;
     private final EmailSender emailSender;
     private final TokenService tokenService;
-
+    private final OutboxService outboxService;
 
     @Override
     public void sendVerificationCode(User user) {
@@ -119,6 +122,17 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         verificationCode.markAsUsed();
         user.setEnabled(true);
         log.info("Email successfully verified for user ID: {}, email: {}", user.getId(), email);
+
+        String eventId = UUID.randomUUID().toString();
+        UserVerifiedEvent event = new UserVerifiedEvent(
+                eventId,
+                user.getId(),
+                user.getEmail(),
+                user.getName(),   // проверь как у тебя называется поле имени
+                Instant.now()
+        );
+        outboxService.save(eventId, "UserVerified", "user-events", event);
+
         return tokenService.issueTokenPair(user);
     }
 
