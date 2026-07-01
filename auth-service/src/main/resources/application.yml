@@ -24,6 +24,10 @@ app:
   rate-limit:
     enabled: ${RATE_LIMIT_ENABLED:true}
 
+  outbox:
+    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
+    cleanup-cron: ${OUTBOX_CLEANUP_CRON:0 0 2 * * *}
+
 spring:
   application:
     name: toDoApplication

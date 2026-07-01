@@ -26,7 +26,7 @@ public class OutboxPoller {
     @Transactional
     public void pollAndPublish() {
         List<OutboxEvent> events = outboxRepository
-                .findByPublishedFalseOrderByCreatedAtAsc(Limit.of(BATCH_SIZE));
+                .findUnpublishedForUpdate(Limit.of(BATCH_SIZE));
 
         if (events.isEmpty()) {
             return;

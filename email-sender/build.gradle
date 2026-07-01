@@ -1,0 +1,34 @@
+dependencies {
+    // =========================
+    // Kafka (consumer)
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    // =========================
+    // Mail
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // =========================
+    // Database (idempotency — processed events)
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // =========================
+    // Monitoring
+    // =========================
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // =========================
+    // Tests
+    // =========================
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+}
+
