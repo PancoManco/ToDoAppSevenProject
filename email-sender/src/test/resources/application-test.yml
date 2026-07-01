@@ -1,0 +1,23 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  kafka:
+    consumer:
+      group-id: email-sender-test
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      ack-mode: manual
+
+app:
+  mail:
+    from: test@todoapp.com
+
+logging:
+  level:
+    root: WARN
+    ru.pancomanco.emailsender: INFO

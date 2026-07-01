@@ -47,6 +47,9 @@ spring:
           google:
             client-id: test-client-id
             client-secret: test-client-secret
+  task:
+    scheduling:
+      enabled: false
 
 logging:
   level:
