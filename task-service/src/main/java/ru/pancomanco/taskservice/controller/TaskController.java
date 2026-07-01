@@ -10,6 +10,7 @@ import ru.pancomanco.taskservice.dto.request.CreateTaskRequestDto;
 import ru.pancomanco.taskservice.dto.request.UpdateTaskRequestDto;
 import ru.pancomanco.taskservice.dto.response.TaskResponseDto;
 import ru.pancomanco.taskservice.service.TaskService;
+import ru.pancomanco.taskservice.service.TaskUserService;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskUserService taskUserService;
 
     private Long ownerId(Jwt jwt) {
         return Long.valueOf(jwt.getSubject());
@@ -39,7 +41,11 @@ public class TaskController {
     public TaskResponseDto createTask(
             @Valid @RequestBody CreateTaskRequestDto request,
             @AuthenticationPrincipal Jwt jwt) {
-        return taskService.createTask(request, ownerId(jwt));
+        Long ownerId = ownerId(jwt);
+        String email = jwt.getClaimAsString("email");
+        String name = jwt.getClaimAsString("name");
+        taskUserService.ensureUserExists(ownerId, email, name);
+        return taskService.createTask(request, ownerId);
     }
 
     @PutMapping("/{id}")

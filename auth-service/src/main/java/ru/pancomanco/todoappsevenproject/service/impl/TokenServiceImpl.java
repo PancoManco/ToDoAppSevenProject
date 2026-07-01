@@ -149,6 +149,7 @@ public class TokenServiceImpl implements TokenService {
                 .subject(String.valueOf(user.getId()))
                 .claim("token_type", "access")
                 .claim("email", user.getEmail())
+                .claim("name", user.getName())  // toCheck
                 .claim("roles", List.of(user.getRole().name()))
                 .build();
 
