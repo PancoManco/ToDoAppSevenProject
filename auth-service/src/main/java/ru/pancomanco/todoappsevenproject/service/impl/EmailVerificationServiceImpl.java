@@ -128,7 +128,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 eventId,
                 user.getId(),
                 user.getEmail(),
-                user.getName(),   // проверь как у тебя называется поле имени
+                user.getName(),
                 Instant.now()
         );
         outboxService.save(eventId, "UserVerified", "user-events", event);

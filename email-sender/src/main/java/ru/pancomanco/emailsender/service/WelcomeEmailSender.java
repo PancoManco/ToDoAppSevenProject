@@ -28,9 +28,9 @@ public class WelcomeEmailSender {
     }
 
     private String buildBody(String name) {
+        // todo htmlBody
         return """
-                WELCOME TEXTTTTTTTTTTTTTTTTT
-                fdsafdsffffffdssssssss
+                WELCOME to toDo App! 
                 """.formatted(name);
     }
 }

@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 00X-create-outbox-table
+      id: 003-create-outbox-table
       author: pancomanco
       changes:
         - createTable:

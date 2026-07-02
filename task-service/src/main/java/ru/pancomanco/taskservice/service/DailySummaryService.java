@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,11 +44,11 @@ public class DailySummaryService {
             }
 
             List<String> completedTitles = completedCount > 0
-                    ? taskRepository.findCompletedTitlesSince(userId, since, Limit.of(MAX_TITLES))
+                    ? taskRepository.findCompletedTitlesSince(userId, since, PageRequest.of(0,MAX_TITLES))
                     : List.of();
 
             List<String> pendingTitles = pendingCount > 0
-                    ? taskRepository.findPendingTitles(userId, Limit.of(MAX_TITLES))
+                    ? taskRepository.findPendingTitles(userId, PageRequest.of(0,MAX_TITLES))
                     : List.of();
 
             result.add(new UserTaskSummary(
