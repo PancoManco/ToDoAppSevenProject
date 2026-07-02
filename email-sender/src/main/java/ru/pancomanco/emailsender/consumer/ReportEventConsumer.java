@@ -1,7 +1,6 @@
 package ru.pancomanco.emailsender.consumer;
 
-import liquibase.license.User;
-import org.springframework.mail.MailException;
+
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -11,39 +10,40 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.emailsender.entity.ProcessedEvent;
-import ru.pancomanco.emailsender.event.UserVerifiedEvent;
+import ru.pancomanco.emailsender.event.DailyReportEvent;
+import ru.pancomanco.emailsender.exception.NonRetryableException;
 import ru.pancomanco.emailsender.repository.ProcessedEventRepository;
-import ru.pancomanco.emailsender.service.WelcomeEmailSender;
+import ru.pancomanco.emailsender.service.DailyReportEmailSender;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class UserEventConsumer {
+public class ReportEventConsumer {
 
     private final ObjectMapper objectMapper;
     private final ProcessedEventRepository processedEventRepository;
-    private final WelcomeEmailSender welcomeEmailSender;
+    private final DailyReportEmailSender dailyReportEmailSender;
 
-    @KafkaListener(topics = "user-events", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "report-events", groupId = "${spring.kafka.consumer.group-id}")
     @Transactional
-    public void handleUserEvent(String payload, Acknowledgment acknowledgment) {
-        UserVerifiedEvent event;
+    public void handleReportEvent(String payload, Acknowledgment acknowledgment) {
+        DailyReportEvent event;
         try {
-            event = objectMapper.readValue(payload, UserVerifiedEvent.class);
+            event = objectMapper.readValue(payload, DailyReportEvent.class);
         } catch (JacksonException e) {
-            throw new NonRetryableException("Malformed event JSON", e);
+            throw new NonRetryableException("Malformed report event JSON", e);
         }
 
         if (processedEventRepository.existsById(event.eventId())) {
-            log.debug("Event {} already processed, skipping", event.eventId());
+            log.debug("Report event {} already processed, skipping", event.eventId());
             acknowledgment.acknowledge();
             return;
         }
 
-        processedEventRepository.save(new ProcessedEvent(event.eventId(), "UserVerified"));
-        welcomeEmailSender.sendWelcomeEmail(event.email(), event.name());
+        processedEventRepository.save(new ProcessedEvent(event.eventId(), "DailyReport"));
+        dailyReportEmailSender.sendReport(event);
         acknowledgment.acknowledge();
 
-        log.info("Processed UserVerified event {} for {}", event.eventId(), event.email());
+        log.info("Processed DailyReport event {} for {}", event.eventId(), event.email());
     }
 }

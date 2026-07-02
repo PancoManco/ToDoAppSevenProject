@@ -1,0 +1,34 @@
+server:
+  port: ${SCHEDULER_PORT:8084}
+
+spring:
+  application:
+    name: scheduler
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+
+app:
+  task-service:
+    url: ${TASK_SERVICE_URL:http://localhost:8082}
+  report:
+    topic: ${REPORT_TOPIC:report-events}
+    cron: ${REPORT_CRON:*/30 * * * * *}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    ru.pancomanco.scheduler: DEBUG

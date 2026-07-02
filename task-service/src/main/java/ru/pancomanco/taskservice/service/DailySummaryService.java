@@ -1,13 +1,10 @@
 package ru.pancomanco.taskservice.service;
 
 import lombok.RequiredArgsConstructor;
-
-
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import ru.pancomanco.taskservice.dto.UserCountProjection;
+import ru.pancomanco.taskservice.dto.UserTitleProjection;
 import ru.pancomanco.taskservice.dto.response.DailySummaryResponseDto.UserTaskSummary;
 import ru.pancomanco.taskservice.dto.response.DailySummaryResponseDto;
 import ru.pancomanco.taskservice.entity.TaskUser;
@@ -16,8 +13,9 @@ import ru.pancomanco.taskservice.repository.TaskUserRepository;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,37 +29,54 @@ public class DailySummaryService {
     @Transactional(readOnly = true)
     public DailySummaryResponseDto buildDailySummary() {
         Instant since = Instant.now().minus(24, ChronoUnit.HOURS);
+
+        Map<Long, Long> completedCounts = toCountMap(taskRepository.countCompletedPerUserSince(since));
+        Map<Long, Long> pendingCounts = toCountMap(taskRepository.countPendingPerUser());
+        Map<Long, List<String>> completedTitles = toTitleMap(
+                taskRepository.findCompletedTitlesPerUserSince(since, MAX_TITLES));
+        Map<Long, List<String>> pendingTitles = toTitleMap(
+                taskRepository.findPendingTitlesPerUser(MAX_TITLES));
+
+        // активные юзеры = у кого есть completed ИЛИ pending
+        Set<Long> activeUserIds = new HashSet<>(completedCounts.keySet());
+        activeUserIds.addAll(pendingCounts.keySet());
+
+        if (activeUserIds.isEmpty()) {
+            return new DailySummaryResponseDto(List.of());
+        }
+
+        Map<Long, TaskUser> users = taskUserRepository.findAllById(activeUserIds).stream()
+                .collect(Collectors.toMap(TaskUser::getUserId, Function.identity()));
+
         List<UserTaskSummary> result = new ArrayList<>();
-
-        for (TaskUser user : taskUserRepository.findAll()) {
-            Long userId = user.getUserId();
-
-            int completedCount = taskRepository.countCompletedSince(userId, since);
-            int pendingCount = taskRepository.countByOwnerIdAndCompletedFalse(userId);
-
-            if (completedCount == 0 && pendingCount == 0) {
+        for (Long userId : activeUserIds) {
+            TaskUser user = users.get(userId);
+            if (user == null) {
                 continue;
             }
-
-            List<String> completedTitles = completedCount > 0
-                    ? taskRepository.findCompletedTitlesSince(userId, since, PageRequest.of(0,MAX_TITLES))
-                    : List.of();
-
-            List<String> pendingTitles = pendingCount > 0
-                    ? taskRepository.findPendingTitles(userId, PageRequest.of(0,MAX_TITLES))
-                    : List.of();
-
             result.add(new UserTaskSummary(
                     userId,
                     user.getEmail(),
                     user.getName(),
-                    completedCount,
-                    completedTitles,
-                    pendingCount,
-                    pendingTitles
+                    completedCounts.getOrDefault(userId, 0L).intValue(),
+                    completedTitles.getOrDefault(userId, List.of()),
+                    pendingCounts.getOrDefault(userId, 0L).intValue(),
+                    pendingTitles.getOrDefault(userId, List.of())
             ));
         }
 
         return new DailySummaryResponseDto(result);
+    }
+
+    private Map<Long, Long> toCountMap(List<UserCountProjection> rows) {
+        return rows.stream().collect(Collectors.toMap(
+                UserCountProjection::getOwnerId,
+                UserCountProjection::getCount));
+    }
+
+    private Map<Long, List<String>> toTitleMap(List<UserTitleProjection> rows) {
+        return rows.stream().collect(Collectors.groupingBy(
+                UserTitleProjection::getOwnerId,
+                Collectors.mapping(UserTitleProjection::getTitle, Collectors.toList())));
     }
 }
