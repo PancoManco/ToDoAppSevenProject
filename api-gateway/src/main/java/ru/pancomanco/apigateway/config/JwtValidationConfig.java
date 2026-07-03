@@ -1,6 +1,7 @@
 package ru.pancomanco.apigateway.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -11,24 +12,29 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import ru.pancomanco.apigateway.properties.JwtProperties;
 
 @Configuration
+@RequiredArgsConstructor
+@EnableConfigurationProperties(JwtProperties.class)
 public class JwtValidationConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    private String jwkSetUri;
+//    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+//    private String jwkSetUri;
+//
+//    @Value("${app.security.jwt.issuer:toDoApplication}")
+//    private String issuer;
 
-    @Value("${app.security.jwt.issuer:toDoApplication}")
-    private String issuer;
+    private final JwtProperties jwtProperties;
 
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder() {
         NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder
-                .withJwkSetUri(jwkSetUri)
+                .withJwkSetUri(jwtProperties.jwkSetUri())
                 .build();
 
         OAuth2TokenValidator<Jwt> defaultValidators =
-                JwtValidators.createDefaultWithIssuer(issuer);
+                JwtValidators.createDefaultWithIssuer(jwtProperties.issuer());
 
         OAuth2TokenValidator<Jwt> accessTypeValidator = tokenTypeValidator("access");
 

@@ -20,7 +20,7 @@ app:
     url: ${TASK_SERVICE_URL:http://localhost:8082}
   report:
     topic: ${REPORT_TOPIC:report-events}
-    cron: ${REPORT_CRON:*/30 * * * * *}
+    cron: ${REPORT_CRON:0 */6 * * * *}
 
 management:
   endpoints:

@@ -37,7 +37,6 @@ public class DailySummaryService {
         Map<Long, List<String>> pendingTitles = toTitleMap(
                 taskRepository.findPendingTitlesPerUser(MAX_TITLES));
 
-        // активные юзеры = у кого есть completed ИЛИ pending
         Set<Long> activeUserIds = new HashSet<>(completedCounts.keySet());
         activeUserIds.addAll(pendingCounts.keySet());
 

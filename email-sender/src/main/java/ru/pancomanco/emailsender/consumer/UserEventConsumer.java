@@ -2,6 +2,7 @@ package ru.pancomanco.emailsender.consumer;
 
 import liquibase.license.User;
 import org.springframework.mail.MailException;
+import ru.pancomanco.emailsender.exception.NonRetryableException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
