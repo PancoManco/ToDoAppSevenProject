@@ -1,0 +1,16 @@
+spring:
+  task:
+    scheduling:
+      enabled: false
+
+app:
+  task-service:
+    url: http://localhost:9999
+  report:
+    topic: report-events
+    cron: "0 0 0 * * *"
+
+logging:
+  level:
+    root: WARN
+    ru.pancomanco.scheduler: INFO
