@@ -1,17 +1,18 @@
 package ru.pancomanco.scheduler.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
+import ru.pancomanco.scheduler.properties.SchedulerProperties;
 
 @Configuration
 public class RestClientConfig {
 
     @Bean
-    public RestClient taskServiceRestClient(@Value("${app.task-service.url}") String taskServiceUrl) {
+    public RestClient taskServiceRestClient(SchedulerProperties properties) {
         return RestClient.builder()
-                .baseUrl(taskServiceUrl)
+                .baseUrl(properties.taskService().url())
+                .defaultHeader("X-Internal-Api-Key", properties.internal().apiKey())
                 .build();
     }
 }

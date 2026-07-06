@@ -22,18 +22,9 @@ spring:
               '[/**]':
                 allowed-origins:
                   - ${FRONTEND_ORIGIN:http://localhost:5173}
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - PATCH
-                  - OPTIONS
+                allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
                 allowedHeaders: "*"
-                exposedHeaders:
-                  - Authorization
-                  - X-Request-Id
-                  - Set-Cookie
+                exposedHeaders: [Authorization, X-Request-Id, Set-Cookie]
                 allowCredentials: true
                 maxAge: 3600
           default-filters:
@@ -47,8 +38,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 10
-                    redis-rate-limiter.burstCapacity: 20
+                    redis-rate-limiter.replenishRate: ${RL_REGISTER_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${RL_REGISTER_BURST:20}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-login
@@ -58,8 +49,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 2
-                    redis-rate-limiter.burstCapacity: 3
+                    redis-rate-limiter.replenishRate: ${RL_LOGIN_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${RL_LOGIN_BURST:20}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-verify
@@ -69,8 +60,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 30
-                    redis-rate-limiter.burstCapacity: 50
+                    redis-rate-limiter.replenishRate: ${RL_VERIFY_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${RL_VERIFY_BURST:50}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-password
@@ -80,8 +71,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 10
-                    redis-rate-limiter.burstCapacity: 20
+                    redis-rate-limiter.replenishRate: ${RL_PASSWORD_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${RL_PASSWORD_BURST:20}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-refresh
@@ -91,8 +82,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 30
-                    redis-rate-limiter.burstCapacity: 50
+                    redis-rate-limiter.replenishRate: ${RL_REFRESH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${RL_REFRESH_BURST:50}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-logout
@@ -124,11 +115,10 @@ management:
     gateway:
       access: none
     health:
-      show-details: always
+      show-details: ${HEALTH_DETAILS:always}
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping: DEBUG
-    reactor.netty.http.client: DEBUG
-    reactor.netty.http.server: DEBUG
+    org.springframework.cloud.gateway: ${LOG_GATEWAY:INFO}
+    reactor.netty.http.client: ${LOG_NETTY:WARN}
+    reactor.netty.http.server: ${LOG_NETTY:WARN}

@@ -40,9 +40,9 @@ spring:
     properties:
       mail:
         smtp:
-          auth: false
+          auth: ${MAIL_SMTP_AUTH:false}
           starttls:
-            enable: false
+            enable: ${MAIL_STARTTLS_ENABLE:false}
 
 app:
   mail:
@@ -52,14 +52,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       probes:
         enabled: true
+      show-details: ${HEALTH_DETAILS:never}
 
 logging:
   level:
     root: INFO
-    ru.pancomanco.emailsender: DEBUG
-    org.springframework.kafka: INFO
+    ru.pancomanco.emailsender: ${LOG_APP:INFO}
+    org.springframework.kafka: ${LOG_KAFKA:INFO}

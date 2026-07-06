@@ -33,7 +33,8 @@ app:
   security:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
-
+  internal:
+    api-key: ${INTERNAL_API_KEY:SECRET}
 management:
   endpoints:
     web:
@@ -47,5 +48,5 @@ management:
 logging:
   level:
     root: INFO
-    ru.pancomanco.taskservice: DEBUG
-    org.springframework.security: INFO
+    ru.pancomanco.taskservice: ${LOG_APP:INFO}
+    org.springframework.security: ${LOG_SECURITY}

@@ -18,17 +18,19 @@ spring:
 app:
   task-service:
     url: ${TASK_SERVICE_URL:http://localhost:8082}
+  internal:
+    api-key: ${INTERNAL_API_KEY:SECRET}
   report:
     topic: ${REPORT_TOPIC:report-events}
-    cron: ${REPORT_CRON:0 */6 * * * *}
+    cron: ${REPORT_CRON:*/30 * * * * *}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
 
 logging:
   level:
     root: INFO
-    ru.pancomanco.scheduler: DEBUG
+    ru.pancomanco.scheduler: ${LOG_APP:INFO}
