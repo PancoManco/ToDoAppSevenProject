@@ -42,7 +42,7 @@ public class DailyReportEmailSender {
             return "У вас осталось " + event.pendingCount() + " несделанных задач";
         }
     }
-
+//todo pages with reports
     private String buildBody(DailyReportEvent event) {
         StringBuilder body = new StringBuilder();
         body.append("Здравствуйте, ").append(event.name()).append("!\n\n");

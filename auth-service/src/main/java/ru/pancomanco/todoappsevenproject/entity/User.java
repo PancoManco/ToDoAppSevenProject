@@ -50,10 +50,6 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-//    public User (String email, String password) {
-//        this.email = email;
-//        this.password = password;
-//    }
 
     public User(String email, String password) {
         this.email = email;

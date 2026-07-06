@@ -74,27 +74,6 @@ public class SocialAuthServiceImpl implements SocialAuthService {
         linkedAccountRepository.save(linkedAccount);
         log.info("Successfully linked OAuth provider [{}] to existing user ID: {}", provider, newUser.getId());
         return newUser;
-//        User user = authRepository.findByEmail(normalizedEmail)
-//                .orElseGet(() -> authRepository.save(
-//                        User.socialUser(
-//                                normalizedEmail,
-//                                profile.name(),
-//                                profile.avatarUrl()
-//                        )
-//                ));
-//
-//        if (!Boolean.TRUE.equals(user.getEnabled())) {
-//            user.setEnabled(true);
-//        }
-//
-//        LinkedAccount linkedAccount = new LinkedAccount(
-//                user,
-//                provider,
-//                profile.providerUserId(),
-//                normalizedEmail
-//        );
-//        linkedAccountRepository.save(linkedAccount);
-//        return user;
     }
 
     private AuthProviderEnum parseProvider(String registrationId) {
@@ -119,10 +98,6 @@ public class SocialAuthServiceImpl implements SocialAuthService {
                     ex
             );
         }
-//        return switch (registrationId.toLowerCase()) {
-//            case "google" -> AuthProviderEnum.GOOGLE;
-//            default -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
-//        };
     }
 
     private SocialProfile extractProfile(

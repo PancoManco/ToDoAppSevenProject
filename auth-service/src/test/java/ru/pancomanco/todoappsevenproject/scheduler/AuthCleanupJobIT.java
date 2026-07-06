@@ -142,7 +142,6 @@ public class AuthCleanupJobIT {
     class PasswordResetTokensCleanup {
 
         @Test
-        @DisplayName("Истёкшие токены удаляются")
         void cleanup_RemovesExpiredResetTokens() {
             User user = createVerifiedUser();
             PasswordResetToken expired = new PasswordResetToken(

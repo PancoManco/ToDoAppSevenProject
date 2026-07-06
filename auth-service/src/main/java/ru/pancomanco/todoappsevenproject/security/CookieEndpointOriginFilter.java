@@ -5,13 +5,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 @Slf4j
@@ -46,7 +44,6 @@ public class CookieEndpointOriginFilter extends OncePerRequestFilter {
             if (origin == null || !origin.equals(allowedOrigin)) {
                 log.warn("SECURITY: Blocked request to {} with invalid/missing Origin: {}. Remote IP: {}",
                         request.getRequestURI(), origin, request.getRemoteAddr());
-                //  response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid Origin");
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"code\":\"auth.origin.invalid\",\"message\":\"Invalid Origin\"}");

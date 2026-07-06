@@ -2,6 +2,7 @@ PROJECT STRUCTURE:
 ==================
 build.gradle
 docker-compose.yml
+project_code.txt
 settings.gradle
 api-gateway\build.gradle
 api-gateway\HELP.md
@@ -19,6 +20,7 @@ auth-service\src\test\resources\application-test.yml
 email-sender\src\main\resources\application.yml
 email-sender\src\test\resources\application-test.yml
 scheduler\src\main\resources\application.yml
+scheduler\src\test\resources\application-test.yml
 task-service\src\main\resources\application.yml
 task-service\src\test\resources\application-test.yml
 auth-service\src\main\resources\db\changelog\db.changelog-master.yaml
@@ -46,6 +48,7 @@ task-service\src\test\java\ru\pancomanco\taskservice\TaskServiceApplicationTests
 api-gateway\src\main\java\ru\pancomanco\apigateway\config\JwtValidationConfig.java
 api-gateway\src\main\java\ru\pancomanco\apigateway\config\RateLimitConfig.java
 api-gateway\src\main\java\ru\pancomanco\apigateway\config\SecurityConfig.java
+api-gateway\src\main\java\ru\pancomanco\apigateway\properties\JwtProperties.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\ClientIpResolver.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\EmailSender.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\RateLimitConfig.java
@@ -126,6 +129,8 @@ scheduler\src\main\java\ru\pancomanco\scheduler\event\DailyReportEvent.java
 scheduler\src\main\java\ru\pancomanco\scheduler\job\DailyReportJob.java
 scheduler\src\main\java\ru\pancomanco\scheduler\kafka\ReportEventPublisher.java
 scheduler\src\main\java\ru\pancomanco\scheduler\service\TaskSummaryClient.java
+scheduler\src\test\java\ru\pancomanco\scheduler\config\TestcontainersConfiguration.java
+scheduler\src\test\java\ru\pancomanco\scheduler\scheduler\DailyReportJobIT.java
 task-service\src\main\java\ru\pancomanco\taskservice\config\SecurityConfig.java
 task-service\src\main\java\ru\pancomanco\taskservice\controllerAdvice\GlobalExceptionHandler.java
 task-service\src\main\java\ru\pancomanco\taskservice\controller\InternalController.java
@@ -351,6 +356,368 @@ volumes:
   kafka-data:
   task-postgres-data:
   email-sender-postgres-data:
+
+================================================================================
+FILE: project_code.txt
+================================================================================
+PROJECT STRUCTURE:
+==================
+build.gradle
+docker-compose.yml
+project_code.txt
+settings.gradle
+api-gateway\build.gradle
+api-gateway\HELP.md
+auth-service\build.gradle
+email-sender\build.gradle
+scheduler\build.gradle
+task-service\build.gradle
+gradle\wrapper\gradle-wrapper.properties
+api-gateway\src\main\resources\application.yml
+auth-service\src\main\resources\application-dev.yml
+auth-service\src\main\resources\application-prod.yml
+auth-service\src\main\resources\application.yml
+auth-service\src\main\resources\messages.properties
+auth-service\src\test\resources\application-test.yml
+email-sender\src\main\resources\application.yml
+email-sender\src\test\resources\application-test.yml
+scheduler\src\main\resources\application.yml
+scheduler\src\test\resources\application-test.yml
+task-service\src\main\resources\application.yml
+task-service\src\test\resources\application-test.yml
+auth-service\src\main\resources\db\changelog\db.changelog-master.yaml
+email-sender\src\main\resources\db\changelog\db.changelog-master.yaml
+task-service\src\main\resources\db\changelog\db.changelog-master.yaml
+api-gateway\src\main\java\ru\pancomanco\apigateway\ApiGatewayApplication.java
+api-gateway\src\test\java\ru\pancomanco\apigateway\ApiGatewayApplicationTests.java
+api-gateway\src\test\java\ru\pancomanco\apigateway\TestApiGatewayApplication.java
+api-gateway\src\test\java\ru\pancomanco\apigateway\TestcontainersConfiguration.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\ScanProject.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\ToDoAppSevenProjectApplication.java
+auth-service\src\main\resources\db\changelog\changes\001-init-auth-schema.yaml
+auth-service\src\main\resources\db\changelog\changes\002-add-user-timestamps.yaml
+auth-service\src\main\resources\db\changelog\changes\003-create-outbox-table.yaml
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\TestToDoAppSevenProjectApplication.java
+email-sender\src\main\java\ru\pancomanco\emailsender\EmailSenderApplication.java
+email-sender\src\main\resources\db\changelog\changes\001-create-processed-events-table.yaml
+email-sender\src\test\java\ru\pancomanco\emailsender\EmailSenderApplicationTests.java
+scheduler\src\main\java\ru\pancomanco\scheduler\SchedulerApplication.java
+scheduler\src\test\java\ru\pancomanco\scheduler\SchedulerApplicationTests.java
+task-service\src\main\java\ru\pancomanco\taskservice\TaskServiceApplication.java
+task-service\src\main\resources\db\changelog\changes\001-create-tasks-table.yaml
+task-service\src\main\resources\db\changelog\changes\002-create-task-users-table.yaml
+task-service\src\test\java\ru\pancomanco\taskservice\TaskServiceApplicationTests.java
+api-gateway\src\main\java\ru\pancomanco\apigateway\config\JwtValidationConfig.java
+api-gateway\src\main\java\ru\pancomanco\apigateway\config\RateLimitConfig.java
+api-gateway\src\main\java\ru\pancomanco\apigateway\config\SecurityConfig.java
+api-gateway\src\main\java\ru\pancomanco\apigateway\properties\JwtProperties.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\ClientIpResolver.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\EmailSender.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\RateLimitConfig.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\config\SecurityConfig.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\controllerAdvice\GlobalExceptionHandler.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\controller\AuthorizationController.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\controller\JwkSetEndpoint.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\controller\UserController.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\AuthResponse.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\TokenPair.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\AuthProviderEnum.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\EmailVerificationCode.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\LinkedAccount.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\PasswordResetToken.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\RefreshToken.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\Role.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\SocialProfile.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\entity\User.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\AppException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\EmailVerificationException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\ErrorCode.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\PasswordResetException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\RateLimitExceededException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\SocialAuthException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\TokenException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\exception\UnauthorizedException.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\properties\AuthProperties.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\properties\MailProperties.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\properties\RateLimitProperties.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\properties\RsaKeyProperties.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\repository\AuthRepository.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\repository\EmailVerificationCodeRepository.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\repository\LinkedAccountRepository.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\repository\PasswordResetTokenRepository.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\repository\RefreshTokenRepository.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\scheduler\AuthCleanupJob.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\security\CookieEndpointOriginFilter.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\security\OAuth2SuccessHandler.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\AuthenticationService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\EmailVerificationService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\MessageService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\PasswordResetService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\RateLimitService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\SocialAuthService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\TokenService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\util\EmailUtil.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\util\HashUtil.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\util\RefreshCookieHelper.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\util\RsaKeyLoader.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\util\VerificationCodeGenerator.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\config\TestcontainersConfiguration.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\config\TestRateLimitConfig.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\controller\AuthFlowIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\controller\AuthorizationControllerIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\scheduler\AuthCleanupJobIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\scheduler\SocialAuthServiceIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\security\OAuth2SuccessHandlerIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\service\OutboxIntegrationIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\service\RateLimitServiceIT.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\util\HashUtilTest.java
+auth-service\src\test\java\ru\pancomanco\todoappsevenproject\util\VerificationCodeGeneratorTest.java
+email-sender\src\main\java\ru\pancomanco\emailsender\config\KafkaErrorHandlingConfig.java
+email-sender\src\main\java\ru\pancomanco\emailsender\consumer\ReportEventConsumer.java
+email-sender\src\main\java\ru\pancomanco\emailsender\consumer\UserEventConsumer.java
+email-sender\src\main\java\ru\pancomanco\emailsender\entity\ProcessedEvent.java
+email-sender\src\main\java\ru\pancomanco\emailsender\event\DailyReportEvent.java
+email-sender\src\main\java\ru\pancomanco\emailsender\event\UserVerifiedEvent.java
+email-sender\src\main\java\ru\pancomanco\emailsender\exception\NonRetryableException.java
+email-sender\src\main\java\ru\pancomanco\emailsender\repository\ProcessedEventRepository.java
+email-sender\src\main\java\ru\pancomanco\emailsender\service\DailyReportEmailSender.java
+email-sender\src\main\java\ru\pancomanco\emailsender\service\WelcomeEmailSender.java
+email-sender\src\test\java\ru\pancomanco\emailsender\config\TestcontainersConfiguration.java
+email-sender\src\test\java\ru\pancomanco\emailsender\config\TestMailConfig.java
+email-sender\src\test\java\ru\pancomanco\emailsender\consumer\UserEventConsumerIT.java
+scheduler\src\main\java\ru\pancomanco\scheduler\config\RestClientConfig.java
+scheduler\src\main\java\ru\pancomanco\scheduler\dto\DailySummaryResponseDto.java
+scheduler\src\main\java\ru\pancomanco\scheduler\event\DailyReportEvent.java
+scheduler\src\main\java\ru\pancomanco\scheduler\job\DailyReportJob.java
+scheduler\src\main\java\ru\pancomanco\scheduler\kafka\ReportEventPublisher.java
+scheduler\src\main\java\ru\pancomanco\scheduler\service\TaskSummaryClient.java
+scheduler\src\test\java\ru\pancomanco\scheduler\config\TestcontainersConfiguration.java
+scheduler\src\test\java\ru\pancomanco\scheduler\scheduler\DailyReportJobIT.java
+task-service\src\main\java\ru\pancomanco\taskservice\config\SecurityConfig.java
+task-service\src\main\java\ru\pancomanco\taskservice\controllerAdvice\GlobalExceptionHandler.java
+task-service\src\main\java\ru\pancomanco\taskservice\controller\InternalController.java
+task-service\src\main\java\ru\pancomanco\taskservice\controller\TaskController.java
+task-service\src\main\java\ru\pancomanco\taskservice\dto\UserCountProjection.java
+task-service\src\main\java\ru\pancomanco\taskservice\dto\UserTitleProjection.java
+task-service\src\main\java\ru\pancomanco\taskservice\entity\Task.java
+task-service\src\main\java\ru\pancomanco\taskservice\entity\TaskUser.java
+task-service\src\main\java\ru\pancomanco\taskservice\exception\TaskNotFoundException.java
+task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskRepository.java
+task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskUserRepository.java
+task-service\src\main\java\ru\pancomanco\taskservice\service\DailySummaryService.java
+task-service\src\main\java\ru\pancomanco\taskservice\service\TaskService.java
+task-service\src\main\java\ru\pancomanco\taskservice\service\TaskUserService.java
+task-service\src\test\java\ru\pancomanco\taskservice\config\TestcontainersConfiguration.java
+task-service\src\test\java\ru\pancomanco\taskservice\config\TestSecurityConfig.java
+task-service\src\test\java\ru\pancomanco\taskservice\controller\TaskControllerIT.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\ForgotPasswordRequestDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\LoginRequestDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\RegisterRequestDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\ResendEmailVerificationRequestDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\ResetPasswordRequestDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\VerifyEmailRequestDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\response\MessageResponseDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\response\RegisterResponseDto.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\event\UserVerifiedEvent.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\kafka\KafkaEventPublisher.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxCleanupJob.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxEvent.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxPoller.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxRepository.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxService.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\impl\AuthenticationServiceImpl.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\impl\EmailVerificationServiceImpl.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\impl\PasswordResetServiceImpl.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\impl\RateLimitServiceImpl.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\impl\SocialAuthServiceImpl.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\service\impl\TokenServiceImpl.java
+task-service\src\main\java\ru\pancomanco\taskservice\dto\request\CreateTaskRequestDto.java
+task-service\src\main\java\ru\pancomanco\taskservice\dto\request\UpdateTaskRequestDto.java
+task-service\src\main\java\ru\pancomanco\taskservice\dto\response\DailySummaryResponseDto.java
+task-service\src\main\java\ru\pancomanco\taskservice\dto\response\TaskResponseDto.java
+
+
+SOURCE CODE:
+============
+
+================================================================================
+FILE: build.gradle
+================================================================================
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.6' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = 'ru.pancoManco'
+    version = '0.0.1-SNAPSHOT'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(26)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        // Lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+
+        // Basic tests
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+        testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+        maxHeapSize = "2G"
+
+        testLogging {
+            events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
+            exceptionFormat "full"
+            showExceptions true
+            showCauses true
+            showStackTraces true
+        }
+    }
+}
+
+================================================================================
+FILE: docker-compose.yml
+================================================================================
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: to_do_application_container
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL","pg_isready -U postgres -d postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit_container
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      - MP_MAX_MESSAGES=500
+  redis:
+    image: redis:7-alpine
+    container_name: redis_container
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: kafka_container
+    restart: unless-stopped
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  task-postgres:
+    image: postgres:16-alpine
+    container_name: task_service_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+      POSTGRES_DB: task_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - task-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U taskuser -d task_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  email-sender-postgres:
+    image: postgres:16-alpine
+    container_name: email-sender-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: emailuser
+      POSTGRES_PASSWORD: emailpassword
+      POSTGRES_DB: email_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - email-sender-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U emailuser -d email_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8085:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local-kraft
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
+volumes:
+  postgres-data:
+  redis-data:
+  kafka-data:
+  task-postgres-data:
+  email-sender-po
 
 ================================================================================
 FILE: settings.gradle
@@ -599,6 +966,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+    testImplementation "org.testcontainers:testcontainers-kafka:2.0.5"
+    testImplementation 'org.awaitility:awaitility'
 }
 
 ================================================================================
@@ -672,10 +1042,7 @@ spring:
   security:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8081}/.well-known/jwks.json
+      jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8081}/.well-known/jwks.json
   cloud:
     gateway:
       server:
@@ -1247,6 +1614,26 @@ logging:
   level:
     root: INFO
     ru.pancomanco.scheduler: DEBUG
+
+================================================================================
+FILE: scheduler\src\test\resources\application-test.yml
+================================================================================
+spring:
+  task:
+    scheduling:
+      enabled: false
+
+app:
+  task-service:
+    url: http://localhost:9999
+  report:
+    topic: report-events
+    cron: "0 0 0 * * *"
+
+logging:
+  level:
+    root: WARN
+    ru.pancomanco.scheduler: INFO
 
 ================================================================================
 FILE: task-service\src\main\resources\application.yml
@@ -2194,7 +2581,8 @@ FILE: api-gateway\src\main\java\ru\pancomanco\apigateway\config\JwtValidationCon
 ================================================================================
 package ru.pancomanco.apigateway.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -2205,24 +2593,29 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import ru.pancomanco.apigateway.properties.JwtProperties;
 
 @Configuration
+@RequiredArgsConstructor
+@EnableConfigurationProperties(JwtProperties.class)
 public class JwtValidationConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    private String jwkSetUri;
+//    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
+//    private String jwkSetUri;
+//
+//    @Value("${app.security.jwt.issuer:toDoApplication}")
+//    private String issuer;
 
-    @Value("${app.security.jwt.issuer:toDoApplication}")
-    private String issuer;
+    private final JwtProperties jwtProperties;
 
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder() {
         NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder
-                .withJwkSetUri(jwkSetUri)
+                .withJwkSetUri(jwtProperties.jwkSetUri())
                 .build();
 
         OAuth2TokenValidator<Jwt> defaultValidators =
-                JwtValidators.createDefaultWithIssuer(issuer);
+                JwtValidators.createDefaultWithIssuer(jwtProperties.issuer());
 
         OAuth2TokenValidator<Jwt> accessTypeValidator = tokenTypeValidator("access");
 
@@ -2337,6 +2730,28 @@ public class SecurityConfig {
                 )
                 .build();
     }
+}
+
+================================================================================
+FILE: api-gateway\src\main\java\ru\pancomanco\apigateway\properties\JwtProperties.java
+================================================================================
+package ru.pancomanco.apigateway.properties;
+
+import jakarta.validation.constraints.NotBlank;
+import org.hibernate.validator.constraints.URL;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@ConfigurationProperties(prefix = "app.security.jwt")
+public record JwtProperties(
+        @NotBlank
+        String issuer,
+
+        @NotBlank
+        @URL
+        String jwkSetUri
+) {
 }
 
 ================================================================================
@@ -8440,6 +8855,127 @@ public class TaskSummaryClient {
                 .uri("/internal/tasks/daily-summary")
                 .retrieve()
                 .body(DailySummaryResponseDto.class);
+    }
+}
+
+================================================================================
+FILE: scheduler\src\test\java\ru\pancomanco\scheduler\config\TestcontainersConfiguration.java
+================================================================================
+package ru.pancomanco.scheduler.config;
+
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
+import org.testcontainers.utility.DockerImageName;
+
+@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+
+    @Bean
+    @ServiceConnection
+    ConfluentKafkaContainer kafkaContainer() {
+        return new ConfluentKafkaContainer(
+                DockerImageName.parse("confluentinc/cp-kafka:7.8.0"));
+    }
+}
+
+================================================================================
+FILE: scheduler\src\test\java\ru\pancomanco\scheduler\scheduler\DailyReportJobIT.java
+================================================================================
+package ru.pancomanco.scheduler.scheduler;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
+import ru.pancomanco.scheduler.config.TestcontainersConfiguration;
+import ru.pancomanco.scheduler.dto.DailySummaryResponseDto;
+import ru.pancomanco.scheduler.job.DailyReportJob;
+import ru.pancomanco.scheduler.service.TaskSummaryClient;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+@SpringBootTest
+@ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
+class DailyReportJobIT {
+
+    @Autowired
+    private DailyReportJob dailyReportJob;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private ConfluentKafkaContainer kafkaContainer;
+
+    @MockitoBean
+    private TaskSummaryClient taskSummaryClient;
+
+    @Test
+    void generatesReports_PublishesEventPerUser() {
+        DailySummaryResponseDto summary = new DailySummaryResponseDto(List.of(
+                new DailySummaryResponseDto.UserTaskSummary(1L, "a@test.com", "UserA",
+                        2, List.of("Done1", "Done2"), 1, List.of("Pending1")),
+                new DailySummaryResponseDto.UserTaskSummary(2L, "b@test.com", "UserB",
+                        0, List.of(), 3, List.of("P1", "P2", "P3"))
+        ));
+        when(taskSummaryClient.fetchDailySummary()).thenReturn(summary);
+
+        dailyReportJob.generateDailyReports();
+
+        try (Consumer<String, String> consumer = createTestConsumer()) {
+            consumer.subscribe(List.of("report-events"));
+            ConsumerRecords<String, String> records =
+                    KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(10), 2);
+
+            assertThat(records.count()).isEqualTo(2);
+
+            List<String> payloads = new java.util.ArrayList<>();
+            records.forEach(r -> payloads.add(r.value()));
+            assertThat(payloads).anyMatch(p -> p.contains("a@test.com"));
+            assertThat(payloads).anyMatch(p -> p.contains("b@test.com"));
+        }
+    }
+
+    @Test
+    void emptySummary_PublishesNothing() {
+        when(taskSummaryClient.fetchDailySummary())
+                .thenReturn(new DailySummaryResponseDto(List.of()));
+
+        dailyReportJob.generateDailyReports();
+
+        try (Consumer<String, String> consumer = createTestConsumer()) {
+            consumer.subscribe(List.of("report-events"));
+            ConsumerRecords<String, String> records =
+                    KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(3));
+            assertThat(records.count()).isZero();
+        }
+    }
+
+    private Consumer<String, String> createTestConsumer() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-report-consumer");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return new KafkaConsumer<>(props);
     }
 }
 

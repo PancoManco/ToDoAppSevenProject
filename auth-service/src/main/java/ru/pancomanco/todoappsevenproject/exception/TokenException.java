@@ -5,8 +5,5 @@ public class TokenException extends AppException{
         super(errorCode);
     }
 
-    public TokenException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode, cause);
-    }
 
 }

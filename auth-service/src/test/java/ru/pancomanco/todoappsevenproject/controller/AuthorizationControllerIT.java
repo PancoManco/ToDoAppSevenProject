@@ -1339,7 +1339,6 @@ public class AuthorizationControllerIT {
 
         @ParameterizedTest(name = "{0} → 400")
         @MethodSource("invalidRequests")
-        @DisplayName("Невалидный запрос возвращает 400")
         void resetPassword_InvalidPayload_ReturnsBadRequest(String description, ResetPasswordRequestDto request) throws Exception {
             performResetPassword(request).andExpect(status().isBadRequest());
         }

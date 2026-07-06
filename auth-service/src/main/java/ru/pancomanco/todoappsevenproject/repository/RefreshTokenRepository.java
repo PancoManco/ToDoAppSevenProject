@@ -15,8 +15,6 @@ import java.util.Optional;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-    //   Optional<RefreshToken> findByTokenHashAndRevokedFalse(String tokenHash);
-
     @Modifying
     @Query("""
         update RefreshToken rt

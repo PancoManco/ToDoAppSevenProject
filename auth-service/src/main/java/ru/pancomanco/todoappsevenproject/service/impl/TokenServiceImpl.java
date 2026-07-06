@@ -2,7 +2,6 @@ package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -124,11 +123,6 @@ public class TokenServiceImpl implements TokenService {
             return;
         }
         String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
-//        refreshTokenRepository
-//                .findByTokenHashAndRevokedFalse(tokenHash)
-//                .ifPresent(RefreshToken::revoke);
-//
-//        String tokenHash = sha256(rawRefreshToken);
         int updatedRows = refreshTokenRepository.revokeByTokenHashIfActive(tokenHash);
         if (updatedRows > 0) {
             log.debug("Successfully revoked refresh token (hash matched).");

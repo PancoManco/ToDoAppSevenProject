@@ -23,11 +23,6 @@ public class GlobalExceptionHandler {
 
     private final MessageService messageService;
 
-//    @ExceptionHandler(UnauthorizedException.class)
-//    ResponseEntity<?> unauthorized(UnauthorizedException ex) {
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                .body(Map.of("error", ex.getMessage()));
-//    }
 
     @ExceptionHandler(JwtException.class)
     ResponseEntity<MessageResponseDto> jwtError(JwtException ex) {

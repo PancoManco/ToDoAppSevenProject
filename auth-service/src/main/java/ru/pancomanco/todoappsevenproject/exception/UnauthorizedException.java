@@ -7,7 +7,4 @@ public class UnauthorizedException extends AppException{
         super(errorCode);
     }
 
-    public UnauthorizedException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode, cause);
-    }
 }
