@@ -2,7 +2,10 @@ package ru.pancomanco.taskservice.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,7 @@ import ru.pancomanco.taskservice.dto.response.TaskResponseDto;
 import ru.pancomanco.taskservice.service.TaskService;
 import ru.pancomanco.taskservice.service.TaskUserService;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @RestController
@@ -26,9 +30,20 @@ public class TaskController {
         return Long.valueOf(jwt.getSubject());
     }
 
+//    @GetMapping
+//    public List<TaskResponseDto> getTasks(@AuthenticationPrincipal Jwt jwt) {
+//        return taskService.getTasks(ownerId(jwt));
+//    }
+
     @GetMapping
-    public List<TaskResponseDto> getTasks(@AuthenticationPrincipal Jwt jwt) {
-        return taskService.getTasks(ownerId(jwt));
+    public ResponseEntity<Page<TaskResponseDto>> getTasks(
+            @AuthenticationPrincipal Jwt jwt,
+            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
+    ) {
+
+        Page<TaskResponseDto> tasks = taskService.getTasks(ownerId(jwt), pageable);
+
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{id}")

@@ -1,6 +1,7 @@
 package ru.pancomanco.taskservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.taskservice.dto.request.CreateTaskRequestDto;
@@ -10,7 +11,7 @@ import ru.pancomanco.taskservice.entity.Task;
 import ru.pancomanco.taskservice.exception.TaskNotFoundException;
 import ru.pancomanco.taskservice.repository.TaskRepository;
 
-import java.util.List;
+import java.awt.print.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -19,11 +20,9 @@ public class TaskService {
     private final TaskRepository taskRepository;
 
     @Transactional(readOnly = true)
-    public List<TaskResponseDto> getTasks(Long ownerId) {
-        return taskRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)
-                .stream()
-                .map(TaskResponseDto::from)
-                .toList();
+    public Page<TaskResponseDto> getTasks(Long ownerId, Pageable pageable) {
+        return taskRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId, pageable)
+                .map(TaskResponseDto::from);
     }
 
     @Transactional(readOnly = true)
