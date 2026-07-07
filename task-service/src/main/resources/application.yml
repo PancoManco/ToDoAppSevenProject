@@ -39,14 +39,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       probes:
         enabled: true
+      show-details: ${HEALTH_DETAILS:never}
 
 logging:
   level:
     root: INFO
     ru.pancomanco.taskservice: ${LOG_APP:INFO}
-    org.springframework.security: ${LOG_SECURITY}
+    org.springframework.security: ${LOG_SECURITY:INFO}
