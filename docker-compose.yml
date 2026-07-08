@@ -135,6 +135,8 @@ services:
       RSA_PUBLIC_KEY_BASE64: ${RSA_PUBLIC_KEY_BASE64}
       JWT_ISSUER: toDoApplication
       FRONTEND_ORIGIN: http://localhost:5173
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
 
   task-service:
     build:
@@ -216,7 +218,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       TASK_SERVICE_URL: http://task-service:8082
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:secret}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-secret}
       REPORT_TOPIC: report-events
       REPORT_CRON: ${REPORT_CRON:-0 0 0 * * *}
 
