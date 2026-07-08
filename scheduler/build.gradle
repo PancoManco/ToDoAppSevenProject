@@ -1,12 +1,11 @@
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-
     implementation 'org.springframework.boot:spring-boot-starter-kafka'
-
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    implementation("org.springframework.boot:spring-boot-starter-aop:3.5.15")
     testImplementation 'org.springframework.kafka:spring-kafka-test'
-
-    testImplementation "org.testcontainers:testcontainers-kafka:2.0.5"
+    testImplementation 'org.testcontainers:testcontainers-kafka:2.0.5'
     testImplementation 'org.awaitility:awaitility'
 }
