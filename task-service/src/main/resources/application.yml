@@ -17,7 +17,7 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
 
   liquibase:
     enabled: true
@@ -28,6 +28,16 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8081}/.well-known/jwks.json
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: ${CACHE_TTL:600000}
+      cache-null-values: false
 
 app:
   security:
@@ -51,3 +61,5 @@ logging:
     root: INFO
     ru.pancomanco.taskservice: ${LOG_APP:INFO}
     org.springframework.security: ${LOG_SECURITY:INFO}
+    org.hibernate.sql: DEBUG
+    org.springframework.cache: TRACE

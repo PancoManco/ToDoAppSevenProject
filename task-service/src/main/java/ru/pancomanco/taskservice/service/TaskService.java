@@ -1,6 +1,8 @@
 package ru.pancomanco.taskservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import ru.pancomanco.taskservice.entity.Task;
 import ru.pancomanco.taskservice.exception.TaskNotFoundException;
 import ru.pancomanco.taskservice.repository.TaskRepository;
 
+import java.util.List;
 
 
 @Service
@@ -20,10 +23,13 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
 
+    @Cacheable(value = "userTasks", key = "#ownerId")
     @Transactional(readOnly = true)
-    public Page<TaskResponseDto> getTasks(Long ownerId, Pageable pageable) {
-        return taskRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId, pageable)
-                .map(TaskResponseDto::from);
+    public List<TaskResponseDto> getTasks(Long ownerId) {
+        return taskRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)
+                .stream()
+                .map(TaskResponseDto::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -33,12 +39,14 @@ public class TaskService {
         return TaskResponseDto.from(task);
     }
 
+    @CacheEvict(value = "userTasks", key = "#ownerId")
     @Transactional
     public TaskResponseDto createTask(CreateTaskRequestDto request, Long ownerId) {
         Task task = new Task(request.title(), request.description(), ownerId);
         return TaskResponseDto.from(taskRepository.save(task));
     }
 
+    @CacheEvict(value = "userTasks", key = "#ownerId")
     @Transactional
     public TaskResponseDto updateTask(Long id, UpdateTaskRequestDto request, Long ownerId) {
         Task task = taskRepository.findByIdAndOwnerId(id, ownerId)
@@ -48,6 +56,7 @@ public class TaskService {
         return TaskResponseDto.from(taskRepository.save(task));
     }
 
+    @CacheEvict(value = "userTasks", key = "#ownerId")
     @Transactional
     public TaskResponseDto setCompleted(Long id, boolean completed, Long ownerId) {
         Task task = taskRepository.findByIdAndOwnerId(id, ownerId)
@@ -60,6 +69,7 @@ public class TaskService {
         return TaskResponseDto.from(taskRepository.save(task));
     }
 
+    @CacheEvict(value = "userTasks", key = "#ownerId")
     @Transactional
     public void deleteTask(Long id, Long ownerId) {
         Task task = taskRepository.findByIdAndOwnerId(id, ownerId)

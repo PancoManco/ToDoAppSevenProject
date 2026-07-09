@@ -56,7 +56,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<UserTitleProjection> findPendingTitlesPerUser(@Param("maxTitles") int maxTitles);
 
 
-    Page<Task> findByOwnerIdOrderByCreatedAtDesc(Long ownerId, Pageable pageable);
+    List<Task> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
 
     Optional<Task> findByIdAndOwnerId(Long id, Long ownerId);
 }

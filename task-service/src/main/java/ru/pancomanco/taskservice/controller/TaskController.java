@@ -16,6 +16,8 @@ import ru.pancomanco.taskservice.dto.response.TaskResponseDto;
 import ru.pancomanco.taskservice.service.TaskService;
 import ru.pancomanco.taskservice.service.TaskUserService;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -29,20 +31,9 @@ public class TaskController {
         return Long.valueOf(jwt.getSubject());
     }
 
-//    @GetMapping
-//    public List<TaskResponseDto> getTasks(@AuthenticationPrincipal Jwt jwt) {
-//        return taskService.getTasks(ownerId(jwt));
-//    }
-
     @GetMapping
-    public ResponseEntity<Page<TaskResponseDto>> getTasks(
-            @AuthenticationPrincipal Jwt jwt,
-            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
-    ) {
-
-        Page<TaskResponseDto> tasks = taskService.getTasks(ownerId(jwt), pageable);
-
-        return ResponseEntity.ok(tasks);
+    public List<TaskResponseDto> getTasks(@AuthenticationPrincipal Jwt jwt) {
+        return taskService.getTasks(ownerId(jwt));
     }
 
     @GetMapping("/{id}")

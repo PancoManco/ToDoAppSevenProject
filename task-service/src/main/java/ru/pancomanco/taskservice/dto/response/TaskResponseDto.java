@@ -2,6 +2,7 @@ package ru.pancomanco.taskservice.dto.response;
 
 import ru.pancomanco.taskservice.entity.Task;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 public record TaskResponseDto(
@@ -12,7 +13,7 @@ public record TaskResponseDto(
         Instant completedAt,
         Instant createdAt,
         Instant updatedAt
-) {
+) implements Serializable {
     public static TaskResponseDto from(Task task) {
         return new TaskResponseDto(
                 task.getId(),
