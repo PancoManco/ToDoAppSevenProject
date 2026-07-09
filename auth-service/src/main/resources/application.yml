@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: toDoApplication
+    name: auth-service
 
   datasource:
     url: ${AUTH_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
@@ -92,10 +92,13 @@ app:
     cleanup-cron: ${OUTBOX_CLEANUP_CRON:0 0 2 * * *}
 
 management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       probes:

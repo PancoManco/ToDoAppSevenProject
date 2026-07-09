@@ -25,10 +25,13 @@ app:
     cron: ${REPORT_CRON:*/30 * * * * *}
 
 management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
 
 logging:
   level:

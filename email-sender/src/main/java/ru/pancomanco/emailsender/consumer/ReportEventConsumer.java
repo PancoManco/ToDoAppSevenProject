@@ -1,6 +1,8 @@
 package ru.pancomanco.emailsender.consumer;
 
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +18,34 @@ import ru.pancomanco.emailsender.repository.ProcessedEventRepository;
 import ru.pancomanco.emailsender.service.DailyReportEmailSender;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class ReportEventConsumer {
 
     private final ObjectMapper objectMapper;
     private final ProcessedEventRepository processedEventRepository;
     private final DailyReportEmailSender dailyReportEmailSender;
+
+    private final Counter reportsSent;
+    private final Counter duplicatesSkipped;
+
+    public ReportEventConsumer(ObjectMapper objectMapper,
+                               ProcessedEventRepository processedEventRepository,
+                               DailyReportEmailSender dailyReportEmailSender,
+                               MeterRegistry meterRegistry) {
+        this.objectMapper = objectMapper;
+        this.processedEventRepository = processedEventRepository;
+        this.dailyReportEmailSender = dailyReportEmailSender;
+
+        this.reportsSent = Counter.builder("emails.sent")
+                .tag("type", "report")
+                .description("Number of emails successfully sent")
+                .register(meterRegistry);
+
+        this.duplicatesSkipped = Counter.builder("emails.duplicates.skipped")
+                .tag("type", "report")
+                .description("Number of duplicate events skipped by idempotency")
+                .register(meterRegistry);
+    }
 
     @KafkaListener(topics = "report-events", groupId = "${spring.kafka.consumer.group-id}")
     @Transactional
@@ -36,12 +59,14 @@ public class ReportEventConsumer {
 
         if (processedEventRepository.existsById(event.eventId())) {
             log.debug("Report event {} already processed, skipping", event.eventId());
+            duplicatesSkipped.increment();
             acknowledgment.acknowledge();
             return;
         }
 
         processedEventRepository.save(new ProcessedEvent(event.eventId(), "DailyReport"));
         dailyReportEmailSender.sendReport(event);
+        reportsSent.increment();
         acknowledgment.acknowledge();
 
         log.info("Processed DailyReport event {} for {}", event.eventId(), event.email());

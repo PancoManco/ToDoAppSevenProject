@@ -107,10 +107,13 @@ spring:
 
 
 management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,metrics
+        include: health,info,gateway,metrics,prometheus
   endpoint:
     gateway:
       access: none
