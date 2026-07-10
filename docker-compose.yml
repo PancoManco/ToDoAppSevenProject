@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${EMAIL_DB_USER:-emailuser}
-      POSTGRES_PASSWORD: ${EMAIL_DB_PASSWORD:-emailpassword}
+      POSTGRES_PASSWORD: ${EMAIL_DB_PASSWORD:-emailpass}
       POSTGRES_DB: ${EMAIL_DB_NAME:-email_db}
     ports:
       - "5434:5432"
@@ -221,7 +221,7 @@ services:
     environment:
       EMAIL_DATASOURCE_URL: jdbc:postgresql://email-sender-postgres:5432/${EMAIL_DB_NAME:-email_db}
       EMAIL_DATASOURCE_USERNAME: ${EMAIL_DB_USER:-emailuser}
-      EMAIL_DATASOURCE_PASSWORD: ${EMAIL_DB_PASSWORD:-emailpassword}
+      EMAIL_DATASOURCE_PASSWORD: ${EMAIL_DB_PASSWORD:-emailpass}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MAIL_HOST: mailpit
       MAIL_PORT: 1025

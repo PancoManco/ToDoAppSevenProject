@@ -65,5 +65,5 @@ management:
 logging:
   level:
     root: INFO
-    ru.pancomanco.emailsender: ${LOG_APP:INFO}
-    org.springframework.kafka: ${LOG_KAFKA:INFO}
+    ru.pancomanco.emailsender: ${LOG_APP:DEBUG}
+    org.springframework.kafka: ${LOG_KAFKA:DEBUG}

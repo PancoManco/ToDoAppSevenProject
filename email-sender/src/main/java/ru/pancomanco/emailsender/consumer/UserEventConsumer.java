@@ -50,7 +50,7 @@ public class UserEventConsumer {
 
     @KafkaListener(topics = "user-events", groupId = "${spring.kafka.consumer.group-id}")
     @Transactional
-    public void handleUserEvent(String payload, Acknowledgment acknowledgment,MeterRegistry meterRegistry) {
+    public void handleUserEvent(String payload, Acknowledgment acknowledgment) {
         UserVerifiedEvent event;
         try {
             event = objectMapper.readValue(payload, UserVerifiedEvent.class);
