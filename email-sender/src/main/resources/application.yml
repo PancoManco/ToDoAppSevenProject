@@ -8,7 +8,7 @@ spring:
   datasource:
     url: ${EMAIL_DATASOURCE_URL:jdbc:postgresql://localhost:5434/email_db}
     username: ${EMAIL_DATASOURCE_USERNAME:emailuser}
-    password: ${EMAIL_DATASOURCE_PASSWORD:emailpassword}
+    password: ${EMAIL_DATASOURCE_PASSWORD:emailpass}
     driver-class-name: org.postgresql.Driver
 
   jpa:

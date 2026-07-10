@@ -75,6 +75,8 @@ services:
     ports:
       - "29092:29092"
     environment:
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
@@ -88,6 +90,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+
+      KAFKA_LOG_RETENTION_HOURS: 1
+      KAFKA_LOG_SEGMENT_BYTES: 104857600
     volumes:
       - kafka-data:/var/lib/kafka/data
     healthcheck:
@@ -95,6 +100,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+    mem_limit: 768m
+    mem_reservation: 512m
 
   mailpit:
     image: axllent/mailpit:latest
@@ -138,6 +146,10 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
 
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    mem_limit: 512m
+    mem_reservation: 256m
+
   task-service:
     build:
       context: .
@@ -163,6 +175,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    mem_limit: 512m
+    mem_reservation: 256m
+
   api-gateway:
     build:
       context: .
@@ -182,6 +198,10 @@ services:
       REDIS_HOST: redis
       JWT_ISSUER: toDoApplication
       FRONTEND_ORIGIN: http://localhost:5173
+
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    mem_limit: 512m
+    mem_reservation: 256m
 
   email-sender:
     build:
@@ -206,6 +226,10 @@ services:
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
 
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    mem_limit: 512m
+    mem_reservation: 256m
+
   scheduler:
     build:
       context: .
@@ -226,6 +250,10 @@ services:
       REPORT_TOPIC: report-events
       REPORT_CRON: ${REPORT_CRON:-0 0 0 * * *}
 
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    mem_limit: 512m
+    mem_reservation: 256m
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -241,6 +269,12 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
 
+      JAVA_TOOL_OPTIONS: "-Xmx128M"
+    mem_limit: 256m
+    mem_reservation: 128m
+    profiles:
+      - monitoring
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -252,6 +286,11 @@ services:
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=1d'
+    mem_limit: 512m
+    mem_reservation: 256m
+    profiles:
+      - monitoring
 
   grafana:
     image: grafana/grafana:latest
@@ -267,7 +306,10 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
-
+    mem_limit: 512m
+    mem_reservation: 256m
+    profiles:
+      - monitoring
 volumes:
   postgres-data:
   redis-data:
