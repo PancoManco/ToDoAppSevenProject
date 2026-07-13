@@ -5,15 +5,12 @@ docker-compose.yml
 project_code.txt
 settings.gradle
 api-gateway\build.gradle
-api-gateway\HELP.md
 auth-service\build.gradle
 email-sender\build.gradle
 scheduler\build.gradle
 task-service\build.gradle
 gradle\wrapper\gradle-wrapper.properties
 api-gateway\src\main\resources\application.yml
-auth-service\src\main\resources\application-dev.yml
-auth-service\src\main\resources\application-prod.yml
 auth-service\src\main\resources\application.yml
 auth-service\src\main\resources\messages.properties
 auth-service\src\test\resources\application-test.yml
@@ -126,8 +123,10 @@ email-sender\src\test\java\ru\pancomanco\emailsender\consumer\UserEventConsumerI
 scheduler\src\main\java\ru\pancomanco\scheduler\config\RestClientConfig.java
 scheduler\src\main\java\ru\pancomanco\scheduler\dto\DailySummaryResponseDto.java
 scheduler\src\main\java\ru\pancomanco\scheduler\event\DailyReportEvent.java
+scheduler\src\main\java\ru\pancomanco\scheduler\exception\ReportPublishException.java
 scheduler\src\main\java\ru\pancomanco\scheduler\job\DailyReportJob.java
 scheduler\src\main\java\ru\pancomanco\scheduler\kafka\ReportEventPublisher.java
+scheduler\src\main\java\ru\pancomanco\scheduler\properties\SchedulerProperties.java
 scheduler\src\main\java\ru\pancomanco\scheduler\service\TaskSummaryClient.java
 scheduler\src\test\java\ru\pancomanco\scheduler\config\TestcontainersConfiguration.java
 scheduler\src\test\java\ru\pancomanco\scheduler\scheduler\DailyReportJobIT.java
@@ -140,6 +139,7 @@ task-service\src\main\java\ru\pancomanco\taskservice\dto\UserTitleProjection.jav
 task-service\src\main\java\ru\pancomanco\taskservice\entity\Task.java
 task-service\src\main\java\ru\pancomanco\taskservice\entity\TaskUser.java
 task-service\src\main\java\ru\pancomanco\taskservice\exception\TaskNotFoundException.java
+task-service\src\main\java\ru\pancomanco\taskservice\filter\InternalApiKeyFilter.java
 task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskRepository.java
 task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskUserRepository.java
 task-service\src\main\java\ru\pancomanco\taskservice\service\DailySummaryService.java
@@ -157,6 +157,7 @@ auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\VerifyE
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\response\MessageResponseDto.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\response\RegisterResponseDto.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\event\UserVerifiedEvent.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\exception\KafkaPublishException.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\kafka\KafkaEventPublisher.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxCleanupJob.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxEvent.java
@@ -367,15 +368,12 @@ docker-compose.yml
 project_code.txt
 settings.gradle
 api-gateway\build.gradle
-api-gateway\HELP.md
 auth-service\build.gradle
 email-sender\build.gradle
 scheduler\build.gradle
 task-service\build.gradle
 gradle\wrapper\gradle-wrapper.properties
 api-gateway\src\main\resources\application.yml
-auth-service\src\main\resources\application-dev.yml
-auth-service\src\main\resources\application-prod.yml
 auth-service\src\main\resources\application.yml
 auth-service\src\main\resources\messages.properties
 auth-service\src\test\resources\application-test.yml
@@ -488,8 +486,10 @@ email-sender\src\test\java\ru\pancomanco\emailsender\consumer\UserEventConsumerI
 scheduler\src\main\java\ru\pancomanco\scheduler\config\RestClientConfig.java
 scheduler\src\main\java\ru\pancomanco\scheduler\dto\DailySummaryResponseDto.java
 scheduler\src\main\java\ru\pancomanco\scheduler\event\DailyReportEvent.java
+scheduler\src\main\java\ru\pancomanco\scheduler\exception\ReportPublishException.java
 scheduler\src\main\java\ru\pancomanco\scheduler\job\DailyReportJob.java
 scheduler\src\main\java\ru\pancomanco\scheduler\kafka\ReportEventPublisher.java
+scheduler\src\main\java\ru\pancomanco\scheduler\properties\SchedulerProperties.java
 scheduler\src\main\java\ru\pancomanco\scheduler\service\TaskSummaryClient.java
 scheduler\src\test\java\ru\pancomanco\scheduler\config\TestcontainersConfiguration.java
 scheduler\src\test\java\ru\pancomanco\scheduler\scheduler\DailyReportJobIT.java
@@ -502,6 +502,7 @@ task-service\src\main\java\ru\pancomanco\taskservice\dto\UserTitleProjection.jav
 task-service\src\main\java\ru\pancomanco\taskservice\entity\Task.java
 task-service\src\main\java\ru\pancomanco\taskservice\entity\TaskUser.java
 task-service\src\main\java\ru\pancomanco\taskservice\exception\TaskNotFoundException.java
+task-service\src\main\java\ru\pancomanco\taskservice\filter\InternalApiKeyFilter.java
 task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskRepository.java
 task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskUserRepository.java
 task-service\src\main\java\ru\pancomanco\taskservice\service\DailySummaryService.java
@@ -519,6 +520,7 @@ auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\request\VerifyE
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\response\MessageResponseDto.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\dto\response\RegisterResponseDto.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\event\UserVerifiedEvent.java
+auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\exception\KafkaPublishException.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\kafka\KafkaEventPublisher.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxCleanupJob.java
 auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\outbox\OutboxEvent.java
@@ -709,15 +711,7 @@ services:
       - "8085:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
-      KAFKA_CLUSTERS_0_NAME: local-kraft
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
-volumes:
-  postgres-data:
-  redis-data:
-  kafka-data:
-  task-postgres-data:
-  email-sender-po
+      KAFKA_CLUST
 
 ================================================================================
 FILE: settings.gradle
@@ -775,50 +769,6 @@ dependencyManagement {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
-
-================================================================================
-FILE: api-gateway\HELP.md
-================================================================================
-# Getting Started
-
-### Reference Documentation
-
-For further reference, please consider the following sections:
-
-* [Official Gradle documentation](https://docs.gradle.org)
-* [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/4.1.0/gradle-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/4.1.0/gradle-plugin/packaging-oci-image.html)
-* [Spring Boot Testcontainers support](https://docs.spring.io/spring-boot/4.1.0/reference/testing/testcontainers.html#testing.testcontainers)
-* [Spring Boot Actuator](https://docs.spring.io/spring-boot/4.1.0/reference/actuator/index.html)
-* [Gateway](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-webmvc.html)
-* [OAuth2 Resource Server](https://docs.spring.io/spring-boot/4.1.0/reference/web/spring-security.html#web.security.oauth2.server)
-* [Spring Security](https://docs.spring.io/spring-boot/4.1.0/reference/web/spring-security.html)
-* [Testcontainers](https://java.testcontainers.org/)
-
-### Guides
-
-The following guides illustrate how to use some features concretely:
-
-* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
-* [Securing a Web Application](https://spring.io/guides/gs/securing-web/)
-* [Spring Boot and OAuth2](https://spring.io/guides/tutorials/spring-boot-oauth2/)
-* [Authenticating a User with LDAP](https://spring.io/guides/gs/authenticating-ldap/)
-
-### Additional Links
-
-These additional references should also help you:
-
-* [Gradle Build Scans – insights for your project's build](https://scans.gradle.com#gradle)
-
-### Testcontainers support
-
-This project
-uses [Testcontainers at development time](https://docs.spring.io/spring-boot/4.1.0/reference/features/dev-services.html#features.dev-services.testcontainers).
-
-Testcontainers has been configured to use the following Docker images:
-
-Please review the tags of the used images and set them to the same as you're running in production.
-
 
 ================================================================================
 FILE: auth-service\build.gradle
@@ -1029,7 +979,7 @@ zipStorePath=wrapper/dists
 FILE: api-gateway\src\main\resources\application.yml
 ================================================================================
 server:
-  port: 8080
+  port: ${API_GATEWAY_PORT:8080}
 
 spring:
   application:
@@ -1052,18 +1002,9 @@ spring:
               '[/**]':
                 allowed-origins:
                   - ${FRONTEND_ORIGIN:http://localhost:5173}
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - PATCH
-                  - OPTIONS
+                allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
                 allowedHeaders: "*"
-                exposedHeaders:
-                  - Authorization
-                  - X-Request-Id
-                  - Set-Cookie
+                exposedHeaders: [Authorization, X-Request-Id, Set-Cookie]
                 allowCredentials: true
                 maxAge: 3600
           default-filters:
@@ -1077,8 +1018,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 10
-                    redis-rate-limiter.burstCapacity: 20
+                    redis-rate-limiter.replenishRate: ${RL_REGISTER_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${RL_REGISTER_BURST:20}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-login
@@ -1088,8 +1029,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 2
-                    redis-rate-limiter.burstCapacity: 3
+                    redis-rate-limiter.replenishRate: ${RL_LOGIN_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${RL_LOGIN_BURST:20}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-verify
@@ -1099,8 +1040,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 30
-                    redis-rate-limiter.burstCapacity: 50
+                    redis-rate-limiter.replenishRate: ${RL_VERIFY_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${RL_VERIFY_BURST:50}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-password
@@ -1110,8 +1051,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 10
-                    redis-rate-limiter.burstCapacity: 20
+                    redis-rate-limiter.replenishRate: ${RL_PASSWORD_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${RL_PASSWORD_BURST:20}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-refresh
@@ -1121,8 +1062,8 @@ spring:
               filters:
                 - name: RequestRateLimiter
                   args:
-                    redis-rate-limiter.replenishRate: 30
-                    redis-rate-limiter.burstCapacity: 50
+                    redis-rate-limiter.replenishRate: ${RL_REFRESH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${RL_REFRESH_BURST:50}
                     key-resolver: "#{@ipKeyResolver}"
 
             - id: auth-logout
@@ -1154,146 +1095,30 @@ management:
     gateway:
       access: none
     health:
-      show-details: always
+      show-details: ${HEALTH_DETAILS:always}
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping: DEBUG
-    reactor.netty.http.client: DEBUG
-    reactor.netty.http.server: DEBUG
-
-================================================================================
-FILE: auth-service\src\main\resources\application-dev.yml
-================================================================================
-app:
-  security:
-    cookie:
-      secure: false
-      same-site: Lax
-
-spring:
-  jpa:
-    properties:
-      hibernate:
-        format_sql: true
-
-  mail:
-    host: localhost
-    port: 1025
-    username: ""
-    password: ""
-    properties:
-      mail:
-        smtp:
-          auth: false
-          starttls:
-            enable: false
-            required: false
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
-  management:
-    endpoint:
-      health:
-        show-details: always
-logging:
-  level:
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-
-================================================================================
-FILE: auth-service\src\main\resources\application-prod.yml
-================================================================================
-app:
-  security:
-    cookie:
-      secure: ${COOKIE_SECURE:false}
-      same-site: ${COOKIE_SAME_SITE:Lax}
-
-spring:
-  jpa:
-    properties:
-      hibernate:
-        format_sql: false
-  management:
-    endpoint:
-      health:
-        show-details: never
-        probes:
-          enabled: true
-    health:
-      db:
-        enabled: true
-      redis:
-        enabled: true
-      mail:
-        enabled: true
-server:
-  forward-headers-strategy: framework
-
-logging:
-  level:
-    root: INFO
-    ru.pancomanco.todoappsevenproject: INFO
-    org.springframework.security: INFO
-    org.hibernate.SQL: WARN
-    org.hibernate.orm.jdbc.bind: WARN
+    org.springframework.cloud.gateway: ${LOG_GATEWAY:INFO}
+    reactor.netty.http.client: ${LOG_NETTY:WARN}
+    reactor.netty.http.server: ${LOG_NETTY:WARN}
 
 ================================================================================
 FILE: auth-service\src\main\resources\application.yml
 ================================================================================
 server:
-  port: 8081
-app:
-  security:
-    frontend-origin: ${FRONTEND_ORIGIN}
-    oauth2-success-redirect: ${OAUTH_SUCCESS_REDIRECT_URI}
-    oauth2-failure-redirect: ${OAUTH_FAILURE_REDIRECT_URI}
-    rsa:
-      private-key-base64: ${RSA_PRIVATE_KEY_BASE64}
-      public-key-base64: ${RSA_PUBLIC_KEY_BASE64}
-    jwt:
-      issuer: ${JWT_ISSUER:toDoApplication}
-      secret: ${JWT_SECRET}
-      access-token-minutes: ${JWT_ACCESS_TOKEN_TTL_MINUTES:5}
-      refresh-token-days: ${JWT_REFRESH_TOKEN_TTL_DAYS:7}
-
-    cookie:
-      secure: false
-      same-site: ${COOKIE_SAME_SITE:Lax}
-
-  mail:
-    from: ${MAIL_FROM}
-
-  rate-limit:
-    enabled: ${RATE_LIMIT_ENABLED:true}
-
-  outbox:
-    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
-    cleanup-cron: ${OUTBOX_CLEANUP_CRON:0 0 2 * * *}
+  port: ${AUTH_SERVICE_PORT:8081}
+  forward-headers-strategy: framework
 
 spring:
   application:
     name: toDoApplication
 
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      acks: all
-      retries: 3
-      properties:
-        enable.idempotence: true
   datasource:
-    url: ${DATASOURCE_URL}
-    username: ${DATASOURCE_USERNAME}
-    password: ${DATASOURCE_PASSWORD}
-    driver-class-name: ${DATASOURCE_DRIVER:org.postgresql.Driver}
+    url: ${AUTH_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${AUTH_DATASOURCE_USERNAME:postgres}
+    password: ${AUTH_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
 
   data:
     redis:
@@ -1306,11 +1131,21 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        format_sql: false
+        format_sql: ${HIBERNATE_FORMAT_SQL:false}
 
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
 
   security:
     oauth2:
@@ -1323,50 +1158,72 @@ spring:
               - openid
               - email
               - profile
-
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: ${MAIL_SMTP_AUTH:true}
+          auth: ${MAIL_SMTP_AUTH:false}
           starttls:
-            enable: ${MAIL_STARTTLS_ENABLE:true}
-            required: ${MAIL_STARTTLS_REQUIRED:true}
+            enable: ${MAIL_STARTTLS_ENABLE:false}
+            required: ${MAIL_STARTTLS_REQUIRED:false}
 
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info,metrics
-    endpoint:
-      health:
-        probes:
-          enabled: true
-        show-details: never
+app:
+  security:
+    frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+    oauth2-success-redirect: ${OAUTH_SUCCESS_REDIRECT_URI:http://localhost:5173}
+    oauth2-failure-redirect: ${OAUTH_FAILURE_REDIRECT_URI:http://localhost:5173/login}
+    rsa:
+      private-key-base64: ${RSA_PRIVATE_KEY_BASE64}
+      public-key-base64: ${RSA_PUBLIC_KEY_BASE64}
+    jwt:
+      issuer: ${JWT_ISSUER:toDoApplication}
+      access-token-minutes: ${JWT_ACCESS_TOKEN_TTL_MINUTES:5}
+      refresh-token-days: ${JWT_REFRESH_TOKEN_TTL_DAYS:7}
+    cookie:
+      secure: ${COOKIE_SECURE:false}
+      same-site: ${COOKIE_SAME_SITE:Lax}
+  mail:
+    from: ${MAIL_FROM:noreply@todoapp.com}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+  outbox:
+    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
+    cleanup-cron: ${OUTBOX_CLEANUP_CRON:0 0 2 * * *}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
     health:
-      db:
+      probes:
         enabled: true
-      redis:
-        enabled: true
-      mail:
-        enabled: true
+      show-details: ${HEALTH_DETAILS:never}
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    mail:
+      enabled: true
 
 logging:
   level:
     root: INFO
-    ru.pancomanco.todoappsevenproject: INFO
-    org.springframework.security: INFO
-    org.hibernate.SQL: WARN
-    org.hibernate.orm.jdbc.bind: WARN
+    ru.pancomanco.todoappsevenproject: ${LOG_APP:INFO}
+    org.springframework.security: ${LOG_SECURITY:INFO}
+    org.hibernate.SQL: ${LOG_SQL:WARN}
+    org.hibernate.orm.jdbc.bind: ${LOG_SQL_BIND:WARN}
 
 ================================================================================
 FILE: auth-service\src\main\resources\messages.properties
@@ -1431,7 +1288,6 @@ app:
       public-key-base64: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBNVIxdE1xSlBEZ205ejVlOUl0cXgNCkZaN1I1ay9iM2QvTU52V0hlclM1WkxTemRaQ29Fd0lIQXE1Rzg3V1d1QnRiWmJkZFF5d0lydTdQZ3kwNkdKKzUNCnhadGdJTURBYWwrZ2NJb2NsNUpoc1FEbWZtVFdIUFZqc2VlTUdaZThiczh3MlBDeUZ4UFFiRU9DQnMrekhiQTANCkJSeFg3Q1VIVEZwYVhRK1h6aUVrVUV5UVNqSlhaNFJiSm43cm9LNEczSjRTQ0hSeGNONldsU3BmcS9mcHZBUlcNCnovRWRBMmpJbnFPTEFhN0VicHJ5NU14Y2UvNUNDbXBlb2lOaU5pZTd1QTlOdzNMWFl2TjdxVmFwNHJkRjhrT2QNCnl0Z0FKQ3h4ODhXNHJKOTVyM0diYTAzeFI2SWNWSVlMZG1KV05xUThNODFXTVVUY1BldCszWUhDTGVHa2tINngNCmN3SURBUUFCDQotLS0tLUVORCBQVUJMSUMgS0VZLS0tLS0NCg
     jwt:
       issuer: toDoApplication-test
-      secret: dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tYXQtbGVhc3QtMjU2LWJpdHM=
       access-token-minutes: 5
       refresh-token-days: 7
     cookie:
@@ -1526,9 +1382,9 @@ spring:
     properties:
       mail:
         smtp:
-          auth: false
+          auth: ${MAIL_SMTP_AUTH:false}
           starttls:
-            enable: false
+            enable: ${MAIL_STARTTLS_ENABLE:false}
 
 app:
   mail:
@@ -1538,17 +1394,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       probes:
         enabled: true
+      show-details: ${HEALTH_DETAILS:never}
 
 logging:
   level:
     root: INFO
-    ru.pancomanco.emailsender: DEBUG
-    org.springframework.kafka: INFO
+    ru.pancomanco.emailsender: ${LOG_APP:INFO}
+    org.springframework.kafka: ${LOG_KAFKA:INFO}
 
 ================================================================================
 FILE: email-sender\src\test\resources\application-test.yml
@@ -1600,20 +1457,22 @@ spring:
 app:
   task-service:
     url: ${TASK_SERVICE_URL:http://localhost:8082}
+  internal:
+    api-key: ${INTERNAL_API_KEY:SECRET}
   report:
     topic: ${REPORT_TOPIC:report-events}
-    cron: ${REPORT_CRON:0 */6 * * * *}
+    cron: ${REPORT_CRON:*/30 * * * * *}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
 
 logging:
   level:
     root: INFO
-    ru.pancomanco.scheduler: DEBUG
+    ru.pancomanco.scheduler: ${LOG_APP:INFO}
 
 ================================================================================
 FILE: scheduler\src\test\resources\application-test.yml
@@ -1639,7 +1498,7 @@ logging:
 FILE: task-service\src\main\resources\application.yml
 ================================================================================
 server:
-  port: 8082
+  port: ${TASK_SERVICE_PORT:8082}
 
 spring:
   application:
@@ -1673,7 +1532,8 @@ app:
   security:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
-
+  internal:
+    api-key: ${INTERNAL_API_KEY:SECRET}
 management:
   endpoints:
     web:
@@ -1687,8 +1547,8 @@ management:
 logging:
   level:
     root: INFO
-    ru.pancomanco.taskservice: DEBUG
-    org.springframework.security: INFO
+    ru.pancomanco.taskservice: ${LOG_APP:INFO}
+    org.springframework.security: ${LOG_SECURITY}
 
 ================================================================================
 FILE: task-service\src\test\resources\application-test.yml
@@ -2423,10 +2283,13 @@ package ru.pancomanco.scheduler;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import ru.pancomanco.scheduler.properties.SchedulerProperties;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableConfigurationProperties(SchedulerProperties.class)
 public class SchedulerApplication {
 
     public static void main(String[] args) {
@@ -2743,7 +2606,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-@ConfigurationProperties(prefix = "app.security.jwt")
+@ConfigurationProperties(prefix = "spring.security.jwt")
 public record JwtProperties(
         @NotBlank
         String issuer,
@@ -3125,20 +2988,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource(AuthProperties properties) {
-//        CorsConfiguration config = new CorsConfiguration();
-//
-//        config.setAllowedOrigins(List.of(properties.frontendOrigin()));
-//        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-//        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-//        config.setAllowCredentials(true);
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", config);
-//
-//        return source;
-//    }
 
     @Bean
     RSAPrivateKey rsaPrivateKey(RsaKeyProperties rsaKeyProperties) {
@@ -3179,11 +3028,6 @@ public class GlobalExceptionHandler {
 
     private final MessageService messageService;
 
-//    @ExceptionHandler(UnauthorizedException.class)
-//    ResponseEntity<?> unauthorized(UnauthorizedException ex) {
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                .body(Map.of("error", ex.getMessage()));
-//    }
 
     @ExceptionHandler(JwtException.class)
     ResponseEntity<MessageResponseDto> jwtError(JwtException ex) {
@@ -3819,10 +3663,6 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-//    public User (String email, String password) {
-//        this.email = email;
-//        this.password = password;
-//    }
 
     public User(String email, String password) {
         this.email = email;
@@ -4109,9 +3949,6 @@ public class TokenException extends AppException{
         super(errorCode);
     }
 
-    public TokenException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode, cause);
-    }
 
 }
 
@@ -4127,9 +3964,6 @@ public class UnauthorizedException extends AppException{
         super(errorCode);
     }
 
-    public UnauthorizedException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode, cause);
-    }
 }
 
 ================================================================================
@@ -4452,8 +4286,6 @@ import java.util.Optional;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-    //   Optional<RefreshToken> findByTokenHashAndRevokedFalse(String tokenHash);
-
     @Modifying
     @Query("""
         update RefreshToken rt
@@ -4595,13 +4427,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.pancomanco.todoappsevenproject.properties.AuthProperties;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 @Slf4j
@@ -4636,7 +4466,6 @@ public class CookieEndpointOriginFilter extends OncePerRequestFilter {
             if (origin == null || !origin.equals(allowedOrigin)) {
                 log.warn("SECURITY: Blocked request to {} with invalid/missing Origin: {}. Remote IP: {}",
                         request.getRequestURI(), origin, request.getRemoteAddr());
-                //  response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid Origin");
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"code\":\"auth.origin.invalid\",\"message\":\"Invalid Origin\"}");
@@ -6840,7 +6669,6 @@ public class AuthorizationControllerIT {
 
         @ParameterizedTest(name = "{0} → 400")
         @MethodSource("invalidRequests")
-        @DisplayName("Невалидный запрос возвращает 400")
         void resetPassword_InvalidPayload_ReturnsBadRequest(String description, ResetPasswordRequestDto request) throws Exception {
             performResetPassword(request).andExpect(status().isBadRequest());
         }
@@ -6998,7 +6826,6 @@ public class AuthCleanupJobIT {
     class PasswordResetTokensCleanup {
 
         @Test
-        @DisplayName("Истёкшие токены удаляются")
         void cleanup_RemovesExpiredResetTokens() {
             User user = createVerifiedUser();
             PasswordResetToken expired = new PasswordResetToken(
@@ -8453,7 +8280,7 @@ public class DailyReportEmailSender {
             return "У вас осталось " + event.pendingCount() + " несделанных задач";
         }
     }
-
+//todo pages with reports
     private String buildBody(DailyReportEvent event) {
         StringBuilder body = new StringBuilder();
         body.append("Здравствуйте, ").append(event.name()).append("!\n\n");
@@ -8668,18 +8495,19 @@ FILE: scheduler\src\main\java\ru\pancomanco\scheduler\config\RestClientConfig.ja
 ================================================================================
 package ru.pancomanco.scheduler.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
+import ru.pancomanco.scheduler.properties.SchedulerProperties;
 
 @Configuration
 public class RestClientConfig {
 
     @Bean
-    public RestClient taskServiceRestClient(@Value("${app.task-service.url}") String taskServiceUrl) {
+    public RestClient taskServiceRestClient(SchedulerProperties properties) {
         return RestClient.builder()
-                .baseUrl(taskServiceUrl)
+                .baseUrl(properties.taskService().url())
+                .defaultHeader("X-Internal-Api-Key", properties.internal().apiKey())
                 .build();
     }
 }
@@ -8724,6 +8552,17 @@ public record DailyReportEvent(
         List<String> pendingTitles,
         Instant occurredAt
 ) {
+}
+
+================================================================================
+FILE: scheduler\src\main\java\ru\pancomanco\scheduler\exception\ReportPublishException.java
+================================================================================
+package ru.pancomanco.scheduler.exception;
+
+public class ReportPublishException extends RuntimeException {
+    public ReportPublishException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
 
 ================================================================================
@@ -8800,6 +8639,7 @@ FILE: scheduler\src\main\java\ru\pancomanco\scheduler\kafka\ReportEventPublisher
 ================================================================================
 package ru.pancomanco.scheduler.kafka;
 
+import ru.pancomanco.scheduler.exception.ReportPublishException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8808,11 +8648,15 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.pancomanco.scheduler.event.DailyReportEvent;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ReportEventPublisher {
 
+    private static final int SEND_TIMEOUT_SECONDS = 10;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
@@ -8822,12 +8666,46 @@ public class ReportEventPublisher {
     public void publish(DailyReportEvent event) {
         try {
             String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(reportTopic, event.eventId(), payload).get();
+            kafkaTemplate.send(reportTopic, event.eventId(), payload).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             log.debug("Published report event {} for user {}", event.eventId(), event.userId());
-        } catch (Exception e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Failed to publish report event " + event.eventId(), e);
         }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ReportPublishException(
+                    "Interrupted while publishing event " + event.eventId(), e);
+
+        } catch (TimeoutException e) {
+            throw new ReportPublishException(
+                    "Timeout publishing event " + event.eventId() +
+                            " after " + SEND_TIMEOUT_SECONDS + "s", e);
+        } catch (Exception e) {
+            throw new ReportPublishException(
+                    "Failed to publish report event " + event.eventId(), e);
+        }
+    }
+}
+
+================================================================================
+FILE: scheduler\src\main\java\ru\pancomanco\scheduler\properties\SchedulerProperties.java
+================================================================================
+package ru.pancomanco.scheduler.properties;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@ConfigurationProperties(prefix = "app")
+public record SchedulerProperties(
+        TaskService taskService,
+        Internal internal,
+        Report report
+) {
+    public record TaskService(String url) {
+    }
+
+    public record Internal(String apiKey) {
+    }
+
+    public record Report(String topic, String cron) {
     }
 }
 
@@ -9107,7 +8985,11 @@ package ru.pancomanco.taskservice.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -9117,7 +8999,6 @@ import ru.pancomanco.taskservice.dto.response.TaskResponseDto;
 import ru.pancomanco.taskservice.service.TaskService;
 import ru.pancomanco.taskservice.service.TaskUserService;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -9131,9 +9012,20 @@ public class TaskController {
         return Long.valueOf(jwt.getSubject());
     }
 
+//    @GetMapping
+//    public List<TaskResponseDto> getTasks(@AuthenticationPrincipal Jwt jwt) {
+//        return taskService.getTasks(ownerId(jwt));
+//    }
+
     @GetMapping
-    public List<TaskResponseDto> getTasks(@AuthenticationPrincipal Jwt jwt) {
-        return taskService.getTasks(ownerId(jwt));
+    public ResponseEntity<Page<TaskResponseDto>> getTasks(
+            @AuthenticationPrincipal Jwt jwt,
+            @PageableDefault(size = 10, page = 0, sort = "createdAt") Pageable pageable
+    ) {
+
+        Page<TaskResponseDto> tasks = taskService.getTasks(ownerId(jwt), pageable);
+
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{id}")
@@ -9327,16 +9219,81 @@ public class TaskNotFoundException extends RuntimeException {
 }
 
 ================================================================================
+FILE: task-service\src\main\java\ru\pancomanco\taskservice\filter\InternalApiKeyFilter.java
+================================================================================
+package ru.pancomanco.taskservice.filter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@Slf4j
+public class InternalApiKeyFilter extends OncePerRequestFilter {
+
+    private static final String HEADER = "X-Internal-Api-Key";
+    private static final String INTERNAL_PREFIX = "/internal/";
+
+    private final String expectedApiKey;
+
+    public InternalApiKeyFilter(@Value("${app.internal.api-key}") String expectedApiKey) {
+        this.expectedApiKey = expectedApiKey;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        if (request.getRequestURI().startsWith(INTERNAL_PREFIX)) {
+            String providedKey = request.getHeader(HEADER);
+
+            if (providedKey == null || !constantTimeEquals(providedKey, expectedApiKey)) {
+                log.warn("Rejected internal request to {} — invalid/missing API key. IP: {}",
+                        request.getRequestURI(), request.getRemoteAddr());
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"forbidden\"}");
+                return;
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private boolean constantTimeEquals(String a, String b) {
+        if (a.length() != b.length()) {
+            return false;
+        }
+        int result = 0;
+        for (int i = 0; i < a.length(); i++) {
+            result |= a.charAt(i) ^ b.charAt(i);
+        }
+        return result == 0;
+    }
+}
+
+================================================================================
 FILE: task-service\src\main\java\ru\pancomanco\taskservice\repository\TaskRepository.java
 ================================================================================
 package ru.pancomanco.taskservice.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.pancomanco.taskservice.dto.UserCountProjection;
 import ru.pancomanco.taskservice.dto.UserTitleProjection;
 import ru.pancomanco.taskservice.entity.Task;
+
 
 
 import java.time.Instant;
@@ -9384,7 +9341,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<UserTitleProjection> findPendingTitlesPerUser(@Param("maxTitles") int maxTitles);
 
 
-    List<Task> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
+    Page<Task> findByOwnerIdOrderByCreatedAtDesc(Long ownerId, Pageable pageable);
 
     Optional<Task> findByIdAndOwnerId(Long id, Long ownerId);
 }
@@ -9492,6 +9449,8 @@ FILE: task-service\src\main\java\ru\pancomanco\taskservice\service\TaskService.j
 package ru.pancomanco.taskservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.taskservice.dto.request.CreateTaskRequestDto;
@@ -9501,7 +9460,7 @@ import ru.pancomanco.taskservice.entity.Task;
 import ru.pancomanco.taskservice.exception.TaskNotFoundException;
 import ru.pancomanco.taskservice.repository.TaskRepository;
 
-import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -9510,11 +9469,9 @@ public class TaskService {
     private final TaskRepository taskRepository;
 
     @Transactional(readOnly = true)
-    public List<TaskResponseDto> getTasks(Long ownerId) {
-        return taskRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)
-                .stream()
-                .map(TaskResponseDto::from)
-                .toList();
+    public Page<TaskResponseDto> getTasks(Long ownerId, Pageable pageable) {
+        return taskRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId, pageable)
+                .map(TaskResponseDto::from);
     }
 
     @Transactional(readOnly = true)
@@ -9911,7 +9868,7 @@ public record RegisterRequestDto(
         @NotBlank
         String email,
         @NotBlank
-        @Size(min = 6, max = 20)
+        @Size(min = 8, max = 64)
         String password) {}
 
 
@@ -9943,7 +9900,7 @@ public record ResetPasswordRequestDto(
         String token,
 
         @NotBlank
-        @Size(min = 6, max = 20)
+        @Size(min = 8, max = 64)
         String newPassword
 ) {
 }
@@ -10006,6 +9963,17 @@ public record UserVerifiedEvent(
 }
 
 ================================================================================
+FILE: auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\exception\KafkaPublishException.java
+================================================================================
+package ru.pancomanco.todoappsevenproject.messaging.exception;
+
+public class KafkaPublishException extends RuntimeException {
+    public KafkaPublishException(String message,Throwable cause) {
+        super(message,cause);
+    }
+}
+
+================================================================================
 FILE: auth-service\src\main\java\ru\pancomanco\todoappsevenproject\messaging\kafka\KafkaEventPublisher.java
 ================================================================================
 package ru.pancomanco.todoappsevenproject.messaging.kafka;
@@ -10014,26 +9982,48 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import ru.pancomanco.todoappsevenproject.messaging.exception.KafkaPublishException;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaEventPublisher {
-
+    private static final int SEND_TIMEOUT_SECONDS = 10;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
+//    public void publish(String topic, String key, String payload) {
+//        kafkaTemplate.send(topic, key, payload)
+//                .whenComplete((result, ex) -> {
+//                    if (ex != null) {
+//                        log.error("Failed to publish to topic {}: {}", topic, ex.getMessage());
+//                    } else {
+//                        log.debug("Published to topic {} partition {} offset {}",
+//                                topic,
+//                                result.getRecordMetadata().partition(),
+//                                result.getRecordMetadata().offset());
+//                    }
+//                });
+//    }
     public void publish(String topic, String key, String payload) {
-        kafkaTemplate.send(topic, key, payload)
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Failed to publish to topic {}: {}", topic, ex.getMessage());
-                    } else {
-                        log.debug("Published to topic {} partition {} offset {}",
-                                topic,
-                                result.getRecordMetadata().partition(),
-                                result.getRecordMetadata().offset());
-                    }
-                });
+       try {
+           kafkaTemplate.send(topic, key, payload).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+       }
+       catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new KafkaPublishException(
+                "Interrupted while publishing event " + key, e);
+
+    } catch (TimeoutException e) {
+        throw new KafkaPublishException(
+                "Timeout publishing event " + key +
+                        " after " + SEND_TIMEOUT_SECONDS + "s", e);
+    } catch (Exception e) {
+        throw new KafkaPublishException(
+                "Failed to publish report event " + key, e);
+    }
     }
 }
 
@@ -10846,27 +10836,6 @@ public class SocialAuthServiceImpl implements SocialAuthService {
         linkedAccountRepository.save(linkedAccount);
         log.info("Successfully linked OAuth provider [{}] to existing user ID: {}", provider, newUser.getId());
         return newUser;
-//        User user = authRepository.findByEmail(normalizedEmail)
-//                .orElseGet(() -> authRepository.save(
-//                        User.socialUser(
-//                                normalizedEmail,
-//                                profile.name(),
-//                                profile.avatarUrl()
-//                        )
-//                ));
-//
-//        if (!Boolean.TRUE.equals(user.getEnabled())) {
-//            user.setEnabled(true);
-//        }
-//
-//        LinkedAccount linkedAccount = new LinkedAccount(
-//                user,
-//                provider,
-//                profile.providerUserId(),
-//                normalizedEmail
-//        );
-//        linkedAccountRepository.save(linkedAccount);
-//        return user;
     }
 
     private AuthProviderEnum parseProvider(String registrationId) {
@@ -10891,10 +10860,6 @@ public class SocialAuthServiceImpl implements SocialAuthService {
                     ex
             );
         }
-//        return switch (registrationId.toLowerCase()) {
-//            case "google" -> AuthProviderEnum.GOOGLE;
-//            default -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
-//        };
     }
 
     private SocialProfile extractProfile(
@@ -10958,7 +10923,6 @@ package ru.pancomanco.todoappsevenproject.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -11080,11 +11044,6 @@ public class TokenServiceImpl implements TokenService {
             return;
         }
         String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
-//        refreshTokenRepository
-//                .findByTokenHashAndRevokedFalse(tokenHash)
-//                .ifPresent(RefreshToken::revoke);
-//
-//        String tokenHash = sha256(rawRefreshToken);
         int updatedRows = refreshTokenRepository.revokeByTokenHashIfActive(tokenHash);
         if (updatedRows > 0) {
             log.debug("Successfully revoked refresh token (hash matched).");
