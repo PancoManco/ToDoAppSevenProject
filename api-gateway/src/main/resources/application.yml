@@ -122,6 +122,10 @@ management:
 
 logging:
   level:
+    root: WARN
+    ru.pancomanco.apigateway: ${LOG_APP:INFO}
     org.springframework.cloud.gateway: ${LOG_GATEWAY:INFO}
+    org.springframework.security: ${LOG_SECURITY:WARN}
     reactor.netty.http.client: ${LOG_NETTY:WARN}
     reactor.netty.http.server: ${LOG_NETTY:WARN}
+    io.github.resilience4j: ${LOG_RESILIENCE:WARN}

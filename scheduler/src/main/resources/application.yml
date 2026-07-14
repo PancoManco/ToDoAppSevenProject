@@ -22,7 +22,7 @@ app:
     api-key: ${INTERNAL_API_KEY:SECRET}
   report:
     topic: ${REPORT_TOPIC:report-events}
-    cron: ${REPORT_CRON:*/30 * * * * *}
+    cron: ${REPORT_CRON:*/5 * * * *}
 
 management:
   metrics:
@@ -35,9 +35,13 @@ management:
 
 logging:
   level:
-    io.github.resilience4j: DEBUG
-    io.github.resilience4j.circuitbreaker: DEBUG
-    io.github.resilience4j.retry: DEBUG
+    root: WARN
+    ru.pancomanco.scheduler: ${LOG_APP:INFO}
+    io.github.resilience4j: ${LOG_RESILIENCE:WARN}
+    io.github.resilience4j.circuitbreaker: ${LOG_CIRCUIT_BREAKER:WARN}
+    io.github.resilience4j.retry: ${LOG_RETRY:WARN}
+    org.apache.kafka: ${LOG_KAFKA:WARN}
+    org.springframework.scheduling: ${LOG_SCHEDULING:INFO}
 
 resilience4j:
   circuitbreaker:

@@ -65,5 +65,8 @@ management:
 logging:
   level:
     root: INFO
-    ru.pancomanco.emailsender: ${LOG_APP:DEBUG}
-    org.springframework.kafka: ${LOG_KAFKA:DEBUG}
+    ru.pancomanco.emailsender: ${LOG_APP:INFO}
+    org.springframework.kafka: ${LOG_KAFKA:WARN}
+    org.springframework.mail: ${LOG_MAIL:WARN}
+    org.hibernate.SQL: ${LOG_SQL:WARN}
+    org.hibernate.orm.jdbc.bind: ${LOG_SQL_BIND:WARN}

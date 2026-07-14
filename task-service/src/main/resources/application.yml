@@ -61,8 +61,11 @@ management:
 
 logging:
   level:
-    root: INFO
+    root: WARN
     ru.pancomanco.taskservice: ${LOG_APP:INFO}
-    org.springframework.security: ${LOG_SECURITY:INFO}
-    org.hibernate.sql: DEBUG
-    org.springframework.cache: TRACE
+    org.springframework.security: ${LOG_SECURITY:WARN}
+    org.springframework.web: ${LOG_WEB:WARN}
+    org.hibernate.SQL: ${LOG_SQL:WARN}
+    org.hibernate.orm.jdbc.bind: ${LOG_SQL_BIND:WARN}
+    org.springframework.cache: ${LOG_CACHE:INFO}
+    org.springframework.data.redis: ${LOG_REDIS:WARN}
