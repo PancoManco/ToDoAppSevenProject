@@ -22,7 +22,7 @@ app:
     api-key: ${INTERNAL_API_KEY:SECRET}
   report:
     topic: ${REPORT_TOPIC:report-events}
-    cron: ${REPORT_CRON:*/5 * * * *}
+    cron: ${REPORT_CRON:*/5 * * * * *}
 
 management:
   metrics:
