@@ -124,6 +124,7 @@ class OAuth2SuccessHandlerIT {
         void onSuccess_ExistingVerifiedUser_LinksAndRedirects() throws Exception {
             String email = uniqueEmail();
             User existing = new User(email, passwordEncoder.encode("Password123!"));
+            existing.setName("testUser");
             existing.setEnabled(true);
             authRepository.save(existing);
 

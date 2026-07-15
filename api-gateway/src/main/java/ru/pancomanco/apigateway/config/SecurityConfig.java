@@ -41,8 +41,10 @@ public class SecurityConfig {
                         .pathMatchers(
                                 "/api/v1/auth/**",
                                 "/.well-known/**",
-                                "/actuator/**"
+                                "/actuator/health",
+                                "/actuator/info"
                         ).permitAll()
+                        .pathMatchers("/actuator/**").denyAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -64,8 +64,8 @@ public class ReportEventConsumer {
             return;
         }
 
-        processedEventRepository.save(new ProcessedEvent(event.eventId(), "DailyReport"));
         dailyReportEmailSender.sendReport(event);
+        processedEventRepository.save(new ProcessedEvent(event.eventId(), "DailyReport"));
         reportsSent.increment();
         acknowledgment.acknowledge();
 

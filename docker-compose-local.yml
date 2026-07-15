@@ -132,9 +132,9 @@ services:
     ports:
       - "8081:8081"
     environment:
-      AUTH_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${AUTH_DB_NAME:-auth_db}
-      AUTH_DATASOURCE_USERNAME: ${AUTH_DB_USER:-authuser}
-      AUTH_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD:-authpass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/${AUTH_DB_NAME:-auth_db}
+      SPRING_DATASOURCE_USERNAME: ${AUTH_DB_USER:-authuser}
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD:-authpass}
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MAIL_HOST: mailpit
@@ -166,12 +166,12 @@ services:
     ports:
       - "8082:8082"
     environment:
-      TASK_DATASOURCE_URL: jdbc:postgresql://task-postgres:5432/${TASK_DB_NAME:-task_db}
-      TASK_DATASOURCE_USERNAME: ${TASK_DB_USER:-taskuser}
-      TASK_DATASOURCE_PASSWORD: ${TASK_DB_PASSWORD:-taskpass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://task-postgres:5432/${TASK_DB_NAME:-task_db}
+      SPRING_DATASOURCE_USERNAME: ${TASK_DB_USER:-taskuser}
+      SPRING_DATASOURCE_PASSWORD: ${TASK_DB_PASSWORD:-taskpass}
       AUTH_SERVICE_URL: http://auth-service:8081
       JWT_ISSUER: toDoApplication
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-secret}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?INTERNAL_API_KEY is required}
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
@@ -219,9 +219,9 @@ services:
     ports:
       - "8083:8083"
     environment:
-      EMAIL_DATASOURCE_URL: jdbc:postgresql://email-sender-postgres:5432/${EMAIL_DB_NAME:-email_db}
-      EMAIL_DATASOURCE_USERNAME: ${EMAIL_DB_USER:-emailuser}
-      EMAIL_DATASOURCE_PASSWORD: ${EMAIL_DB_PASSWORD:-emailpass}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://email-sender-postgres:5432/${EMAIL_DB_NAME:-email_db}
+      SPRING_DATASOURCE_USERNAME: ${EMAIL_DB_USER:-emailuser}
+      SPRING_DATASOURCE_PASSWORD: ${EMAIL_DB_PASSWORD:-emailpass}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
@@ -246,7 +246,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       TASK_SERVICE_URL: http://task-service:8082
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-secret}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?INTERNAL_API_KEY is required}
       REPORT_TOPIC: report-events
       REPORT_CRON: ${REPORT_CRON:-0 0 0 * * *}
 

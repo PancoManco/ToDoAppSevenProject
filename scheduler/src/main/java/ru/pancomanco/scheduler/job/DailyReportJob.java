@@ -65,6 +65,9 @@ public class DailyReportJob {
         }
 
         int published = 0;
+        int failed = 0;
+        Instant occurredAt = Instant.now();
+
         for (UserTaskSummary user : summary.users()) {
             try {
                 DailyReportEvent event = new DailyReportEvent(
@@ -76,16 +79,24 @@ public class DailyReportJob {
                         user.completedTitles(),
                         user.pendingCount(),
                         user.pendingTitles(),
-                        Instant.now()
+                        occurredAt
                 );
+
                 reportEventPublisher.publish(event);
                 reportsPublished.increment();
+                published++;
+
             } catch (Exception e) {
                 log.error("Failed to publish report for user {}, skipping", user.userId(), e);
                 publishErrors.increment();
+                failed++;
             }
         }
 
-        log.info("Daily report generation finished: {} events published", (long) reportsPublished.count());
+        log.info(
+                "Daily report generation finished: {} events published, {} failed",
+                published,
+                failed
+        );
     }
 }

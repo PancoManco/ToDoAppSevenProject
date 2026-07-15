@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-add-user-timestamps.yaml
   - include:
       file: db/changelog/changes/003-create-outbox-table.yaml
+  - include:
+      file: db/changelog/changes/004-add-outbox-retry-fields.yaml

@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.testcontainers.kafka.ConfluentKafkaContainer;
 import ru.pancomanco.todoappsevenproject.config.TestRateLimitConfig;
+import ru.pancomanco.todoappsevenproject.messaging.outbox.OutboxEvent;
 import tools.jackson.databind.ObjectMapper;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +92,42 @@ class OutboxIntegrationIT {
             assertThat(record.value()).contains("poll@test.com");
             assertThat(record.key()).isEqualTo(eventId);
         }
+    }
+
+    @Test
+    void outboxEvent_MarkFailed_IncrementsAttemptsAndSetsNextAttemptAt() {
+        OutboxEvent event = new OutboxEvent(
+                UUID.randomUUID().toString(),
+                "UserVerified",
+                "user-events",
+                "{}"
+        );
+
+        event.markFailed(new RuntimeException("Kafka down"));
+
+        assertThat(event.getAttempts()).isEqualTo(1);
+        assertThat(event.getNextAttemptAt()).isAfter(Instant.now());
+        assertThat(event.getLastError()).contains("Kafka down");
+        assertThat(event.isDead()).isFalse();
+        assertThat(event.isPublished()).isFalse();
+    }
+
+    @Test
+    void outboxEvent_MarkFailed_AfterMaxAttempts_MarksDead() {
+        OutboxEvent event = new OutboxEvent(
+                UUID.randomUUID().toString(),
+                "UserVerified",
+                "user-events",
+                "{}"
+        );
+
+        for (int i = 0; i < 10; i++) {
+            event.markFailed(new RuntimeException("Kafka down"));
+        }
+
+        assertThat(event.getAttempts()).isEqualTo(10);
+        assertThat(event.isDead()).isTrue();
+        assertThat(event.isPublished()).isFalse();
     }
 
     private Consumer<String, String> createTestConsumer() {

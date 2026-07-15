@@ -116,17 +116,33 @@ public class AuthorizationControllerIT {
                 .content(objectMapper.writeValueAsString(request)));
     }
 
-    private ResultActions performVerifyEmail(VerifyEmailRequestDto request) throws Exception {
-        return mockMvc.perform(post("/api/v1/auth/verify-email")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)));
-    }
+//    private ResultActions performVerifyEmail(VerifyEmailRequestDto request) throws Exception {
+//        return mockMvc.perform(post("/api/v1/auth/verify-email")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(request)));
+//    }
 
     private ResultActions performLogin(LoginRequestDto request) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/login")
+                .header("Origin", frontendOrigin)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)));
+                .content(objectMapper.writeValueAsString(
+                        new LoginRequestDto(request.email(), request.password()))));
     }
+
+    private ResultActions performVerifyEmail(VerifyEmailRequestDto request) throws Exception {
+        return mockMvc.perform(post("/api/v1/auth/verify-email")
+                .header("Origin", frontendOrigin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        new VerifyEmailRequestDto(request.email(), request.code()))));
+    }
+
+//    private ResultActions performLogin(LoginRequestDto request) throws Exception {
+//        return mockMvc.perform(post("/api/v1/auth/login")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(request)));
+//    }
 
     private ResultActions performRefresh(String refreshTokenCookie, String origin) throws Exception {
         var request = post("/api/v1/auth/refresh");
@@ -304,7 +320,7 @@ public class AuthorizationControllerIT {
                     Arguments.of("password=null", new RegisterRequestDto(VALID_NAME, "valid@test.com", null)),
                     Arguments.of("password=blank", new RegisterRequestDto(VALID_NAME, "valid@test.com", "")),
                     Arguments.of("password=too short (5 chars)", new RegisterRequestDto(VALID_NAME, "valid@test.com", "12345")),
-                    Arguments.of("password=too long (21 chars)", new RegisterRequestDto(VALID_NAME, "valid@test.com", "a".repeat(21)))
+                    Arguments.of("password=too long (65 chars)", new RegisterRequestDto(VALID_NAME, "valid@test.com", "a".repeat(65)))
             );
 
         }

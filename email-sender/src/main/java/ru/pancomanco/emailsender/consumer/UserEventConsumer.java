@@ -2,12 +2,6 @@ package ru.pancomanco.emailsender.consumer;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import liquibase.license.User;
-import org.springframework.mail.MailException;
-import ru.pancomanco.emailsender.exception.NonRetryableException;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -15,8 +9,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.emailsender.entity.ProcessedEvent;
 import ru.pancomanco.emailsender.event.UserVerifiedEvent;
+import ru.pancomanco.emailsender.exception.NonRetryableException;
 import ru.pancomanco.emailsender.repository.ProcessedEventRepository;
 import ru.pancomanco.emailsender.service.WelcomeEmailSender;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @Slf4j
@@ -64,9 +61,8 @@ public class UserEventConsumer {
             acknowledgment.acknowledge();
             return;
         }
-
-        processedEventRepository.save(new ProcessedEvent(event.eventId(), "UserVerified"));
         welcomeEmailSender.sendWelcomeEmail(event.email(), event.name());
+        processedEventRepository.save(new ProcessedEvent(event.eventId(), "UserVerified"));
         emailsSent.increment();
         acknowledgment.acknowledge();
 

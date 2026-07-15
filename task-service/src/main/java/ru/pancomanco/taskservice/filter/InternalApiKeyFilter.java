@@ -8,8 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ru.pancomanco.taskservice.properties.InternalProperties;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 @Component
 @Slf4j
@@ -20,8 +23,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
 
     private final String expectedApiKey;
 
-    public InternalApiKeyFilter(@Value("${app.internal.api-key}") String expectedApiKey) {
-        this.expectedApiKey = expectedApiKey;
+    public InternalApiKeyFilter(InternalProperties properties) {
+        this.expectedApiKey = properties.apiKey();
     }
 
     @Override
@@ -45,14 +48,14 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean constantTimeEquals(String a, String b) {
-        if (a.length() != b.length()) {
+    private boolean constantTimeEquals(String provided, String expected) {
+        if (provided == null || provided.isBlank() || expected == null || expected.isBlank()) {
             return false;
         }
-        int result = 0;
-        for (int i = 0; i < a.length(); i++) {
-            result |= a.charAt(i) ^ b.charAt(i);
-        }
-        return result == 0;
+
+        byte[] providedBytes = provided.getBytes(StandardCharsets.UTF_8);
+        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
+
+        return MessageDigest.isEqual(providedBytes, expectedBytes);
     }
 }

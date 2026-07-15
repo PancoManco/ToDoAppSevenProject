@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-add-outbox-retry-fields
+      author: pancomanco
+      changes:
+        - addColumn:
+            tableName: outbox
+            columns:
+              - column:
+                  name: attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: next_attempt_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: last_error
+                  type: TEXT
+
+              - column:
+                  name: dead
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            tableName: outbox
+            indexName: idx_outbox_ready_to_publish
+            columns:
+              - column:
+                  name: published
+              - column:
+                  name: dead
+              - column:
+                  name: next_attempt_at
+              - column:
+                  name: created_at

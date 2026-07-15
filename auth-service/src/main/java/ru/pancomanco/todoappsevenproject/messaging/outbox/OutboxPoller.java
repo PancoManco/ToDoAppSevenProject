@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.pancomanco.todoappsevenproject.messaging.kafka.KafkaEventPublisher;
 
 
-
+import java.time.Instant;
 import java.util.List;
 
 @Component
@@ -20,27 +20,32 @@ public class OutboxPoller {
     private static final int BATCH_SIZE = 100;
 
     private final OutboxRepository outboxRepository;
-    private final KafkaEventPublisher kafkaEventPublisher;
+    private final OutboxEventProcessor outboxEventProcessor;
 
     @Scheduled(fixedDelayString = "${app.outbox.poll-interval-ms:5000}")
-    @Transactional
     public void pollAndPublish() {
-        List<OutboxEvent> events = outboxRepository
-                .findUnpublishedForUpdate(Limit.of(BATCH_SIZE));
+        List<Long> eventIds = outboxRepository.findReadyToPublishIds(
+                Instant.now(),
+                Limit.of(BATCH_SIZE)
+        );
 
-        if (events.isEmpty()) {
+        if (eventIds.isEmpty()) {
             return;
         }
 
-        log.debug("Found {} unpublished outbox events", events.size());
+        int published = 0;
+        int failed = 0;
 
-        for (OutboxEvent event : events) {
-            kafkaEventPublisher.publish(
-                    event.getTopic(),
-                    event.getEventId(),
-                    event.getPayload()
-            );
-            event.markPublished();
+        for (Long eventId : eventIds) {
+            try {
+                outboxEventProcessor.process(eventId);
+                published++;
+            } catch (Exception e) {
+                failed++;
+                log.error("Failed to publish outbox event id={}, will retry later", eventId, e);
+            }
         }
+
+        log.info("Outbox poll finished: {} published, {} failed", published, failed);
     }
 }

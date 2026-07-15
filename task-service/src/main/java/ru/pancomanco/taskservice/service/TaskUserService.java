@@ -14,8 +14,27 @@ public class TaskUserService {
 
     @Transactional
     public void ensureUserExists(Long userId, String email, String name) {
-        if (!taskUserRepository.existsById(userId)) {
-            taskUserRepository.save(new TaskUser(userId, email, name));
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required");
         }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email is required");
+        }
+
+        if (name == null || name.isBlank()) {
+            name = email;
+        }
+
+        String finalName = name;
+
+        taskUserRepository.findById(userId)
+                .ifPresentOrElse(
+                        existing -> {
+                            existing.setEmail(email);
+                            existing.setName(finalName);
+                        },
+                        () -> taskUserRepository.save(new TaskUser(userId, email, finalName))
+                );
     }
 }

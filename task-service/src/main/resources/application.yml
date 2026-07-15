@@ -6,9 +6,9 @@ spring:
     name: task-service
 
   datasource:
-    url: ${TASK_DATASOURCE_URL:jdbc:postgresql://localhost:5433/task_db}
-    username: ${TASK_DATASOURCE_USERNAME:taskuser}
-    password: ${TASK_DATASOURCE_PASSWORD:taskpass}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/task_db}
+    username: ${SPRING_DATASOURCE_USERNAME:taskuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:taskpass}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -44,7 +44,7 @@ app:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
   internal:
-    api-key: ${INTERNAL_API_KEY:SECRET}
+    api-key: ${INTERNAL_API_KEY}
 management:
   metrics:
     tags:

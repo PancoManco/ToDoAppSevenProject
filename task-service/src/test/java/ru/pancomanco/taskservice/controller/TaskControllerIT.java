@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import ru.pancomanco.taskservice.config.TestSecurityConfig;
-import ru.pancomanco.taskservice.config.TestcontainersConfiguration;
 import ru.pancomanco.taskservice.dto.request.CreateTaskRequestDto;
 import ru.pancomanco.taskservice.entity.Task;
 import ru.pancomanco.taskservice.repository.TaskRepository;
@@ -26,8 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, TestSecurityConfig.class})
 class TaskControllerIT {
 
     @Autowired
@@ -36,19 +34,46 @@ class TaskControllerIT {
     private ObjectMapper objectMapper;
     @Autowired
     private TaskRepository taskRepository;
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private static final Long USER_A = 100L;
     private static final Long USER_B = 200L;
 
     @BeforeEach
     void clean() {
-        taskRepository.deleteAll();
+        taskRepository.deleteAllInBatch();
+        taskRepository.flush();
+
+        cacheManager.getCacheNames().forEach(cacheName -> {
+            Cache cache = cacheManager.getCache(cacheName);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
+
+        redisTemplate.execute((RedisCallback<Object>) connection -> {
+            connection.serverCommands().flushDb();
+            return null;
+        });
     }
 
     private static RequestPostProcessor asUser(Long userId) {
         return jwt().jwt(builder -> builder
                 .subject(String.valueOf(userId))
                 .claim("token_type", "access")
+                .claim("roles", java.util.List.of("USER")));
+    }
+
+    private static RequestPostProcessor asUser(Long userId, String email, String name) {
+        return jwt().jwt(builder -> builder
+                .subject(String.valueOf(userId))
+                .claim("token_type", "access")
+                .claim("email", email)
+                .claim("name", name)
                 .claim("roles", java.util.List.of("USER")));
     }
 
@@ -65,7 +90,7 @@ class TaskControllerIT {
             CreateTaskRequestDto request = new CreateTaskRequestDto("Поспать наконец то", "несколько дней");
 
             mockMvc.perform(post("/api/v1/tasks")
-                            .with(asUser(USER_A))
+                            .with(asUser(USER_A, "custom@test.com", "Custom User"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())

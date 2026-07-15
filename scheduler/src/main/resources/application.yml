@@ -19,10 +19,10 @@ app:
   task-service:
     url: ${TASK_SERVICE_URL:http://localhost:8082}
   internal:
-    api-key: ${INTERNAL_API_KEY:SECRET}
+    api-key: ${INTERNAL_API_KEY}
   report:
     topic: ${REPORT_TOPIC:report-events}
-    cron: ${REPORT_CRON:*/5 * * * * *}
+    cron: ${REPORT_CRON:0 0 0 * * *}
 
 management:
   metrics:

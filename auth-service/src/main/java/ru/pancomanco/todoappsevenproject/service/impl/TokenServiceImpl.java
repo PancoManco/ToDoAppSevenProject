@@ -55,7 +55,8 @@ public class TokenServiceImpl implements TokenService {
         User managedUser = authRepository.findById(user.getId())
                 .orElseThrow(() -> new UnauthorizedException(ErrorCode.AUTH_USER_NOT_FOUND));
 
-        log.debug("Issuing new token pair for user ID: {}. Revoking previous active sessions.", managedUser.getId());
+        log.debug("Issuing new token pair for user ID: {}. Single-session mode: revoking previous active sessions.",
+                managedUser.getId());
         refreshTokenRepository.revokeAllActiveTokensByUserId(managedUser.getId());
         String accessToken = createAccessToken(managedUser);
         String refreshToken = createRefreshToken(managedUser);
@@ -143,11 +144,14 @@ public class TokenServiceImpl implements TokenService {
                 .subject(String.valueOf(user.getId()))
                 .claim("token_type", "access")
                 .claim("email", user.getEmail())
-                .claim("name", user.getName())  // toCheck
+                .claim("name", displayName(user))
                 .claim("roles", List.of(user.getRole().name()))
                 .build();
 
-        JwsHeader headers = JwsHeader.with(SignatureAlgorithm.RS256).build();
+        JwsHeader headers = JwsHeader.with(SignatureAlgorithm.RS256)
+                .keyId("auth-key-1")
+                .build();
+
         return jwtEncoder
                 .encode(JwtEncoderParameters.from(headers, claims))
                 .getTokenValue();
@@ -167,12 +171,24 @@ public class TokenServiceImpl implements TokenService {
                 .claim("token_type", "refresh")
                 .build();
 
-        JwsHeader headers = JwsHeader.with(SignatureAlgorithm.RS256).build();
+        JwsHeader headers = JwsHeader.with(SignatureAlgorithm.RS256)
+                .keyId("auth-key-1")
+                .build();
 
         return jwtEncoder
                 .encode(JwtEncoderParameters.from(headers, claims))
                 .getTokenValue();
 
     }
+    private String displayName(User user) {
+        if (user.getName() != null && !user.getName().isBlank()) {
+            return user.getName();
+        }
 
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            return user.getEmail();
+        }
+
+        return "User " + user.getId();
+    }
 }
