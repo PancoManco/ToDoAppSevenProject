@@ -1,0 +1,269 @@
+services:
+  auth-postgres:
+    image: postgres:16-alpine
+    container_name: auth-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  task-postgres:
+    image: postgres:16-alpine
+    container_name: task-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TASK_DB_USER}
+      POSTGRES_PASSWORD: ${TASK_DB_PASSWORD}
+      POSTGRES_DB: ${TASK_DB_NAME}
+    volumes:
+      - task-postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TASK_DB_USER}"]
+      interval: 10s
+
+  email-postgres:
+    image: postgres:16-alpine
+    container_name: email-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${EMAIL_DB_USER}
+      POSTGRES_PASSWORD: ${EMAIL_DB_PASSWORD}
+      POSTGRES_DB: ${EMAIL_DB_NAME}
+    volumes:
+      - email-postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${EMAIL_DB_USER}"]
+      interval: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_LOG_RETENTION_HOURS: 168
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+  auth-service:
+    image: ${DOCKERHUB_USERNAME}/auth-service:latest
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/${AUTH_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${AUTH_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      RSA_PRIVATE_KEY_BASE64: ${RSA_PRIVATE_KEY_BASE64}
+      RSA_PUBLIC_KEY_BASE64: ${RSA_PUBLIC_KEY_BASE64}
+      JWT_ISSUER: ${JWT_ISSUER}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      COOKIE_SECURE: "true"
+      COOKIE_SAME_SITE: "None"
+      JAVA_TOOL_OPTIONS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  task-service:
+    image: ${DOCKERHUB_USERNAME}/task-service:latest
+    container_name: task-service
+    restart: unless-stopped
+    depends_on:
+      task-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://task-postgres:5432/${TASK_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${TASK_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${TASK_DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      AUTH_SERVICE_URL: http://auth-service:8081
+      JWT_ISSUER: ${JWT_ISSUER}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      JAVA_TOOL_OPTIONS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  email-sender:
+    image: ${DOCKERHUB_USERNAME}/email-sender:latest
+    container_name: email-sender
+    restart: unless-stopped
+    depends_on:
+      email-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://email-postgres:5432/${EMAIL_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${EMAIL_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${EMAIL_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: latest
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  scheduler:
+    image: ${DOCKERHUB_USERNAME}/scheduler:latest
+    container_name: scheduler
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+      task-service:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TASK_SERVICE_URL: http://task-service:8082
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      REPORT_TOPIC: report-events
+      REPORT_CRON: "0 0 8 * * *"
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8084/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api-gateway:
+    image: ${DOCKERHUB_USERNAME}/api-gateway:latest
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      task-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      TASK_SERVICE_URL: http://task-service:8082
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_ISSUER: ${JWT_ISSUER}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC"
+    networks:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - frontend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
+
+volumes:
+  auth-postgres-data:
+  task-postgres-data:
+  email-postgres-data:
+  redis-data:
+  kafka-data:

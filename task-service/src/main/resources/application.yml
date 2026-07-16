@@ -44,7 +44,7 @@ app:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
   internal:
-    api-key: ${INTERNAL_API_KEY}
+    api-key: ${INTERNAL_API_KEY:?INTERNAL_API_KEY is required}
 management:
   metrics:
     tags:

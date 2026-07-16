@@ -44,8 +44,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+            client-secret: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
             scope:
               - openid
               - email
@@ -74,8 +74,8 @@ app:
     oauth2-success-redirect: ${OAUTH_SUCCESS_REDIRECT_URI:http://localhost:5173}
     oauth2-failure-redirect: ${OAUTH_FAILURE_REDIRECT_URI:http://localhost:5173/login}
     rsa:
-      private-key-base64: ${RSA_PRIVATE_KEY_BASE64}
-      public-key-base64: ${RSA_PUBLIC_KEY_BASE64}
+      private-key-base64: ${RSA_PRIVATE_KEY_BASE64:?RSA_PRIVATE_KEY_BASE64 is required}
+      public-key-base64: ${RSA_PUBLIC_KEY_BASE64:?RSA_PUBLIC_KEY_BASE64 is required}
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
       access-token-minutes: ${JWT_ACCESS_TOKEN_TTL_MINUTES:5}

@@ -65,7 +65,6 @@ public class OutboxEvent {
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
-
         this.createdAt = now;
 
         if (this.nextAttemptAt == null) {

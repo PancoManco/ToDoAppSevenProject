@@ -1,5 +1,6 @@
 package ru.pancomanco.todoappsevenproject.messaging.outbox;
 
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.*;
@@ -17,7 +18,11 @@ public interface OutboxRepository extends JpaRepository<OutboxEvent, Long> {
               AND o.nextAttemptAt <= :now
             ORDER BY o.createdAt ASC
             """)
-    @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))
+    @QueryHints({
+            @QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"),  // SKIP LOCKED
+            @QueryHint(name = "org.hibernate.readOnly", value = "false")
+    })
+  //  @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Long> findReadyToPublishIds(@Param("now") Instant now, Limit limit);
 
     @Modifying

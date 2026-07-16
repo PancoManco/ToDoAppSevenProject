@@ -18,7 +18,6 @@ import java.util.List;
 public class OutboxPoller {
 
     private static final int BATCH_SIZE = 100;
-
     private final OutboxRepository outboxRepository;
     private final OutboxEventProcessor outboxEventProcessor;
 
@@ -45,7 +44,6 @@ public class OutboxPoller {
                 log.error("Failed to publish outbox event id={}, will retry later", eventId, e);
             }
         }
-
         log.info("Outbox poll finished: {} published, {} failed", published, failed);
+        }
     }
-}

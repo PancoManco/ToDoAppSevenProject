@@ -64,11 +64,15 @@ public class ReportEventConsumer {
             return;
         }
 
-        dailyReportEmailSender.sendReport(event);
-        processedEventRepository.save(new ProcessedEvent(event.eventId(), "DailyReport"));
-        reportsSent.increment();
+        try {
+            dailyReportEmailSender.sendReport(event);
+            processedEventRepository.save(new ProcessedEvent(event.eventId(), "DailyReport"));
+            reportsSent.increment();
+            log.info("Processed DailyReport event {} for {}", event.eventId(), event.email());
+        } catch (Exception e) {
+            log.error("Failed to send report for event {}", event.eventId(), e);
+            throw new NonRetryableException("Failed to send report", e);
+        }
         acknowledgment.acknowledge();
-
-        log.info("Processed DailyReport event {} for {}", event.eventId(), event.email());
     }
 }
