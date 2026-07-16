@@ -100,28 +100,12 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/${AUTH_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${AUTH_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      RSA_PRIVATE_KEY_BASE64: ${RSA_PRIVATE_KEY_BASE64}
-      RSA_PUBLIC_KEY_BASE64: ${RSA_PUBLIC_KEY_BASE64}
-      JWT_ISSUER: ${JWT_ISSUER}
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-      COOKIE_SECURE: "true"
-      COOKIE_SAME_SITE: "None"
-      JAVA_TOOL_OPTIONS: "-Xmx512m -Xms256m -XX:+UseG1GC"
     networks:
       - backend
     healthcheck:
@@ -141,16 +125,12 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://task-postgres:5432/${TASK_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${TASK_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${TASK_DB_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      AUTH_SERVICE_URL: http://auth-service:8081
-      JWT_ISSUER: ${JWT_ISSUER}
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-      JAVA_TOOL_OPTIONS: "-Xmx512m -Xms256m -XX:+UseG1GC"
     networks:
       - backend
     healthcheck:
@@ -168,17 +148,12 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://email-postgres:5432/${EMAIL_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${EMAIL_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${EMAIL_DB_PASSWORD}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: latest
-      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC"
     networks:
       - backend
     healthcheck:
@@ -196,13 +171,8 @@ services:
         condition: service_healthy
       task-service:
         condition: service_healthy
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      TASK_SERVICE_URL: http://task-service:8082
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-      REPORT_TOPIC: report-events
-      REPORT_CRON: "0 0 8 * * *"
-      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC"
+    env_file:
+      - .env
     networks:
       - backend
     healthcheck:
@@ -224,14 +194,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      AUTH_SERVICE_URL: http://auth-service:8081
-      TASK_SERVICE_URL: http://task-service:8082
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_ISSUER: ${JWT_ISSUER}
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
-      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseG1GC"
+    env_file:
+      - .env
     networks:
       - backend
       - frontend
