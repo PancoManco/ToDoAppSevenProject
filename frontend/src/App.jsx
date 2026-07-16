@@ -4,12 +4,6 @@ import AuthScreen from './components/AuthScreen.jsx';
 import ResetPasswordScreen from './components/ResetPasswordScreen.jsx';
 import TasksScreen from './components/TasksScreen.jsx';
 
-/**
- * Роутера нет — «экран» выбирается по трём вещам:
- *   1. в адресе есть ?token=...        -> сброс пароля по ссылке из письма
- *   2. вернулись с Google (/oauth-success) -> меняем refresh-cookie на access-токен
- *   3. есть access-токен               -> задачи, иначе вход
- */
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(Boolean(token.get()));
   const [resetToken, setResetToken] = useState(null);
@@ -18,14 +12,14 @@ export default function App() {
   useEffect(() => {
     const url = new URL(window.location.href);
 
-    // 1. ссылка из письма о сбросе пароля
+
     const t = url.searchParams.get('token');
     if (t) {
       setResetToken(t);
       return;
     }
 
-    // 2. возврат от Google: бэкенд положил refresh в cookie и отправил нас сюда
+
     if (url.pathname.startsWith('/oauth-success')) {
       setExchanging(true);
       auth

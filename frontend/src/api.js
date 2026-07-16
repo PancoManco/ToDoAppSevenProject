@@ -1,21 +1,14 @@
-/**
- * ЕДИНСТВЕННОЕ место, где фронт знает про твой бэкенд.
- * Если что-то не сходится с реальным API — правь ТОЛЬКО этот файл.
- */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const normalizeUrl = (value) => {
+  if (!value) return '';
+  return value.replace(/\/$/, '');
+};
+
+const BASE_URL = normalizeUrl(import.meta.env.VITE_API_URL);
 const API = `${BASE_URL}/api/v1`;
 
-/**
- * Вход через Google идёт НЕ через gateway: в gateway нет маршрута /oauth2/**,
- * поэтому браузер отправляем прямо в auth-service.
- */
-const AUTH_URL = import.meta.env.VITE_AUTH_URL || 'http://localhost:8081';
+const AUTH_URL = normalizeUrl(import.meta.env.VITE_AUTH_URL);
 export const GOOGLE_LOGIN_URL = `${AUTH_URL}/oauth2/authorization/google`;
-
-/* ------------------------------------------------------------------ */
-/* Токен                                                               */
-/* ------------------------------------------------------------------ */
 
 const TOKEN_KEY = 'accessToken';
 
@@ -24,10 +17,6 @@ export const token = {
   save: (value) => localStorage.setItem(TOKEN_KEY, value),
   clear: () => localStorage.removeItem(TOKEN_KEY),
 
-  /**
-   * Читаем payload JWT, чтобы показать почту пользователя.
-   * Подпись не проверяем — это только для отображения, доверяет по-прежнему бэкенд.
-   */
   claims: () => {
     const raw = localStorage.getItem(TOKEN_KEY);
     if (!raw) return {};
@@ -82,8 +71,8 @@ async function request(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
       credentials: 'include', // refresh-токен в httpOnly cookie
     });
-  } catch {
-    throw new ApiError('Бэкенд недоступен. Запущен ли gateway на :8080?', 0);
+  }  catch {
+    throw new ApiError('Бэкенд недоступен. Проверь, что приложение запущено и /api проксируется на gateway.', 0);
   }
 
   if (response.status === 204) return null;
@@ -148,14 +137,11 @@ export const auth = {
   resendCode: (email) =>
     request('/auth/resend-verification-code', { method: 'POST', body: { email } }),
 
-  /** Просим письмо со ссылкой на сброс пароля. */
+
   forgotPassword: (email) =>
     request('/auth/forgot-password', { method: 'POST', body: { email } }),
 
-  /**
-   * Задаём новый пароль по токену из письма.
-   * ⚠ Имена полей — предположение. Сверь с ResetPasswordRequestDto на бэкенде.
-   */
+
   resetPassword: (resetToken, newPassword) =>
     request('/auth/reset-password', {
       method: 'POST',
