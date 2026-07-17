@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { auth } from '../api.js';
 
-/**
- * Открывается, когда в адресе есть ?token=... — то есть человек пришёл
- * по ссылке из письма о сбросе пароля.
- */
 export default function ResetPasswordScreen({ resetToken, onDone }) {
     const [password, setPassword] = useState('');
     const [repeat, setRepeat] = useState('');

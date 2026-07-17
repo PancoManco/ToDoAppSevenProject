@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react';
 
-/**
- * Модалка редактирования задачи.
- * Кнопки «Сохранить» нет: правки уходят на бэкенд сами, через 700 мс после
- * того, как ты перестал печатать (PUT /tasks/{id}).
- *
- * Esc и клик по фону закрывают окно.
- */
 export default function TaskModal({ task, onSave, onDelete, onToggle, onClose }) {
     const [title, setTitle] = useState(task.title || '');
     const [description, setDescription] = useState(task.description || '');
@@ -14,7 +7,6 @@ export default function TaskModal({ task, onSave, onDelete, onToggle, onClose })
     const [deleting, setDeleting] = useState(false);
     const [toggling, setToggling] = useState(false);
 
-    // Esc закрывает
     useEffect(() => {
         const onKey = (e) => {
             if (e.key === 'Escape') onClose();
@@ -23,7 +15,6 @@ export default function TaskModal({ task, onSave, onDelete, onToggle, onClose })
         return () => window.removeEventListener('keydown', onKey);
     }, [onClose]);
 
-    // Автосохранение: ждём паузу в наборе и отправляем PUT
     useEffect(() => {
         if (title === task.title && description === task.description) return;
         if (!title.trim()) return;
@@ -53,7 +44,6 @@ export default function TaskModal({ task, onSave, onDelete, onToggle, onClose })
     }
 
     async function handleToggle(e) {
-        // Защита: если onToggle не передан — ничего не делаем
         if (!onToggle) return;
         e.preventDefault();
         setToggling(true);

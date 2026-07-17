@@ -87,7 +87,6 @@ export default function TasksScreen({ onLogout }) {
     }
   }
 
-  // ✅ НОВАЯ ФУНКЦИЯ: быстрое удаление из списка
   async function handleQuickDelete(id) {
     setError('');
     try {
@@ -176,15 +175,12 @@ export default function TasksScreen({ onLogout }) {
                 onSave={handleSave}
                 onDelete={handleDelete}
                 onToggle={async (id, completed) => {
-                  // Обновляем в списке
                   setItems(prev => prev.map(t => t.id === id ? { ...t, completed } : t));
-                  // Обновляем в модалке — чтобы чекбокс сразу перерисовался
                   setEditing(prev => prev && prev.id === id ? { ...prev, completed } : prev);
 
                   try {
                     await tasksApi.setCompleted(id, completed);
                   } catch (e) {
-                    // Откат при ошибке
                     setItems(prev => prev.map(t => t.id === id ? { ...t, completed: !completed } : t));
                     setEditing(prev => prev && prev.id === id ? { ...prev, completed: !completed } : prev);
                     fail(e);
@@ -235,7 +231,6 @@ function Column({ label, count, tasks, emptyText, onToggle, onOpen, onDelete }) 
                       {task.description && <span className="row__note">{task.description}</span>}
                     </button>
 
-                    {/* ✅ НОВАЯ КНОПКА УДАЛЕНИЯ */}
                     <button
                         type="button"
                         className="row__delete"

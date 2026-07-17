@@ -8,7 +8,7 @@ const BASE_URL = normalizeUrl(import.meta.env.VITE_API_URL);
 const API = `${BASE_URL}/api/v1`;
 
 const AUTH_URL = normalizeUrl(import.meta.env.VITE_AUTH_URL);
-export const GOOGLE_LOGIN_URL = `${AUTH_URL}/oauth2/authorization/google`;
+//export const GOOGLE_LOGIN_URL = `${AUTH_URL}/oauth2/authorization/google`;
 
 const TOKEN_KEY = 'accessToken';
 
@@ -45,10 +45,6 @@ function extractAccessToken(body) {
     null
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Базовый запрос                                                      */
-/* ------------------------------------------------------------------ */
 
 export class ApiError extends Error {
   constructor(message, status) {
@@ -108,10 +104,6 @@ function errorMessage(data, status, method, path) {
   return `Ошибка ${status}`;
 }
 
-/* ------------------------------------------------------------------ */
-/* AUTH                                                                */
-/* ------------------------------------------------------------------ */
-
 export const auth = {
   register: (name, email, password) =>
     request('/auth/register', { method: 'POST', body: { name, email, password } }),
@@ -148,7 +140,6 @@ export const auth = {
       body: { token: resetToken, newPassword },
     }),
 
-  /** Обмен refresh-cookie на новый access-токен (нужен после входа через Google). */
   refresh: async () => {
     const data = await request('/auth/refresh', { method: 'POST' });
     const accessToken = extractAccessToken(data);
@@ -165,10 +156,6 @@ export const auth = {
   },
 };
 
-/* ------------------------------------------------------------------ */
-/* TASKS                                                               */
-/* ------------------------------------------------------------------ */
-
 export const tasks = {
   list: async () => {
     const data = await request('/tasks');
@@ -183,7 +170,6 @@ export const tasks = {
   update: (id, title, description) =>
     request(`/tasks/${id}`, { method: 'PUT', body: { title, description } }),
 
-  /** В контроллере два разных пути, без параметра. */
   setCompleted: (id, completed) =>
     request(`/tasks/${id}/${completed ? 'complete' : 'incomplete'}`, { method: 'PATCH' }),
 

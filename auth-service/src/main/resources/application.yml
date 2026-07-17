@@ -69,6 +69,8 @@ spring:
     fallback-to-system-locale: false
 
 app:
+  oauth2:
+    enabled: ${APP_OAUTH2_ENABLED:false}
   security:
     frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
     oauth2-success-redirect: ${OAUTH_SUCCESS_REDIRECT_URI:http://localhost:5173}
@@ -115,7 +117,7 @@ management:
 logging:
   level:
     root: WARN
-    ru.pancomanco.todoappsevenproject: ${LOG_APP:INFO}
+    ru.pancomanco.authservice: ${LOG_APP:INFO}
     org.springframework.security: ${LOG_SECURITY:WARN}
     org.springframework.web: ${LOG_WEB:WARN}
     org.hibernate.SQL: ${LOG_SQL:WARN}

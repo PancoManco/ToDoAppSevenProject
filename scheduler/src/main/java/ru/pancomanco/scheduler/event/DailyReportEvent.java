@@ -1,6 +1,5 @@
 package ru.pancomanco.scheduler.event;
 
-
 import java.time.Instant;
 import java.util.List;
 

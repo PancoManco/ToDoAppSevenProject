@@ -6,41 +6,61 @@ on:
       - main
 
 jobs:
-  check-changes:
+  detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      changed: ${{ steps.check.outputs.changed }}
-
-      api_gateway_changed: ${{ steps.check.outputs.api_gateway_changed }}
-      auth_service_changed: ${{ steps.check.outputs.auth_service_changed }}
-      task_service_changed: ${{ steps.check.outputs.task_service_changed }}
-      email_sender_changed: ${{ steps.check.outputs.email_sender_changed }}
-      scheduler_changed: ${{ steps.check.outputs.scheduler_changed }}
-      frontend_changed: ${{ steps.check.outputs.frontend_changed }}
-
+      auth-service: ${{ steps.filter.outputs.auth-service }}
+      task-service: ${{ steps.filter.outputs.task-service }}
+      email-sender: ${{ steps.filter.outputs.email-sender }}
+      scheduler: ${{ steps.filter.outputs.scheduler }}
+      api-gateway: ${{ steps.filter.outputs.api-gateway }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infra: ${{ steps.filter.outputs.infra }}
     steps:
         - name: Checkout code
           uses: actions/checkout@v5
           with:
-            fetch-depth: 5
+            fetch-depth: 0
 
         - name: Check for changes
+          uses: dorny/path-filter@v3
           id: check
-          run: |
-              if git merge-base ${{ github.event.before }} ${{ github.sha }} >/dev/null 2>&1; then
-                CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-              else
-                CHANGED_FILES=$(git show --name-only --pretty=format: ${{ github.sha }})
-              fi
-              echo "changed=false" >> $GITHUB_OUTPUT
-              for folder in frontend common backend scheduler mailer; do
-                if echo "$CHANGED_FILES" | grep -q "^$folder/"; then
-                  echo "changed=true" >> $GITHUB_OUTPUT
-                  echo "${folder}_changed=true" >> $GITHUB_OUTPUT
-                else
-                  echo "${folder}_changed=false" >> $GITHUB_OUTPUT
-                fi
-              done
+          with:
+            filters: |
+              auth-service:
+              - 'auth-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'docker/auth-service.Dockerfile'
+              task-service:
+                - 'task-service/**'
+                - 'build.gradle'
+                - 'settings.gradle'
+                - 'gradle/**'
+                - 'docker/task-service.Dockerfile'
+              email-sender:
+                - 'email-sender/**'
+                - 'build.gradle'
+                - 'settings.gradle'
+                - 'gradle/**'
+                - 'docker/email-sender.Dockerfile'
+              scheduler:
+                - 'scheduler/**'
+                - 'build.gradle'
+                - 'settings.gradle'
+                - 'gradle/**'
+                - 'docker/scheduler.Dockerfile'
+              api-gateway:
+                - 'api-gateway/**'
+                - 'build.gradle'
+              frontend:
+                - 'frontend/**'
+                - 'docker/frontend.Dockerfile'
+                - 'docker/nginx.conf'
+              infra:
+                - 'docker-compose-prod.yml'
+                - 'deploy.sh'
   test:
     name: Run Gradle tests
     runs-on: ubuntu-latest
@@ -64,108 +84,132 @@ jobs:
           ./gradlew test --no-daemon
 
   build-and-push:
-    name: Build and push Docker images
+    name: Build ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: [test,check-changes]
-    if: needs.check-changes.outputs.changed == 'true'
-
+    needs: [test,detect-changes]
+    if: github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: auth-service
+            changed: ${{ needs.detect-changes.outputs.auth-service }}
+            dockerfile: ./auth-service/Dockerfile
+          - service: task-service
+            changed: ${{ needs.detect-changes.outputs.task-service }}
+            dockerfile: ./task-service/Dockerfile
+          - service: email-sender
+            changed: ${{ needs.detect-changes.outputs.email-sender }}
+            dockerfile: ./email-sender/Dockerfile
+          - service: scheduler
+            changed: ${{ needs.detect-changes.outputs.scheduler }}
+            dockerfile: ./scheduler/Dockerfile
+          - service: api-gateway
+            changed: ${{ needs.detect-changes.outputs.api-gateway }}
+            dockerfile: ./api-gateway/Dockerfile
+          - service: frontend
+            changed: ${{ needs.detect-changes.outputs.frontend }}
+            dockerfile: ./frontend/Dockerfile
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Skip if not changed
+        if: matrix.changed != 'true'
+        run: |
+            echo "⏭️ ${{ matrix.service }} не изменился — пропускаем сборку"
+            exit 0
+
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        if: matrix.service != 'frontend'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '26'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        if: matrix.service != 'frontend'
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push api-gateway
-        if: needs.check-changes.outputs.frontend-changed == 'true'
-        uses: docker/build-push-action@v6
+      - name: Build and push
+        uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./api-gateway/Dockerfile
+          file: ${{ matrix.dockerfile }}
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/todo-api-gateway:latest
-
-      - name: Build and push auth-service
-        if: needs.check-changes.outputs.auth_service_changed == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./auth-service/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/todo-auth-service:latest
-
-      - name: Build and push task-service
-        if: needs.check-changes.outputs.task_service_changed == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./task-service/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/todo-task-service:latest
-
-      - name: Build and push email-sender
-        if: needs.check-changes.outputs.email_sender_changed == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./email-sender/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/todo-email-sender:latest
-
-      - name: Build and push scheduler
-        if: needs.check-changes.outputs.scheduler_changed == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./scheduler/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/todo-scheduler:latest
-
-      - name: Build and push frontend
-        if: needs.check-changes.outputs.frontend_changed == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/todo-frontend:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
 
   deploy:
     name: Deploy to VPS
+    needs: [ detect-changes, build-and-push ]
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [build-and-push,check-changes,test]
-    if: needs.check-changes.outputs.changed == 'true'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1
+      - name: Copy compose and deploy script to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          source: "docker-compose-prod.yml,deploy.sh"
+          target: "/opt/todo-app"
+          strip_components: 0
+          overwrite: true
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AUTH_CHANGED: ${{ needs.detect-changes.outputs.auth-service }}
+          TASK_CHANGED: ${{ needs.detect-changes.outputs.task-service }}
+          EMAIL_CHANGED: ${{ needs.detect-changes.outputs.email-sender }}
+          SCHEDULER_CHANGED: ${{ needs.detect-changes.outputs.scheduler }}
+          GATEWAY_CHANGED: ${{ needs.detect-changes.outputs.api-gateway }}
+          FRONTEND_CHANGED: ${{ needs.detect-changes.outputs.frontend }}
+          INFRA_CHANGED: ${{ needs.detect-changes.outputs.infra }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          envs: DOCKERHUB_USERNAME,AUTH_CHANGED,TASK_CHANGED,EMAIL_CHANGED,SCHEDULER_CHANGED,GATEWAY_CHANGED,FRONTEND_CHANGED,INFRA_CHANGED
           script: |
             set -e
-
-            cd ${{ secrets.VPS_DEPLOY_PATH }}
-
-            docker compose --env-file .env -f docker-compose-prod.yml pull
-
-            docker compose --env-file .env -f docker-compose-prod.yml up -d --remove-orphans
-
-            docker image prune -f
-
-            docker compose --env-file .env -f docker-compose-prod.yml ps
+            cd /opt/todo-app
+            chmod +x deploy.sh
+            
+            # Собираем список изменённых сервисов
+            SERVICES=""
+            [ "$AUTH_CHANGED" = "true" ] && SERVICES="$SERVICES auth-service"
+            [ "$TASK_CHANGED" = "true" ] && SERVICES="$SERVICES task-service"
+            [ "$EMAIL_CHANGED" = "true" ] && SERVICES="$SERVICES email-sender"
+            [ "$SCHEDULER_CHANGED" = "true" ] && SERVICES="$SERVICES scheduler"
+            [ "$GATEWAY_CHANGED" = "true" ] && SERVICES="$SERVICES api-gateway"
+            [ "$FRONTEND_CHANGED" = "true" ] && SERVICES="$SERVICES frontend"
+            
+            if [ -z "$SERVICES" ] && [ "$INFRA_CHANGED" != "true" ]; then
+              echo "ℹ️  Ни один сервис не изменился — деплой не нужен"
+              exit 0
+            fi
+            
+             echo "🚀 Деплоим сервисы: $SERVICES"
+            export DOCKERHUB_USERNAME
+            ./deploy.sh $SERVICES
