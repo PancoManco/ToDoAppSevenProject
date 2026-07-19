@@ -25,16 +25,36 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(JwtException.class)
     ResponseEntity<MessageResponseDto> jwtError(JwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new MessageResponseDto("Invalid token"));
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new MessageResponseDto(
+                        messageService.get("security.token.invalid")
+                ));
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
     ResponseEntity<MessageResponseDto> missingCookie(MissingRequestCookieException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new MessageResponseDto("Missing refresh token"));
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new MessageResponseDto(
+                        messageService.get(
+                                "security.refresh_token.missing"
+                        )
+                ));
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<MessageResponseDto> handleUnexpectedException(
+            Exception exception
+    ) {
+        log.error("Unexpected application error", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new MessageResponseDto(
+                        messageService.get("common.internal_error")
+                ));
+    }
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<MessageResponseDto> handleAppException(AppException ex) {

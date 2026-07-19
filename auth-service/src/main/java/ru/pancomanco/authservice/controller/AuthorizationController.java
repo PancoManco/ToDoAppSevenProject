@@ -47,7 +47,7 @@ public class AuthorizationController {
         String ip = clientIpResolver.resolve(httpRequest);
         rateLimitService.checkRegister(ip, request.email());
 
-        authService.register(request);
+        authService.register(request,httpRequest.getLocale());
 
         return ResponseEntity.ok()
                 .body(new RegisterResponseDto(
@@ -80,7 +80,7 @@ public class AuthorizationController {
         String ip = clientIpResolver.resolve(httpRequest);
         rateLimitService.checkResendVerification(ip, request.email());
 
-        emailVerificationService.resendCode(request.email());
+        emailVerificationService.resendCode(request.email(),httpRequest.getLocale());
 
         return ResponseEntity.ok()
                 .body(new MessageResponseDto(messageService.get("auth.verification.resend_code_sent")));
@@ -137,10 +137,10 @@ public class AuthorizationController {
         String ip = clientIpResolver.resolve(httpRequest);
         rateLimitService.checkForgotPassword(ip, request.email());
 
-        passwordResetService.sendResetLink(request.email());
+        passwordResetService.sendResetLink(request.email(),httpRequest.getLocale());
 
         return ResponseEntity.ok()
-                .body(new MessageResponseDto(messageService.get("auth.password.reset_link_sent")));
+                .body(new MessageResponseDto(messageService.get("auth.password.reset.link_sent")));
     }
 
     @PostMapping("/reset-password")
@@ -154,7 +154,7 @@ public class AuthorizationController {
         passwordResetService.resetPassword(request.token(), request.newPassword());
 
         return ResponseEntity.ok()
-                .body(new MessageResponseDto(messageService.get("auth.password.reset_success")));
+                .body(new MessageResponseDto(messageService.get("auth.password.reset.success")));
     }
 
 

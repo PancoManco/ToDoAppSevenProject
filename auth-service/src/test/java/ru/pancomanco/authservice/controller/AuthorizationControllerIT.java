@@ -263,7 +263,7 @@ public class AuthorizationControllerIT {
                         assertThat(passwordEncoder.matches(VALID_PASSWORD, user.getPassword())).isTrue();
                     });
 
-            verify(emailSender, times(1)).sendVerificationCode(eq(email), anyString());
+            verify(emailSender, times(1)).sendVerificationCode(eq(email), anyString(),any(Locale.class));
             verify(rateLimitService, times(1)).checkRegister(anyString(), eq(email));
         }
 
@@ -283,7 +283,7 @@ public class AuthorizationControllerIT {
             assertThat(passwordEncoder.matches("newPassword123", updated.getPassword())).isTrue();
             assertThat(updated.getEnabled()).isFalse();
 
-            verify(emailSender, times(1)).sendVerificationCode(eq(email), anyString());
+            verify(emailSender, times(1)).sendVerificationCode(eq(email), anyString(),any(Locale.class));
         }
 
         @Test
@@ -300,7 +300,7 @@ public class AuthorizationControllerIT {
                     "auth.email.already_exists"
             );
 
-            verify(emailSender, never()).sendVerificationCode(anyString(), anyString());
+            verify(emailSender, never()).sendVerificationCode(anyString(), anyString(),any(Locale.class));
         }
 
         static Stream<Arguments> invalidRequests() {
@@ -329,7 +329,7 @@ public class AuthorizationControllerIT {
         @MethodSource("invalidRequests")
         void register_InvalidPayload_ReturnsBadRequest(String description, RegisterRequestDto request) throws Exception {
             performRegister(request).andExpect(status().isBadRequest());
-            verify(emailSender, never()).sendVerificationCode(anyString(), anyString());
+            verify(emailSender, never()).sendVerificationCode(anyString(), anyString(),any(Locale.class));
         }
 
 
@@ -383,7 +383,7 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isOk());
 
             ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
-            verify(emailSender).sendVerificationCode(eq(email), codeCaptor.capture());
+            verify(emailSender).sendVerificationCode(eq(email), codeCaptor.capture(),any(Locale.class));
             assertThat(codeCaptor.getValue()).matches("\\d{6}");
         }
 
@@ -1001,7 +1001,7 @@ public class AuthorizationControllerIT {
                                    && !t.isExpired());
 
             verify(emailSender, times(1))
-                    .sendPasswordResetLink(eq(email), anyString());
+                    .sendPasswordResetLink(eq(email), anyString(),any(Locale.class));
         }
 
         @Test
@@ -1013,7 +1013,7 @@ public class AuthorizationControllerIT {
                     .andExpect(status().isOk());
 
             ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
-            verify(emailSender).sendPasswordResetLink(eq(email), linkCaptor.capture());
+            verify(emailSender).sendPasswordResetLink(eq(email), linkCaptor.capture(),any(Locale.class));
 
             String link = linkCaptor.getValue();
             assertThat(link).startsWith(frontendOrigin);
@@ -1039,7 +1039,7 @@ public class AuthorizationControllerIT {
             assertThat(activeTokens).isEqualTo(1);
 
             verify(emailSender, times(2))
-                    .sendPasswordResetLink(eq(email), anyString());
+                    .sendPasswordResetLink(eq(email), anyString(),any(Locale.class));
         }
 
         @Test
@@ -1053,7 +1053,7 @@ public class AuthorizationControllerIT {
             assertThat(passwordResetTokenRepository.findAll())
                     .anyMatch(t -> t.getUser().getId().equals(user.getId()));
 
-            verify(emailSender, times(1)).sendPasswordResetLink(eq(email), anyString());
+            verify(emailSender, times(1)).sendPasswordResetLink(eq(email), anyString(),any(Locale.class));
         }
 
         @Test
@@ -1073,10 +1073,10 @@ public class AuthorizationControllerIT {
 
             performForgotPassword(new ForgotPasswordRequestDto(email))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
+                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset.link_sent")));
 
             assertThat(passwordResetTokenRepository.findAll()).isEmpty();
-            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
+            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString(),any(Locale.class));
         }
 
         @Test
@@ -1086,14 +1086,14 @@ public class AuthorizationControllerIT {
 
             performForgotPassword(new ForgotPasswordRequestDto(email))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
+                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset.link_sent")));
 
             long tokens = passwordResetTokenRepository.findAll().stream()
                     .filter(t -> t.getUser().getId().equals(user.getId()))
                     .count();
             assertThat(tokens).isZero();
 
-            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
+            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString(),any(Locale.class));
         }
 
         @Test
@@ -1118,7 +1118,7 @@ public class AuthorizationControllerIT {
             createVerifiedUser(email);
 
             doThrow(new org.springframework.mail.MailSendException("SMTP down"))
-                    .when(emailSender).sendPasswordResetLink(eq(email), anyString());
+                    .when(emailSender).sendPasswordResetLink(eq(email), anyString(),any(Locale.class));
 
             expectError(
                     performForgotPassword(new ForgotPasswordRequestDto(email)),
@@ -1142,7 +1142,7 @@ public class AuthorizationControllerIT {
         void forgotPassword_InvalidEmail_ReturnsBadRequest(String description, ForgotPasswordRequestDto request) throws Exception {
             performForgotPassword(request).andExpect(status().isBadRequest());
 
-            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString());
+            verify(emailSender, never()).sendPasswordResetLink(anyString(), anyString(),any(Locale.class));
         }
     }
 
@@ -1157,7 +1157,7 @@ public class AuthorizationControllerIT {
 
             performResetPassword(new ResetPasswordRequestDto(rawToken, NEW_PASSWORD))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset_success")));
+                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset.success")));
 
             User reloaded = authRepository.findByEmail(email).orElseThrow();
             assertThat(passwordEncoder.matches(NEW_PASSWORD, reloaded.getPassword())).isTrue();

@@ -23,6 +23,7 @@ import ru.pancomanco.authservice.util.VerificationCodeGenerator;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +42,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private final OutboxService outboxService;
 
     @Override
-    public void sendVerificationCode(User user) {
+    public void sendVerificationCode(User user, Locale locale) {
 
         if (Boolean.TRUE.equals(user.getEnabled())) {
             throw new EmailVerificationException(
@@ -62,7 +63,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
         codeRepository.save(verificationCode);
         try {
-            emailSender.sendVerificationCode(user.getEmail(), code);
+            emailSender.sendVerificationCode(user.getEmail(), code,locale);
             log.info("Verification code sent successfully to email: {}", user.getEmail());
         } catch (MailException ex) {
             log.error("Failed to send verification code to email: {}. Reason: {}", user.getEmail(), ex.getMessage());
@@ -137,7 +138,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     }
 
     @Override
-    public void resendCode(String email) {
+    public void resendCode(String email,Locale locale) {
         String normalizedEmail = EmailUtil.normalize(email);
         Optional<User> userOptional = authRepository.findByEmail(normalizedEmail);
         if (userOptional.isEmpty()) {
@@ -149,7 +150,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             log.debug("Resend code requested for already verified email: {}. Ignored.", email);
             return;
         }
-        sendVerificationCode(user);
+        sendVerificationCode(user,locale);
     }
 
 }

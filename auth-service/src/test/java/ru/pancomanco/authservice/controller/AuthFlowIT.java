@@ -32,6 +32,7 @@ import ru.pancomanco.authservice.service.RateLimitService;
 import ru.pancomanco.authservice.util.RefreshCookieHelper;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -89,13 +90,13 @@ public class AuthFlowIT {
 
     private String captureSentVerificationCode(String email) {
         ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
-        verify(emailSender, atLeastOnce()).sendVerificationCode(eq(email), codeCaptor.capture());
+        verify(emailSender, atLeastOnce()).sendVerificationCode(eq(email), codeCaptor.capture(),any(Locale.class));
         return codeCaptor.getValue();
     }
 
     private String captureSentResetLink(String email) {
         ArgumentCaptor<String> linkCaptor = ArgumentCaptor.forClass(String.class);
-        verify(emailSender, atLeastOnce()).sendPasswordResetLink(eq(email), linkCaptor.capture());
+        verify(emailSender, atLeastOnce()).sendPasswordResetLink(eq(email), linkCaptor.capture(),any(Locale.class));
         return linkCaptor.getValue();
     }
 
@@ -113,6 +114,7 @@ public class AuthFlowIT {
 
     private ResultActions performRegister(String email) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/register")
+                .header(HttpHeaders.ORIGIN, frontendOrigin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(
                         new RegisterRequestDto(NAME, email, PASSWORD))));
@@ -120,6 +122,7 @@ public class AuthFlowIT {
 
     private ResultActions performVerifyEmail(String email, String code) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/verify-email")
+                .header(HttpHeaders.ORIGIN, frontendOrigin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(
                         new VerifyEmailRequestDto(email, code))));
@@ -127,6 +130,7 @@ public class AuthFlowIT {
 
     private ResultActions performLogin(String email, String password) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/login")
+                .header(HttpHeaders.ORIGIN, frontendOrigin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(
                         new LoginRequestDto(email, password))));
@@ -146,6 +150,7 @@ public class AuthFlowIT {
 
     private ResultActions performForgotPassword(String email) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/forgot-password")
+                .header(HttpHeaders.ORIGIN, frontendOrigin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(
                         new ForgotPasswordRequestDto(email))));
@@ -153,6 +158,7 @@ public class AuthFlowIT {
 
     private ResultActions performResetPassword(String token, String newPassword) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/reset-password")
+                .header(HttpHeaders.ORIGIN, frontendOrigin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(
                         new ResetPasswordRequestDto(token, newPassword))));

@@ -5,12 +5,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record VerifyEmailRequestDto(
-        @Email
-        @NotBlank
+        @NotBlank(message = "{validation.email.required}")
+        @Email(message = "{validation.email.invalid}")
         String email,
 
-        @NotBlank
-        @Pattern(regexp = "\\d{6}", message = "Code must contain 6 digits")
+        @NotBlank(message = "{validation.verification_code.required}")
+        @Pattern(
+                regexp = "\\d{6}",
+                message = "{validation.verification_code.format}"
+        )
         String code
 ) {
 }

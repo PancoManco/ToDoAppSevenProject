@@ -6,13 +6,22 @@ import jakarta.validation.constraints.Size;
 
 public record RegisterRequestDto(
 
-        @NotBlank
-        @Size(min = 2, max = 100)
+        @NotBlank(message = "{validation.name.required}")
+        @Size(
+                min = 2,
+                max = 100,
+                message = "{validation.name.size}"
+        )
         String name,
-        @Email
-        @NotBlank
+        @NotBlank(message = "{validation.email.required}")
+        @Email(message = "{validation.email.invalid}")
         String email,
-        @NotBlank
-        @Size(min = 8, max = 64)
+
+        @NotBlank(message = "{validation.password.required}")
+        @Size(
+                min = 8,
+                max = 64,
+                message = "{validation.password.size}"
+        )
         String password) {}
 

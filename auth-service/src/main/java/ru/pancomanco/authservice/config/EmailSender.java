@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import ru.pancomanco.common.i18n.MessageService;
 import ru.pancomanco.authservice.properties.MailProperties;
 
+import java.util.Locale;
+
 @Component
 @RequiredArgsConstructor
 @EnableConfigurationProperties(MailProperties.class)
@@ -20,11 +22,19 @@ public class EmailSender {
     private final MailProperties mailProperties;
     private final MessageService messageService;
 
-    public void sendVerificationCode(String to, String code) {
+    public void sendVerificationCode(
+            String to,
+            String code,
+            Locale locale
+    ) {
         sendSimpleMessage(
                 to,
-                messageService.get("mail.verification.subject"),
                 messageService.get(
+                        locale,
+                        "mail.verification.subject"
+                ),
+                messageService.get(
+                        locale,
                         "mail.verification.body",
                         code,
                         VERIFICATION_CODE_TTL_MINUTES
@@ -32,11 +42,19 @@ public class EmailSender {
         );
     }
 
-    public void sendPasswordResetLink(String to, String resetLink) {
+    public void sendPasswordResetLink(
+            String to,
+            String resetLink,
+            Locale locale
+    ) {
         sendSimpleMessage(
                 to,
-                messageService.get("mail.password-reset.subject"),
                 messageService.get(
+                        locale,
+                        "mail.password-reset.subject"
+                ),
+                messageService.get(
+                        locale,
                         "mail.password-reset.body",
                         resetLink,
                         PASSWORD_RESET_LINK_TTL_MINUTES
@@ -44,7 +62,11 @@ public class EmailSender {
         );
     }
 
-    private void sendSimpleMessage(String to, String subject, String text) {
+    private void sendSimpleMessage(
+            String to,
+            String subject,
+            String text
+    ) {
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setFrom(mailProperties.from());

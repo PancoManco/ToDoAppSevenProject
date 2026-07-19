@@ -12,6 +12,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
 
     // =========================
+    // MessageService
+    // =========================
+    implementation project(':common')
+
+    // =========================
     // Cache / Redis
     // =========================
     implementation 'org.springframework.boot:spring-boot-starter-cache'

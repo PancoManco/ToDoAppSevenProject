@@ -18,6 +18,7 @@ import ru.pancomanco.authservice.service.EmailVerificationService;
 import ru.pancomanco.authservice.service.TokenService;
 import ru.pancomanco.authservice.util.EmailUtil;
 
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -32,7 +33,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final EmailVerificationService emailVerificationService;
 
     @Override
-    public void register(RegisterRequestDto registerRequestDto) {
+    public void register(RegisterRequestDto registerRequestDto, Locale locale) {
         String email = EmailUtil.normalize(registerRequestDto.email());
         String passwordHash = passwordEncoder.encode(registerRequestDto.password());
         String name = normalizeName(registerRequestDto.name());
@@ -52,7 +53,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             restartUnverifiedRegistration(
                     existingUser,
                     passwordHash,
-                    name
+                    name,
+                    locale
             );
             return;
         }
@@ -60,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setName(name);
         user.setEnabled(false);
         authRepository.save(user);
-        emailVerificationService.sendVerificationCode(user);
+        emailVerificationService.sendVerificationCode(user,locale);
         log.info("Successful registration for user ID: {}, email: {}", user.getId(), email);
     }
     @Override
@@ -103,7 +105,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private void restartUnverifiedRegistration(
             User user,
             String passwordHash,
-            String name
+            String name,
+            Locale locale
     ) {
         log.info("Starting UnverifiedRegistration ...");
         user.setPassword(passwordHash);
@@ -111,7 +114,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setAvatarUrl(null);
         user.setEnabled(false);
 
-        emailVerificationService.sendVerificationCode(user);
+        emailVerificationService.sendVerificationCode(user,locale);
     }
 
     private String normalizeName(String name) {

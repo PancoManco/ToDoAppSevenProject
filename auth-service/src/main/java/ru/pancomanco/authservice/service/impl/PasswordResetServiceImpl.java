@@ -25,6 +25,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -45,7 +46,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
-    public void sendResetLink(String email) {
+    public void sendResetLink(String email, Locale locale) {
         String normalizedEmail = EmailUtil.normalize(email);
 
         Optional<User> userOptional =
@@ -84,7 +85,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                            + URLEncoder.encode(rawToken, StandardCharsets.UTF_8);
 
         try {
-            emailSender.sendPasswordResetLink(user.getEmail(), resetLink);
+            emailSender.sendPasswordResetLink(user.getEmail(), resetLink,locale);
             log.info("Password reset link sent to email: {}", email);
         } catch (MailException ex) {
             log.error("Failed to send password reset email to: {}. Reason: {}", email, ex.getMessage());
