@@ -1,7 +1,13 @@
 package ru.pancomanco.taskservice.exception;
 
+import lombok.Getter;
+
+@Getter
 public class TaskNotFoundException extends RuntimeException {
-  public TaskNotFoundException(Long id) {
-    super("Task not found: " + id);
+  private final Long taskId;
+
+  public TaskNotFoundException(Long taskId) {
+    super("Task not found, id=" + taskId);
+    this.taskId = taskId;
   }
 }

@@ -40,6 +40,10 @@ spring:
       time-to-live: ${CACHE_TTL:600000}
       cache-null-values: false
 
+  messages:
+    encoding: UTF-8
+    fallback-to-system-locale: false
+    basename: messages
 app:
   security:
     jwt:

@@ -5,9 +5,18 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   detect-changes:
+    name: Detect changes
     runs-on: ubuntu-latest
+
     outputs:
       auth-service: ${{ steps.filter.outputs.auth-service }}
       task-service: ${{ steps.filter.outputs.task-service }}
@@ -16,66 +25,84 @@ jobs:
       api-gateway: ${{ steps.filter.outputs.api-gateway }}
       frontend: ${{ steps.filter.outputs.frontend }}
       infra: ${{ steps.filter.outputs.infra }}
-    steps:
-        - name: Checkout code
-          uses: actions/checkout@v5
-          with:
-            fetch-depth: 0
 
-        - name: Check for changes
-          uses: dorny/path-filter@v3
-          id: check
-          with:
-            filters: |
-              auth-service:
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            auth-service:
               - 'auth-service/**'
+              - 'common/**'
               - 'build.gradle'
               - 'settings.gradle'
               - 'gradle/**'
-              - 'docker/auth-service.Dockerfile'
-              task-service:
-                - 'task-service/**'
-                - 'build.gradle'
-                - 'settings.gradle'
-                - 'gradle/**'
-                - 'docker/task-service.Dockerfile'
-              email-sender:
-                - 'email-sender/**'
-                - 'build.gradle'
-                - 'settings.gradle'
-                - 'gradle/**'
-                - 'docker/email-sender.Dockerfile'
-              scheduler:
-                - 'scheduler/**'
-                - 'build.gradle'
-                - 'settings.gradle'
-                - 'gradle/**'
-                - 'docker/scheduler.Dockerfile'
-              api-gateway:
-                - 'api-gateway/**'
-                - 'build.gradle'
-              frontend:
-                - 'frontend/**'
-                - 'docker/frontend.Dockerfile'
-                - 'docker/nginx.conf'
-              infra:
-                - 'docker-compose-prod.yml'
-                - 'deploy.sh'
+              - 'gradlew'
+              - 'gradlew.bat'
+
+            task-service:
+              - 'task-service/**'
+              - 'common/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+
+            email-sender:
+              - 'email-sender/**'
+              - 'common/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+
+            scheduler:
+              - 'scheduler/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+
+            api-gateway:
+              - 'api-gateway/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+
+            frontend:
+              - 'frontend/**'
+              - 'docker/nginx.conf'
+
+            infra:
+              - 'docker-compose-prod.yml'
+              - 'deploy.sh'
   test:
     name: Run Gradle tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: '26'
+          cache: gradle
 
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run tests
@@ -86,8 +113,9 @@ jobs:
   build-and-push:
     name: Build ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: [test,detect-changes]
-    if: github.event_name == 'push'
+    needs:
+      - test
+      - detect-changes
     strategy:
       fail-fast: false
       matrix:
@@ -117,30 +145,33 @@ jobs:
             echo "⏭️ ${{ matrix.service }} не изменился — пропускаем сборку"
             exit 0
 
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 26
-        if: matrix.service != 'frontend'
-        uses: actions/setup-java@v4
-        with:
-          java-version: '26'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        if: matrix.service != 'frontend'
-        uses: gradle/actions/setup-gradle@v4
+      - name: Checkout
+        if: matrix.changed == 'true'
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
+        if: matrix.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        if: matrix.changed == 'true'
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Generate Docker metadata
+        if: matrix.changed == 'true'
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}
+          tags: |
+              type=raw,value=latest
+              type=sha,prefix=sha-
       - name: Build and push
-        uses: docker/build-push-action@v5
+        if: matrix.changed == 'true'
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -154,24 +185,29 @@ jobs:
 
   deploy:
     name: Deploy to VPS
-    needs: [ detect-changes, build-and-push ]
-    if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Copy compose and deploy script to VPS
+    needs:
+      - detect-changes
+      - build-and-push
+
+    if: |
+      github.ref == 'refs/heads/main' &&
+      needs.build-and-push.result == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Copy deployment files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          source: "docker-compose-prod.yml,deploy.sh"
-          target: "/opt/todo-app"
-          strip_components: 0
+          source: docker-compose-prod.yml,deploy.sh
+          target: /opt/todo-app
           overwrite: true
 
       - name: Deploy via SSH
@@ -210,6 +246,11 @@ jobs:
               exit 0
             fi
             
-             echo "🚀 Деплоим сервисы: $SERVICES"
-            export DOCKERHUB_USERNAME
-            ./deploy.sh $SERVICES
+             if [ "$INFRA_CHANGED" = "true" ] \
+              && [ -z "$SERVICES" ]; then
+              echo "🚀 Обновляем инфраструктуру"
+              ./deploy.sh
+            else
+              echo "🚀 Деплоим:$SERVICES"
+              ./deploy.sh $SERVICES
+            fi

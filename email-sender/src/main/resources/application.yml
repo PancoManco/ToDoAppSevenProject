@@ -46,9 +46,15 @@ spring:
           starttls:
             enable: ${MAIL_STARTTLS_ENABLE:false}
 
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
 app:
   mail:
     from: ${MAIL_FROM:noreply@todoapp.com}
+    default-locale: ${MAIL_DEFAULT_LOCALE:ru}
 
 management:
   metrics:

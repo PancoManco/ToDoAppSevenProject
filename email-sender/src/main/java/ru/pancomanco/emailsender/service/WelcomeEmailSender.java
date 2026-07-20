@@ -6,6 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import ru.pancomanco.common.i18n.MessageService;
+import ru.pancomanco.emailsender.properties.MailProperties;
+
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -13,24 +17,44 @@ import org.springframework.stereotype.Service;
 public class WelcomeEmailSender {
 
     private final JavaMailSender mailSender;
+    private final MailProperties mailProperties;
+    private final MessageService messageService;
 
-    @Value("${app.mail.from}")
-    private String from;
+    public void sendWelcomeEmail(
+            String to,
+            String name
+    ) {
+        Locale locale = mailProperties.locale();
 
-    public void sendWelcomeEmail(String to, String name) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(from);
+        message.setFrom(mailProperties.from());
         message.setTo(to);
-        message.setSubject("Welcome to ToDo App!");
-        message.setText(buildBody(name));
+
+        message.setSubject(
+                messageService.get(
+                        locale,
+                        "mail.welcome.subject"
+                )
+        );
+
+        message.setText(
+                messageService.get(
+                        locale,
+                        "mail.welcome.body",
+                        resolveName(name)
+                )
+        );
+
         mailSender.send(message);
+
         log.info("Welcome email sent to {}", to);
     }
 
-    private String buildBody(String name) {
-        // todo htmlBody
-        return """
-                WELCOME to toDo App! 
-                """.formatted(name);
+    private String resolveName(String name) {
+        if (name == null || name.isBlank()) {
+            return "";
+        }
+
+        return name;
     }
 }

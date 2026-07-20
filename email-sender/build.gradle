@@ -23,6 +23,11 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // =========================
+    // MessageService
+    // =========================
+    implementation project(':common')
+
+    // =========================
     // Tests
     // =========================
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
