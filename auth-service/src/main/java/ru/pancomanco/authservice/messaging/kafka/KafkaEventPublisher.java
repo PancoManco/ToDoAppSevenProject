@@ -16,19 +16,6 @@ public class KafkaEventPublisher {
     private static final int SEND_TIMEOUT_SECONDS = 10;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-//    public void publish(String topic, String key, String payload) {
-//        kafkaTemplate.send(topic, key, payload)
-//                .whenComplete((result, ex) -> {
-//                    if (ex != null) {
-//                        log.error("Failed to publish to topic {}: {}", topic, ex.getMessage());
-//                    } else {
-//                        log.debug("Published to topic {} partition {} offset {}",
-//                                topic,
-//                                result.getRecordMetadata().partition(),
-//                                result.getRecordMetadata().offset());
-//                    }
-//                });
-//    }
     public void publish(String topic, String key, String payload) {
        try {
            kafkaTemplate.send(topic, key, payload).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);

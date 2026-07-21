@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { auth } from '../api.js';
 // import { auth, GOOGLE_LOGIN_URL } from '../api.js';
 
 export default function AuthScreen({ onAuthenticated }) {
@@ -89,8 +90,7 @@ export default function AuthScreen({ onAuthenticated }) {
         <p className="auth__sub">
           {mode === 'verify' ? (
             <>
-              Мы отправили шестизначный код на <b>{email}</b>. Письмо ищи в Mailpit —{' '}
-              <code>localhost:8025</code>.
+              Мы отправили шестизначный код на <b>{email}</b>.
             </>
           ) : (
             subs[mode]

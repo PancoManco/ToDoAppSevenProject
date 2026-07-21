@@ -39,7 +39,6 @@ import ru.pancomanco.authservice.util.RsaKeyLoader;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
-
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor

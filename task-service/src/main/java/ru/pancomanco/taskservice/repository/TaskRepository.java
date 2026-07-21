@@ -7,8 +7,6 @@ import ru.pancomanco.taskservice.dto.UserCountProjection;
 import ru.pancomanco.taskservice.dto.UserTitleProjection;
 import ru.pancomanco.taskservice.entity.Task;
 
-
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
