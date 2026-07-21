@@ -19,11 +19,6 @@ import ru.pancomanco.apigateway.properties.JwtProperties;
 @EnableConfigurationProperties(JwtProperties.class)
 public class JwtValidationConfig {
 
-//    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-//    private String jwkSetUri;
-//
-//    @Value("${app.security.jwt.issuer:toDoApplication}")
-//    private String issuer;
 
     private final JwtProperties jwtProperties;
 

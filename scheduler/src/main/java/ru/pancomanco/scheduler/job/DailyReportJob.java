@@ -64,9 +64,6 @@ public class DailyReportJob {
         }
 
         int published = 0;
-       // int failed = 0;
-     //   Instant occurredAt = Instant.now();
-
         for (UserTaskSummary user : summary.users()) {
             try {
                 DailyReportEvent event = new DailyReportEvent(
@@ -92,10 +89,5 @@ public class DailyReportJob {
             }
         }
 
-//        log.info(
-//                "Daily report generation finished: {} events published, {} failed",
-//                published,
-//                failed
-//        );
     }
 }

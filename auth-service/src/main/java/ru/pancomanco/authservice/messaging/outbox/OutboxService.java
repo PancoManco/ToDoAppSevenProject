@@ -1,6 +1,5 @@
 package ru.pancomanco.authservice.messaging.outbox;
 
-
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
