@@ -6,6 +6,9 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
 
+COPY common/build.gradle common/build.gradle
+COPY common/src common/src
+
 COPY auth-service/build.gradle auth-service/
 COPY api-gateway/build.gradle api-gateway/
 COPY task-service/build.gradle task-service/
