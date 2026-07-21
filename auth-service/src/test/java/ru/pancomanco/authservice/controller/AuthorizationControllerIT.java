@@ -993,7 +993,7 @@ public class AuthorizationControllerIT {
 
             performForgotPassword(new ForgotPasswordRequestDto(email))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset_link_sent")));
+                    .andExpect(jsonPath("$.message").value(msg("auth.password.reset.link_sent")));
 
             assertThat(passwordResetTokenRepository.findAll())
                     .anyMatch(t -> t.getUser().getId().equals(user.getId())

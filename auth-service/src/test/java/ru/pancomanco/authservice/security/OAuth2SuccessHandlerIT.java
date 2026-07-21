@@ -33,7 +33,11 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "app.oauth2.enabled=true",
+        "spring.security.oauth2.client.registration.google.client-id=test-client-id",
+        "spring.security.oauth2.client.registration.google.client-secret=test-client-secret"
+})
 @Import({TestcontainersConfiguration.class, TestRateLimitConfig.class})
 @ActiveProfiles("test")
 class OAuth2SuccessHandlerIT {

@@ -8,11 +8,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import ru.pancomanco.taskservice.config.TestSecurityConfig;
+import ru.pancomanco.taskservice.config.TestcontainersConfiguration;
 import ru.pancomanco.taskservice.dto.request.CreateTaskRequestDto;
 import ru.pancomanco.taskservice.entity.Task;
 import ru.pancomanco.taskservice.repository.TaskRepository;
@@ -26,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Import({TestcontainersConfiguration.class, TestSecurityConfig.class})
 class TaskControllerIT {
 
     @Autowired
