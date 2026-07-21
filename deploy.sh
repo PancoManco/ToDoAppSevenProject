@@ -134,6 +134,10 @@ cd "$PROJECT_DIR"
 [[ -f "$ENV_FILE" ]] \
   || fail "Не найден $PROJECT_DIR/$ENV_FILE"
 
+set -a
+source "$ENV_FILE"
+set +a
+
 command -v docker >/dev/null 2>&1 \
   || fail "Docker не установлен"
 
