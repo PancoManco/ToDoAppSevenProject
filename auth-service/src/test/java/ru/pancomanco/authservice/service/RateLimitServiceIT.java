@@ -1,10 +1,12 @@
 package ru.pancomanco.authservice.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -61,6 +63,16 @@ public class RateLimitServiceIT {
         return "test-" + UUID.randomUUID().toString().substring(0, 8) + "@test.com";
     }
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @BeforeEach
+    void clearRedis() {
+        stringRedisTemplate.getConnectionFactory()
+                .getConnection()
+                .serverCommands()
+                .flushDb();
+    }
 
     @Nested
     class RegisterLimits {
