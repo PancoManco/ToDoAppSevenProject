@@ -175,7 +175,7 @@ jobs:
               type=raw,value=latest
               type=sha,prefix=sha-
       - name: Build and push
-        if: matrix.changed == 'true'
+
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -196,13 +196,7 @@ jobs:
       - detect-changes
       - build-and-push
 
-    if: |
-      always() &&
-      github.ref == 'refs/heads/main' &&
-      (
-        needs.build-and-push.result == 'success' ||
-        github.event_name == 'workflow_dispatch'
-      )
+
 
     steps:
       - name: Checkout
