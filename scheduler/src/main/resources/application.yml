@@ -4,7 +4,10 @@ server:
 spring:
   application:
     name: scheduler
-
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:

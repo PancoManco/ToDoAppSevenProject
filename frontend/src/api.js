@@ -4,10 +4,10 @@ const normalizeUrl = (value) => {
   return value.replace(/\/$/, '');
 };
 
-const BASE_URL = normalizeUrl(import.meta.env.VITE_API_URL);
+const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API = `${BASE_URL}/api/v1`;
 
-const AUTH_URL = normalizeUrl(import.meta.env.VITE_AUTH_URL);
+//const AUTH_URL = normalizeUrl(import.meta.env.VITE_AUTH_URL);
 //export const GOOGLE_LOGIN_URL = `${AUTH_URL}/oauth2/authorization/google`;
 
 const TOKEN_KEY = 'accessToken';
