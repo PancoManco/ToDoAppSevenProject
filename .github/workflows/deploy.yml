@@ -4,7 +4,12 @@ on:
   push:
     branches:
       - main
-
+  workflow_dispatch:
+    inputs:
+      full_deploy:
+        description: "Build and deploy all services"
+        required: false
+        default: "true"
 permissions:
   contents: read
 
