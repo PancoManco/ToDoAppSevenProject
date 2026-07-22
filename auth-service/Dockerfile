@@ -21,12 +21,12 @@ COPY auth-service/src auth-service/src
 
 RUN ./gradlew :auth-service:bootJar --no-daemon
 
-FROM eclipse-temurin:26-jre AS runtime
+FROM eclipse-temurin:26-jre-alpine AS runtime
 
 WORKDIR /app
-
-RUN groupadd -r spring && useradd -r -g spring spring
-USER spring
+RUN apk add --no-cache wget
+RUN addgroup -S app && adduser -S app -G app
+USER app
 
 COPY --from=build /workspace/auth-service/build/libs/*.jar app.jar
 

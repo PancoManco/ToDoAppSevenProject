@@ -5,6 +5,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import ru.pancomanco.authservice.config.RateLimitConfig;
 import ru.pancomanco.authservice.exception.ErrorCode;
@@ -17,7 +18,12 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class  RateLimitServiceImpl  implements RateLimitService {
+@ConditionalOnProperty(
+        name = "app.rate-limit.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
+public class RateLimitServiceImpl implements RateLimitService {
     private final ProxyManager<byte[]> bucket4jProxyManager;
 
     @Override

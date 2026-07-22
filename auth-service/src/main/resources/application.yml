@@ -113,6 +113,8 @@ management:
       enabled: true
     mail:
       enabled: true
+    kafka:
+      enabled: true
 
 logging:
   level:

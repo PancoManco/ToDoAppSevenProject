@@ -12,7 +12,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TASK_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${TASK_DB_USER} -d ${TASK_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -48,16 +48,18 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${EMAIL_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${EMAIL_DB_USER} -d ${EMAIL_DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:5-alpine
     container_name: redis
     restart: unless-stopped
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
     networks:
@@ -102,8 +104,6 @@ services:
     depends_on:
       auth-postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       kafka:
         condition: service_healthy
     env_file:
@@ -119,6 +119,16 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit_container
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      - MP_MAX_MESSAGES=500
 
   task-service:
     image: ${DOCKERHUB_USERNAME}/task-service:latest
