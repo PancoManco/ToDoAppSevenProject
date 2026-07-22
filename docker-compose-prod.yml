@@ -101,11 +101,6 @@ services:
     image: ${DOCKERHUB_USERNAME}/auth-service:latest
     container_name: auth-service
     restart: unless-stopped
-    depends_on:
-      auth-postgres:
-        condition: service_started
-      kafka:
-        condition: service_started
     env_file:
       - .env
     environment:
@@ -124,13 +119,6 @@ services:
     image: ${DOCKERHUB_USERNAME}/task-service:latest
     container_name: task-service
     restart: unless-stopped
-    depends_on:
-      task-postgres:
-        condition: service_started
-      redis:
-        condition: service_started
-      auth-service:
-        condition: service_started
     env_file:
       - .env
     environment:
@@ -149,11 +137,6 @@ services:
     image: ${DOCKERHUB_USERNAME}/email-sender:latest
     container_name: email-sender
     restart: unless-stopped
-    depends_on:
-      email-postgres:
-        condition: service_started
-      kafka:
-        condition: service_started
     env_file:
       - .env
     environment:
@@ -171,11 +154,6 @@ services:
     image: ${DOCKERHUB_USERNAME}/scheduler:latest
     container_name: scheduler
     restart: unless-stopped
-    depends_on:
-      kafka:
-        condition: service_started
-      task-service:
-        condition: service_started
     env_file:
       - .env
     environment:
@@ -192,13 +170,6 @@ services:
     restart: unless-stopped
     expose:
       - "8080"
-    depends_on:
-      auth-service:
-        condition: service_started
-      task-service:
-        condition: service_started
-      redis:
-        condition: service_started
     env_file:
       - .env
     environment:
@@ -231,11 +202,6 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      frontend:
-        condition: service_healthy
-      api-gateway:
-        condition: service_healthy
     networks: [ backend, frontend ]
     healthcheck:
       disable: true
