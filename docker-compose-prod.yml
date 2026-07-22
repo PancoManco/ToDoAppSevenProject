@@ -103,9 +103,9 @@ services:
     restart: unless-stopped
     depends_on:
       auth-postgres:
-        condition: service_healthy
+        condition: service_started
       kafka:
-        condition: service_healthy
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -126,9 +126,9 @@ services:
     restart: unless-stopped
     depends_on:
       task-postgres:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
       auth-service:
         condition: service_started
     env_file:
@@ -137,7 +137,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://task-postgres:5432/${TASK_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${TASK_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${TASK_DB_PASSWORD}
-
       REDIS_HOST: redis
       REDIS_PORT: 6379
       AUTH_SERVICE_URL: http://auth-service:8081
@@ -152,9 +151,9 @@ services:
     restart: unless-stopped
     depends_on:
       email-postgres:
-        condition: service_healthy
+        condition: service_started
       kafka:
-        condition: service_healthy
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -174,9 +173,9 @@ services:
     restart: unless-stopped
     depends_on:
       kafka:
-        condition: service_healthy
+        condition: service_started
       task-service:
-        condition: service_healthy
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -197,9 +196,9 @@ services:
       auth-service:
         condition: service_started
       task-service:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     env_file:
       - .env
     environment:
