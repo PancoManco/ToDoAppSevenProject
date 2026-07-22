@@ -20,12 +20,12 @@ RUN chmod +x gradlew && ./gradlew :api-gateway:dependencies --no-daemon || true
 COPY api-gateway/src api-gateway/src
 RUN ./gradlew :api-gateway:bootJar --no-daemon
 
-FROM eclipse-temurin:26-jre AS runtime
+FROM eclipse-temurin:26-jre-alpine AS runtime
 
 WORKDIR /app
-
-RUN groupadd -r spring && useradd -r -g spring spring
-USER spring
+RUN apk add --no-cache wget
+RUN addgroup -S app && adduser -S app -G app
+USER app
 
 COPY --from=build /workspace/api-gateway/build/libs/*.jar app.jar
 

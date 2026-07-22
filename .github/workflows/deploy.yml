@@ -91,7 +91,9 @@ jobs:
 
             infra:
               - 'docker-compose-prod.yml'
+              - 'nginx.conf'
               - 'deploy.sh'
+              - '.github/workflows/deploy.yml'
   test:
     name: Run Gradle tests
     runs-on: ubuntu-latest
@@ -199,7 +201,6 @@ jobs:
       - detect-changes
       - build-and-push
 
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -211,7 +212,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          source: docker-compose-prod.yml,deploy.sh
+          source: docker-compose-prod.yml,deploy.sh,nginx.conf
           target: /opt/todo-app
           overwrite: true
 
@@ -219,6 +220,10 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+          FULL_DEPLOY: ${{ github.event_name == 'workflow_dispatch' && inputs.full_deploy == 'true' }}
+
           AUTH_CHANGED: ${{ needs.detect-changes.outputs.auth-service }}
           TASK_CHANGED: ${{ needs.detect-changes.outputs.task-service }}
           EMAIL_CHANGED: ${{ needs.detect-changes.outputs.email-sender }}
@@ -226,36 +231,72 @@ jobs:
           GATEWAY_CHANGED: ${{ needs.detect-changes.outputs.api-gateway }}
           FRONTEND_CHANGED: ${{ needs.detect-changes.outputs.frontend }}
           INFRA_CHANGED: ${{ needs.detect-changes.outputs.infra }}
+
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          envs: DOCKERHUB_USERNAME,AUTH_CHANGED,TASK_CHANGED,EMAIL_CHANGED,SCHEDULER_CHANGED,GATEWAY_CHANGED,FRONTEND_CHANGED,INFRA_CHANGED
+
+          envs: >-
+            DOCKERHUB_USERNAME,
+            DOCKERHUB_TOKEN,
+            FULL_DEPLOY,
+            AUTH_CHANGED,
+            TASK_CHANGED,
+            EMAIL_CHANGED,
+            SCHEDULER_CHANGED,
+            GATEWAY_CHANGED,
+            FRONTEND_CHANGED,
+            INFRA_CHANGED
+
           script: |
-            set -e
+            set -eu
+
             cd /opt/todo-app
+
+            test -f .env || {
+              echo "ERROR: /opt/todo-app/.env is missing"
+              exit 1
+            }
+
             chmod +x deploy.sh
-            
-            # Собираем список изменённых сервисов
-            SERVICES=""
-            [ "$AUTH_CHANGED" = "true" ] && SERVICES="$SERVICES auth-service"
-            [ "$TASK_CHANGED" = "true" ] && SERVICES="$SERVICES task-service"
-            [ "$EMAIL_CHANGED" = "true" ] && SERVICES="$SERVICES email-sender"
-            [ "$SCHEDULER_CHANGED" = "true" ] && SERVICES="$SERVICES scheduler"
-            [ "$GATEWAY_CHANGED" = "true" ] && SERVICES="$SERVICES api-gateway"
-            [ "$FRONTEND_CHANGED" = "true" ] && SERVICES="$SERVICES frontend"
-            
-            if [ -z "$SERVICES" ] && [ "$INFRA_CHANGED" != "true" ]; then
-              echo "ℹ️  Ни один сервис не изменился — деплой не нужен"
+
+            echo "$DOCKERHUB_TOKEN" |
+              docker login \
+                --username "$DOCKERHUB_USERNAME" \
+                --password-stdin
+
+            if [ "$FULL_DEPLOY" = "true" ] || [ "$INFRA_CHANGED" = "true" ]; then
+              echo "Full production deploy"
+              ./deploy.sh
               exit 0
             fi
-            
-             if [ "$INFRA_CHANGED" = "true" ] \
-              && [ -z "$SERVICES" ]; then
-              echo "🚀 Обновляем инфраструктуру"
-              ./deploy.sh
-            else
-              echo "🚀 Деплоим:$SERVICES"
-              ./deploy.sh $SERVICES
+
+            SERVICES=""
+
+            [ "$AUTH_CHANGED" = "true" ] &&
+              SERVICES="$SERVICES auth-service"
+
+            [ "$TASK_CHANGED" = "true" ] &&
+              SERVICES="$SERVICES task-service"
+
+            [ "$EMAIL_CHANGED" = "true" ] &&
+              SERVICES="$SERVICES email-sender"
+
+            [ "$SCHEDULER_CHANGED" = "true" ] &&
+              SERVICES="$SERVICES scheduler"
+
+            [ "$GATEWAY_CHANGED" = "true" ] &&
+              SERVICES="$SERVICES api-gateway"
+
+            [ "$FRONTEND_CHANGED" = "true" ] &&
+              SERVICES="$SERVICES frontend"
+
+            if [ -z "$SERVICES" ]; then
+              echo "No services changed"
+              exit 0
             fi
+
+            echo "Deploying:$SERVICES"
+            ./deploy.sh $SERVICES
