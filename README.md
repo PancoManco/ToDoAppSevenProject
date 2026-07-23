@@ -298,18 +298,51 @@ openssl rand -hex 32
 # REDIS_PASSWORD
 openssl rand -base64 24
 ```
+We use two Docker Compose configurations depending on your development needs.
 
-### 3. Start Infrastructure(Docker)
+### Option A: Local Development (Infrastructure Only)
+Use this mode if you are developing the backend (Spring Boot) or frontend (React) and want to run them locally via your IDE or `npm run dev` to utilize hot-reloading and debuggers.
+
 ```bash
-docker compose -f docker-compose-local.yml up -d
+# Starts only PostgreSQL (3 instances), Redis, Kafka, and Mailpit
+docker compose -f docker-compose.infra.yml up -d
 ```
-#### What starts:
-- **✅**: PostgresSQL (3 instances: auth,task,email)
-- **✅**: Redis
-- **✅**: Kafka
-- **✅**: Mailpit (for mail testing, UI: http://localhost:8025
 
-### 4. Start Backed from IDEA
+**What starts:**
+- ✅ **PostgreSQL** (3 instances: auth, task, email)
+- ✅ **Redis** (caching & sessions)
+- ✅ **Kafka** (message broker)
+- ✅ **Mailpit** (email testing, UI: http://localhost:8025)
+
+*After this, start your applications locally(STEP 4):*
+- *Backend: `mvn spring-boot:run` in the respective service directories*
+- *Frontend: `npm run dev` in the `frontend` directory*
+
+---
+
+### Option B: Full Stack (Production-like)
+tarts the infrastructure **PLUS** all compiled microservices, API Gateway, Frontend, and Nginx. 
+*Docker will automatically pull the pre-built backend images from Docker Hub (using the `pancomanco` username defined in your `.env` file).*
+
+*Use this mode for integration testing, QA, or demonstrating the complete project workflow.*
+
+```bash
+# Starts infrastructure + all Java services + compiled React + Nginx
+docker compose -f docker-compose-prod.yml up -d
+```
+
+**What starts:**
+- ✅ **All Infrastructure** (DBs, Redis, Kafka, Mailpit)
+- ✅ **Microservices** (auth-service, task-service, email-sender, scheduler, api-gateway)
+- ✅ **Frontend** (compiled Vite/React production build)
+- ✅ **Nginx** (Reverse Proxy on port 80)
+
+**Access the application:**
+- 🌐 **Frontend:** http://localhost (via Nginx)
+- 📬 **Mailpit UI:** http://localhost:8025
+- 📊 **API Gateway:** http://localhost:8080
+
+### 4. Start Backend from IDEA
 Open project in intellij IDEA and start sevices in this order:
 1. auth-service (port - 8081)
 2. api-gateway (port - 8080)
