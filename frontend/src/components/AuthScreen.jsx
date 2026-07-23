@@ -66,7 +66,7 @@ export default function AuthScreen({ onAuthenticated }) {
   const handleForgot = () =>
     run(async () => {
       await auth.forgotPassword(email.trim());
-      setNotice('Если такая почта есть, мы отправили ссылку для сброса. Загляни в Mailpit.');
+      setNotice('Если такая почта есть, мы отправили ссылку для сброса.');
     });
 
   const titles = {

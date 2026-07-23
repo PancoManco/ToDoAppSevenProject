@@ -116,11 +116,6 @@ public class AuthorizationControllerIT {
                 .content(objectMapper.writeValueAsString(request)));
     }
 
-//    private ResultActions performVerifyEmail(VerifyEmailRequestDto request) throws Exception {
-//        return mockMvc.perform(post("/api/v1/auth/verify-email")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(objectMapper.writeValueAsString(request)));
-//    }
 
     private ResultActions performLogin(LoginRequestDto request) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/login")
@@ -138,11 +133,6 @@ public class AuthorizationControllerIT {
                         new VerifyEmailRequestDto(request.email(), request.code()))));
     }
 
-//    private ResultActions performLogin(LoginRequestDto request) throws Exception {
-//        return mockMvc.perform(post("/api/v1/auth/login")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(objectMapper.writeValueAsString(request)));
-//    }
 
     private ResultActions performRefresh(String refreshTokenCookie, String origin) throws Exception {
         var request = post("/api/v1/auth/refresh");
