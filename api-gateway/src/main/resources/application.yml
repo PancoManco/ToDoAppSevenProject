@@ -1,5 +1,6 @@
 server:
   port: ${API_GATEWAY_PORT:8080}
+  forward-headers-strategy: framework
 app:
   cors:
     enabled: ${CORS_ENABLED:false}
