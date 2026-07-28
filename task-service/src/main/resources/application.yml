@@ -22,12 +22,6 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog/db.changelog-master.yaml
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8081}/.well-known/jwks.json
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -48,6 +42,7 @@ app:
   security:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}
+      jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8081}/.well-known/jwks.json
   internal:
     api-key: ${INTERNAL_API_KEY:?INTERNAL_API_KEY is required}
 management:

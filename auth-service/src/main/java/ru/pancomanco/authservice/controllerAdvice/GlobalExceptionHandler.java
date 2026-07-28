@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     private final MessageService messageService;
 
     @ExceptionHandler(JwtException.class)
-    ResponseEntity<MessageResponseDto> jwtError(JwtException ex) {
+    ResponseEntity<MessageResponseDto> handlejJwtError(JwtException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new MessageResponseDto(
@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
-    ResponseEntity<MessageResponseDto> missingCookie(MissingRequestCookieException ex) {
+    ResponseEntity<MessageResponseDto> handleMissingCookie(MissingRequestCookieException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new MessageResponseDto(

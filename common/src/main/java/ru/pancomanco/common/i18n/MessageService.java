@@ -31,17 +31,4 @@ public class MessageService {
         );
     }
 
-    public String getOrDefault(
-            Locale locale,
-            String code,
-            String defaultMessage,
-            Object... args
-    ) {
-        return messageSource.getMessage(
-                code,
-                args,
-                defaultMessage,
-                locale
-        );
-    }
 }

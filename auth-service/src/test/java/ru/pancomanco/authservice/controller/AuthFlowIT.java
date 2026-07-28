@@ -312,8 +312,6 @@ public class AuthFlowIT {
         performRefresh(firstRefresh).andExpect(status().isForbidden());
         performRefresh(secondRefresh).andExpect(status().isForbidden());
 
-
-
         User user = authRepository.findByEmail(email).orElseThrow();
         long active = refreshTokenRepository.findAll().stream()
                 .filter(rt -> rt.getUser().getId().equals(user.getId()))

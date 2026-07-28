@@ -1,5 +1,6 @@
 package ru.pancomanco.taskservice.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,16 +11,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.*;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
+import ru.pancomanco.taskservice.properties.JwtProperties;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    private String jwkSetUri;
-
-    @Value("${app.security.jwt.issuer}")
-    private String issuer;
+    private final JwtProperties jwtProperties;
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,11 +40,11 @@ public class SecurityConfig {
     @Profile("!test")
     JwtDecoder jwtDecoder() {
         NimbusJwtDecoder decoder = NimbusJwtDecoder
-                .withJwkSetUri(jwkSetUri)
+                .withJwkSetUri(jwtProperties.jwkSetUri())
                 .build();
 
         OAuth2TokenValidator<Jwt> defaultValidators =
-                JwtValidators.createDefaultWithIssuer(issuer);
+                JwtValidators.createDefaultWithIssuer(jwtProperties.issuer());
 
         OAuth2TokenValidator<Jwt> accessTypeValidator = tokenTypeValidator("access");
 

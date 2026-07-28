@@ -32,6 +32,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailVerificationServiceImpl implements EmailVerificationService {
+
     private static final Duration CODE_TTL = Duration.ofMinutes(5);
 
     private final AuthRepository authRepository;

@@ -6,11 +6,14 @@ import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
+import liquibase.util.StringUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import ru.pancomanco.authservice.properties.RateLimitProperties;
 
 import java.time.Duration;
@@ -53,7 +56,13 @@ public class RateLimitConfig {
     RedisClient bucket4jRedisClient(
             RateLimitProperties rateLimitProperties
     ) {
-        return RedisClient.create("redis://" + rateLimitProperties.host() + ":" + rateLimitProperties.port());
+        RedisURI.Builder uriBuilder = RedisURI.builder()
+                .withHost(rateLimitProperties.host())
+                .withPort(rateLimitProperties.port());
+        if (StringUtils.hasText(rateLimitProperties.password())) {
+            uriBuilder.withPassword(rateLimitProperties.password().toCharArray());
+        }
+        return RedisClient.create(uriBuilder.build());
     }
 
     @Bean(destroyMethod = "close")
