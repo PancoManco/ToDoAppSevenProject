@@ -9,7 +9,7 @@ const API = `${BASE_URL}/api/v1`;
 
 //const AUTH_URL = normalizeUrl(import.meta.env.VITE_AUTH_URL);
 //export const GOOGLE_LOGIN_URL = `${AUTH_URL}/oauth2/authorization/google`;
-
+console.log('API URL:', API);
 const TOKEN_KEY = 'accessToken';
 
 export const token = {

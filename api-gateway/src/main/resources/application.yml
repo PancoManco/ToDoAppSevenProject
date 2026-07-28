@@ -25,16 +25,6 @@ spring:
     gateway:
       server:
         webflux:
-#          globalcors:
-#            cors-configurations:
-#              '[/**]':
-#                allowed-origins:
-#                  - ${FRONTEND_ORIGIN:http://localhost:5173}
-#                allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
-#                allowedHeaders: "*"
-#                exposedHeaders: [Authorization, X-Request-Id, Set-Cookie]
-#                allowCredentials: true
-#                maxAge: 3600
           default-filters:
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin, RETAIN_FIRST
           routes:

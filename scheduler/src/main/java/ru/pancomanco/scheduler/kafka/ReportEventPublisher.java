@@ -1,6 +1,7 @@
 package ru.pancomanco.scheduler.kafka;
 
 import ru.pancomanco.scheduler.exception.ReportPublishException;
+import ru.pancomanco.scheduler.properties.SchedulerProperties;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +21,13 @@ public class ReportEventPublisher {
     private static final int SEND_TIMEOUT_SECONDS = 10;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-
-    @Value("${app.report.topic}")
+    private final SchedulerProperties schedulerProperties;
     private String reportTopic;
+
 
     public void publish(DailyReportEvent event) {
         try {
+            reportTopic=schedulerProperties.report().topic();
             String payload = objectMapper.writeValueAsString(event);
             kafkaTemplate.send(reportTopic, event.eventId(), payload).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             log.debug("Published report event {} for user {}", event.eventId(), event.userId());

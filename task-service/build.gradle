@@ -6,7 +6,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // =========================
-    // Security / JWT (resource server — валидация токенов через JWKS)
+    // Security / JWT
     // =========================
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'

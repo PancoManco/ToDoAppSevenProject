@@ -194,7 +194,6 @@ else
 
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --force-recreate "${ALL_DEPENDENTS[@]}"
 
-    # Проверяем что они тоже healthy
     for dep in "${ALL_DEPENDENTS[@]}"; do
       if ! wait_for_healthy "$dep" 20 5; then
         log "⚠️  Зависимый сервис $dep не стал healthy"

@@ -63,7 +63,6 @@ public class DailyReportJob {
             return;
         }
 
-        int published = 0;
         for (UserTaskSummary user : summary.users()) {
             try {
                 DailyReportEvent event = new DailyReportEvent(
@@ -80,12 +79,10 @@ public class DailyReportJob {
 
                 reportEventPublisher.publish(event);
                 reportsPublished.increment();
-             //   published++;
 
             } catch (Exception e) {
                 log.error("Failed to publish report for user {}, skipping", user.userId(), e);
                 publishErrors.increment();
-              //  failed++;
             }
         }
 
