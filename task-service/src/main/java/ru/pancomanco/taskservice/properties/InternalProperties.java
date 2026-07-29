@@ -7,6 +7,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "app.internal")
 public record InternalProperties(
-        @NotBlank String apiKey
+        @NotBlank(message = "Internal API key is required") String apiKey
 ) {
 }

@@ -16,7 +16,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      password: ${REDIS_PASSWORD:}
   security:
     jwt:
       issuer: ${JWT_ISSUER:toDoApplication}

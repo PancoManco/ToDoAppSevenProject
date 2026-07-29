@@ -305,7 +305,7 @@ Use this mode if you are developing the backend (Spring Boot) or frontend (React
 
 ```bash
 # Starts only PostgreSQL (3 instances), Redis, Kafka, and Mailpit
-docker compose -f docker-compose.infra.yml up -d
+docker compose -f docker-compose-local.yml up -d
 ```
 
 **What starts:**
@@ -327,7 +327,7 @@ tarts the infrastructure **PLUS** all compiled microservices, API Gateway, Front
 *Use this mode for integration testing, QA, or demonstrating the complete project workflow.*
 
 ```bash
-# Starts infrastructure + all Java services + compiled React + Nginx
+# Starts infrastructure + all Java services + compiled React + Nginx(added mailpit if you dont want to use real smtp)
 docker compose -f docker-compose-prod.yml up -d
 ```
 
